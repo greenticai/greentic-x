@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://contracts/outcome/resources/outcome",
+  "title": "Outcome",
+  "type": "object",
+  "required": ["outcome_id", "state"],
+  "properties": {
+    "outcome_id": { "type": "string" },
+    "summary": { "type": "string" },
+    "decision": { "type": "string" },
+    "state": { "type": "string", "enum": ["proposed", "approved", "executed", "rejected"] }
+  },
+  "additionalProperties": true
+}

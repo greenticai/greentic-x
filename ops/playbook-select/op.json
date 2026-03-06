@@ -1,0 +1,29 @@
+{
+  "operation_id": "playbook-select",
+  "version": "v1",
+  "description": "Select a playbook route deterministically from a small context payload.",
+  "input_schema": {
+    "schema_id": "greentic-x://ops/playbook-select/input",
+    "version": "v1",
+    "uri": "schemas/input.schema.json"
+  },
+  "output_schema": {
+    "schema_id": "greentic-x://ops/playbook-select/output",
+    "version": "v1",
+    "uri": "schemas/output.schema.json"
+  },
+  "supported_contracts": [
+    { "contract_id": "gx.playbook", "version": "v1" },
+    { "contract_id": "gx.case", "version": "v1" }
+  ],
+  "permissions": [
+    { "capability": "playbook:read", "scope": "playbook" }
+  ],
+  "examples": [
+    {
+      "name": "select standard triage",
+      "input": { "severity": "high", "signal_type": "ingress" },
+      "output": { "playbook_id": "playbook-standard-triage", "route": "default" }
+    }
+  ]
+}

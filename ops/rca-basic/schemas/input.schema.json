@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://ops/rca-basic/input",
+  "title": "RcaBasicInput",
+  "type": "object",
+  "required": ["signals"],
+  "properties": {
+    "signals": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "evidence_count": { "type": "integer" }
+  },
+  "additionalProperties": true
+}

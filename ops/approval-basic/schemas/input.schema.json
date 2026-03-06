@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://ops/approval-basic/input",
+  "title": "ApprovalBasicInput",
+  "type": "object",
+  "required": ["risk_score"],
+  "properties": {
+    "risk_score": { "type": "number" },
+    "requested_action": { "type": "string" }
+  },
+  "additionalProperties": true
+}

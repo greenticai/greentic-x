@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://ops/rca-basic/output",
+  "title": "RcaBasicOutput",
+  "type": "object",
+  "required": ["summary", "confidence"],
+  "properties": {
+    "summary": { "type": "string" },
+    "confidence": { "type": "string" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,4 @@
+{
+  "input": { "severity": "high", "signal_type": "ingress" },
+  "output": { "playbook_id": "playbook-standard-triage", "route": "default" }
+}

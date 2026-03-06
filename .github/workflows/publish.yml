@@ -1,0 +1,81 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Tag to publish, for example v0.1.0
+        required: true
+        type: string
+  push:
+    tags:
+      - v*
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(python3 ci/publishable_crates.py --format workspace-version)"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            tag="${{ github.event.inputs.release_tag }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+          fi
+          if [ "$tag" != "v$version" ]; then
+            printf 'tag %s does not match Cargo version v%s\n' "$tag" "$version" >&2
+            exit 1
+          fi
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          printf 'tag=%s\n' "$tag" >> "$GITHUB_OUTPUT"
+      - run: bash ci/local_check.sh
+
+  publish-crates:
+    runs-on: ubuntu-latest
+    needs: verify
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Publish crates.io packages
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/publishable_crates.py --format names | while IFS= read -r crate_name; do
+            [ -n "$crate_name" ] || continue
+            cargo publish -p "$crate_name" --dry-run
+            attempts=0
+            until cargo publish -p "$crate_name"; do
+              attempts=$((attempts + 1))
+              if [ "$attempts" -ge 3 ]; then
+                printf 'cargo publish failed for %s after %s attempts\n' "$crate_name" "$attempts" >&2
+                exit 1
+              fi
+              sleep $((attempts * 10))
+            done
+            sleep 30
+          done
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.verify.outputs.tag }}
+          generate_release_notes: true

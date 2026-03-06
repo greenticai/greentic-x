@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://contracts/playbook/resources/playbook-run",
+  "title": "PlaybookRun",
+  "type": "object",
+  "required": ["run_id", "playbook_id", "state"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "playbook_id": { "type": "string" },
+    "selected_variant": { "type": "string" },
+    "status": { "type": "string" },
+    "state": { "type": "string", "enum": ["pending", "running", "completed", "failed"] }
+  },
+  "additionalProperties": true
+}

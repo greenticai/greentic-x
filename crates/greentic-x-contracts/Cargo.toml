@@ -1,0 +1,20 @@
+[package]
+name = "greentic-x-contracts"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/greentic-x-contracts"
+readme.workspace = true
+description = "Bootstrap contract model crate for the Greentic-X workspace."
+publish = false
+
+[dependencies]
+greentic-x-events = { path = "../greentic-x-events" }
+greentic-x-types = { path = "../greentic-x-types" }
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://contracts/case/resources/evidence-entry",
+  "title": "CaseEvidenceEntry",
+  "type": "object",
+  "required": ["kind", "uri"],
+  "properties": {
+    "kind": { "type": "string" },
+    "uri": { "type": "string" },
+    "captured_by": { "type": "string" }
+  },
+  "additionalProperties": true
+}

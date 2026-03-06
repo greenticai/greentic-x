@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://contracts/playbook/resources/step-result",
+  "title": "StepResult",
+  "type": "object",
+  "required": ["step", "status"],
+  "properties": {
+    "step": { "type": "string" },
+    "status": { "type": "string" },
+    "detail": { "type": "string" }
+  },
+  "additionalProperties": true
+}

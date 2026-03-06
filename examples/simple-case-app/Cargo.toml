@@ -1,0 +1,19 @@
+[package]
+name = "simple-case-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+description = "Runnable Greentic-X example showing simple case lifecycle operations."
+publish = false
+
+[dependencies]
+greentic-x-contracts = { path = "../../crates/greentic-x-contracts" }
+greentic-x-runtime = { path = "../../crates/greentic-x-runtime" }
+greentic-x-types = { path = "../../crates/greentic-x-types" }
+serde_json.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,7 @@
+{
+  "input": { "signals": ["ingress_drop"], "evidence_count": 3 },
+  "output": {
+    "summary": "Ingress capacity degradation is the primary hypothesis",
+    "confidence": "medium"
+  }
+}

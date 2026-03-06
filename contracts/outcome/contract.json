@@ -1,0 +1,41 @@
+{
+  "contract_id": "gx.outcome",
+  "version": "v1",
+  "description": "Outcome records for proposals, approvals, and execution tracking.",
+  "resources": [
+    {
+      "resource_type": "outcome",
+      "schema": {
+        "schema_id": "greentic-x://contracts/outcome/resources/outcome",
+        "version": "v1",
+        "uri": "schemas/outcome.schema.json"
+      },
+      "patch_rules": [
+        { "path": "/summary", "kind": "allow" },
+        { "path": "/decision", "kind": "allow" }
+      ],
+      "append_collections": [
+        {
+          "name": "actions",
+          "item_schema": {
+            "schema_id": "greentic-x://contracts/outcome/resources/action",
+            "version": "v1",
+            "uri": "schemas/action.schema.json"
+          },
+          "description": "Append-only action records executed as part of the outcome."
+        }
+      ],
+      "transitions": [
+        { "from_state": "proposed", "to_state": "approved" },
+        { "from_state": "approved", "to_state": "executed" },
+        { "from_state": "approved", "to_state": "rejected" }
+      ]
+    }
+  ],
+  "event_declarations": [
+    { "event_type": "resource_created" },
+    { "event_type": "resource_patched" },
+    { "event_type": "resource_appended" },
+    { "event_type": "resource_transitioned" }
+  ]
+}
