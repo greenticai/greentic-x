@@ -1,0 +1,29 @@
+{
+  "operation_id": "rca-basic",
+  "version": "v1",
+  "description": "Summarise a basic root-cause style assessment from evidence snapshots.",
+  "input_schema": {
+    "schema_id": "greentic-x://ops/rca-basic/input",
+    "version": "v1",
+    "uri": "schemas/input.schema.json"
+  },
+  "output_schema": {
+    "schema_id": "greentic-x://ops/rca-basic/output",
+    "version": "v1",
+    "uri": "schemas/output.schema.json"
+  },
+  "supported_contracts": [
+    { "contract_id": "gx.case", "version": "v1" },
+    { "contract_id": "gx.evidence", "version": "v1" }
+  ],
+  "permissions": [
+    { "capability": "evidence:read", "scope": "evidence" }
+  ],
+  "examples": [
+    {
+      "name": "produce ingress RCA summary",
+      "input": { "signals": ["ingress_drop"], "evidence_count": 3 },
+      "output": { "summary": "Ingress capacity degradation is the primary hypothesis", "confidence": "medium" }
+    }
+  ]
+}

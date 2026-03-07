@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://ops/approval-basic/output",
+  "title": "ApprovalBasicOutput",
+  "type": "object",
+  "required": ["approved"],
+  "properties": {
+    "approved": { "type": "boolean" },
+    "reason": { "type": "string" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,53 @@
+{
+  "contract_id": "gx.case",
+  "version": "v1",
+  "description": "Shared operational case record for triage, coordination, and closure.",
+  "resources": [
+    {
+      "resource_type": "case",
+      "schema": {
+        "schema_id": "greentic-x://contracts/case/resources/case",
+        "version": "v1",
+        "uri": "schemas/case.schema.json"
+      },
+      "patch_rules": [
+        { "path": "/title", "kind": "allow" },
+        { "path": "/severity", "kind": "allow" },
+        { "path": "/summary", "kind": "allow" },
+        { "path": "/owner", "kind": "allow" }
+      ],
+      "append_collections": [
+        {
+          "name": "evidence",
+          "item_schema": {
+            "schema_id": "greentic-x://contracts/case/resources/evidence-entry",
+            "version": "v1",
+            "uri": "schemas/evidence-entry.schema.json"
+          },
+          "description": "Append-only evidence references collected during case handling."
+        }
+      ],
+      "transitions": [
+        { "from_state": "new", "to_state": "triaged" },
+        { "from_state": "triaged", "to_state": "investigating" },
+        { "from_state": "investigating", "to_state": "resolved" },
+        { "from_state": "resolved", "to_state": "closed" }
+      ]
+    }
+  ],
+  "compatibility": [
+    {
+      "schema": {
+        "schema_id": "greentic-x://contracts/case/compatibility",
+        "version": "v1"
+      },
+      "mode": "backward_compatible"
+    }
+  ],
+  "event_declarations": [
+    { "event_type": "resource_created" },
+    { "event_type": "resource_patched" },
+    { "event_type": "resource_appended" },
+    { "event_type": "resource_transitioned" }
+  ]
+}

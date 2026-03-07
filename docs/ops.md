@@ -58,6 +58,10 @@ The repo currently includes:
 
 These are intentionally deterministic, generic reference ops. They show extension patterns without pretending to be production integrations.
 
+The same reference material is also mirrored into the source pack at
+`packs/greentic-x-ops-reference/assets/ops/` so it can be bundled with
+`greentic-pack`.
+
 ## Extension Philosophy
 
 Ops should stay:
@@ -73,3 +77,6 @@ The first cut focuses on descriptors and examples. Future work may add:
 - richer harnesses
 - packaging and distribution flows
 - tighter runtime integration
+
+The packaging path now exists via the source pack scaffold, but the generated
+`ops-provider` component is still placeholder-only.

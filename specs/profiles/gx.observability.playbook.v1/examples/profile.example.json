@@ -1,0 +1,13 @@
+{
+  "profile_id": "obs-playbook-1",
+  "resolver": "resolve.by_name",
+  "query_ops": [
+    "query.resource",
+    "query.linked"
+  ],
+  "analysis_ops": [
+    "analyse.threshold"
+  ],
+  "present_op": "present.summary",
+  "split_join": null
+}

@@ -1,0 +1,27 @@
+{
+  "run_id": "run-1",
+  "flow_id": "resolve-query-analyse-present",
+  "status": "succeeded",
+  "input": {
+    "query": "case-42"
+  },
+  "step_states": [
+    {
+      "step_id": "resolve",
+      "status": "succeeded"
+    },
+    {
+      "step_id": "query",
+      "status": "succeeded"
+    },
+    {
+      "step_id": "present",
+      "status": "succeeded"
+    }
+  ],
+  "branch_states": [],
+  "evidence_refs": [],
+  "result": {
+    "view_ref": "view-1"
+  }
+}

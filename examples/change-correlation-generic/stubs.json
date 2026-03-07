@@ -1,0 +1,66 @@
+{
+  "resolvers": [
+    {
+      "resolver_id": "resolve.by_alias",
+      "status": "resolved",
+      "selected": {
+        "resource": {
+          "contract_id": "gx.resource",
+          "resource_type": "change-set",
+          "resource_id": "change-01"
+        },
+        "display": "Change set 01",
+        "confidence": 0.95
+      }
+    }
+  ],
+  "operations": [
+    {
+      "operation_id": "query.resource",
+      "output": {
+        "events": [
+          { "offset": -5, "kind": "change" },
+          { "offset": 1, "kind": "alarm" },
+          { "offset": 3, "kind": "alarm" }
+        ]
+      },
+      "evidence": [
+        {
+          "evidence_id": "corr-query",
+          "evidence_type": "query-result",
+          "producer": "query.resource",
+          "timestamp": "2026-01-01T02:00:00Z",
+          "summary": "Candidate events loaded"
+        }
+      ]
+    },
+    {
+      "operation_id": "correlate.time_window",
+      "output": {
+        "ranked": [
+          { "offset": 1, "score": 0.9 },
+          { "offset": 3, "score": 0.6 }
+        ]
+      },
+      "evidence": [
+        {
+          "evidence_id": "corr-analysis",
+          "evidence_type": "correlation-result",
+          "producer": "correlate.time_window",
+          "timestamp": "2026-01-01T02:01:00Z",
+          "summary": "Events ranked by proximity"
+        }
+      ]
+    },
+    {
+      "operation_id": "present.timeline",
+      "output": {
+        "timeline": [
+          { "offset": -5, "kind": "change" },
+          { "offset": 1, "kind": "alarm", "score": 0.9 },
+          { "offset": 3, "kind": "alarm", "score": 0.6 }
+        ]
+      }
+    }
+  ]
+}

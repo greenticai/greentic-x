@@ -1,0 +1,28 @@
+{
+  "canonical_extension_key": "greentic.ext.capabilities.v1",
+  "capabilities_extension": {
+    "offers": [],
+    "schema_version": 1
+  },
+  "catalog_ref": "file:///projects/ai/greentic-ng/greentic-pack/docs/extensions_capability_packs.catalog.v1.json",
+  "edit_answers": {
+    "cap_id": "greentic.cap.contract.bundle.v1",
+    "component_ref": "contract-hook",
+    "create_offer": "false",
+    "entry_label": "contract",
+    "hook_op_names": "",
+    "offer_id": "greentic-x-contracts-reference",
+    "op": "validate",
+    "priority": "0",
+    "qa_ref": "qa/contract-setup.json",
+    "requires_setup": "false",
+    "version": "v1"
+  },
+  "extension_type": "contract",
+  "operation": "create_extension_pack",
+  "template_id": "contract-basic",
+  "template_qa_answers": {
+    "display_name": "Greentic-X Contracts Reference Pack",
+    "pack_id": "greentic.x.contracts.reference"
+  }
+}

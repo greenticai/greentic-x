@@ -1,0 +1,4 @@
+{
+  "input": { "risk_score": 0.2, "requested_action": "reroute" },
+  "output": { "approved": true, "reason": "risk score within threshold" }
+}

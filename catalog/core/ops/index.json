@@ -1,0 +1,72 @@
+{
+  "catalog_id": "gx.core.ops",
+  "version": "1.0.0",
+  "entries": [
+    {
+      "operation_id": "query.resource",
+      "stage": "query",
+      "input_spec": "gx.resource.v1",
+      "output_spec": "gx.resource.v1"
+    },
+    {
+      "operation_id": "query.linked",
+      "stage": "query",
+      "input_spec": "gx.resource.v1",
+      "output_spec": "gx.resource.v1"
+    },
+    {
+      "operation_id": "transform.filter",
+      "stage": "transform",
+      "input_spec": "gx.resource.v1",
+      "output_spec": "gx.resource.v1"
+    },
+    {
+      "operation_id": "transform.group_by",
+      "stage": "transform",
+      "input_spec": "gx.resource.v1",
+      "output_spec": "gx.resource.v1"
+    },
+    {
+      "operation_id": "analyse.threshold",
+      "stage": "analyse",
+      "input_spec": "gx.resource.v1",
+      "output_spec": "gx.evidence.v1"
+    },
+    {
+      "operation_id": "analyse.percentile",
+      "stage": "analyse",
+      "input_spec": "gx.resource.v1",
+      "output_spec": "gx.evidence.v1"
+    },
+    {
+      "operation_id": "correlate.join",
+      "stage": "correlate",
+      "input_spec": "gx.evidence.v1",
+      "output_spec": "gx.evidence.v1"
+    },
+    {
+      "operation_id": "correlate.time_window",
+      "stage": "correlate",
+      "input_spec": "gx.evidence.v1",
+      "output_spec": "gx.evidence.v1"
+    },
+    {
+      "operation_id": "present.summary",
+      "stage": "present",
+      "input_spec": "gx.evidence.v1",
+      "output_spec": "gx.view.v1"
+    },
+    {
+      "operation_id": "present.table",
+      "stage": "present",
+      "input_spec": "gx.evidence.v1",
+      "output_spec": "gx.view.v1"
+    },
+    {
+      "operation_id": "present.timeline",
+      "stage": "present",
+      "input_spec": "gx.evidence.v1",
+      "output_spec": "gx.view.v1"
+    }
+  ]
+}

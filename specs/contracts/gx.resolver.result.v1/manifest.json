@@ -1,0 +1,11 @@
+{
+  "spec_id": "gx.resolver.result.v1",
+  "kind": "resolver-result",
+  "version": "1.0.0",
+  "title": "Greentic-X Resolver Result",
+  "description": "Normalized resolver result envelope with candidate lists and selected result metadata.",
+  "schema_file": "schema.json",
+  "example_files": [
+    "examples/resolver-result.example.json"
+  ]
+}

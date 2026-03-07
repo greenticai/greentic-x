@@ -1,0 +1,19 @@
+{
+  "view_id": "view-1",
+  "view_type": "summary",
+  "title": "Ingress Alarm Summary",
+  "summary": "Ingress drop aligns with a recent change window.",
+  "primary_data_refs": [
+    "evidence-17",
+    "case-42"
+  ],
+  "channel_hints": [
+    "summary-card"
+  ],
+  "next_actions": [
+    {
+      "label": "Open RCA",
+      "target_ref": "case-42"
+    }
+  ]
+}

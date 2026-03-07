@@ -1,0 +1,85 @@
+{
+  "resolvers": [
+    {
+      "resolver_id": "resolve.by_name",
+      "status": "resolved",
+      "selected": {
+        "resource": {
+          "contract_id": "gx.resource",
+          "resource_type": "entity",
+          "resource_id": "entity-top"
+        },
+        "display": "Top contributors set",
+        "confidence": 0.98
+      }
+    }
+  ],
+  "operations": [
+    {
+      "operation_id": "query.resource",
+      "output": {
+        "samples": [
+          { "entity": "alpha", "value": 42 },
+          { "entity": "beta", "value": 30 }
+        ]
+      },
+      "evidence": [
+        {
+          "evidence_id": "top-query",
+          "evidence_type": "query-result",
+          "producer": "query.resource",
+          "timestamp": "2026-01-01T00:00:00Z",
+          "summary": "Base contributor samples loaded"
+        }
+      ]
+    },
+    {
+      "operation_id": "query.linked",
+      "output": {
+        "linked": [
+          { "entity": "alpha", "value": 42 },
+          { "entity": "beta", "value": 30 },
+          { "entity": "gamma", "value": 18 }
+        ]
+      },
+      "evidence": [
+        {
+          "evidence_id": "top-linked",
+          "evidence_type": "linked-query-result",
+          "producer": "query.linked",
+          "timestamp": "2026-01-01T00:01:00Z",
+          "summary": "Linked contributor samples loaded"
+        }
+      ]
+    },
+    {
+      "operation_id": "analyse.percentile",
+      "output": {
+        "ranked": [
+          { "entity": "alpha", "value": 42 },
+          { "entity": "beta", "value": 30 }
+        ],
+        "percentile": 95
+      },
+      "evidence": [
+        {
+          "evidence_id": "top-analysis",
+          "evidence_type": "analysis-result",
+          "producer": "analyse.percentile",
+          "timestamp": "2026-01-01T00:02:00Z",
+          "summary": "Top contributors ranked by percentile"
+        }
+      ]
+    },
+    {
+      "operation_id": "present.table",
+      "output": {
+        "title": "Top contributors",
+        "table": [
+          { "entity": "alpha", "value": 42 },
+          { "entity": "beta", "value": 30 }
+        ]
+      }
+    }
+  ]
+}

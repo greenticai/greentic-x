@@ -23,8 +23,8 @@
 //! ```
 
 use greentic_x_types::{
-    CompatibilityReference, ContractId, ContractVersion, OperationId, Provenance, ResourceId,
-    ResourceTypeId, Revision,
+    CompatibilityReference, ContractId, ContractVersion, LinkTypeId, OperationId, Provenance,
+    ResolverId, ResourceId, ResourceRef, ResourceTypeId, Revision,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -94,6 +94,16 @@ impl EventEnvelope<ResourceTransitioned> {
     }
 }
 
+impl EventEnvelope<ResourceLinked> {
+    pub fn resource_linked(
+        event_id: impl Into<String>,
+        metadata: EventMetadata,
+        payload: ResourceLinked,
+    ) -> Self {
+        Self::new(event_id, EventType::ResourceLinked, metadata, payload)
+    }
+}
+
 impl EventEnvelope<OperationInstalled> {
     pub fn operation_installed(
         event_id: impl Into<String>,
@@ -111,6 +121,26 @@ impl EventEnvelope<OperationExecuted> {
         payload: OperationExecuted,
     ) -> Self {
         Self::new(event_id, EventType::OperationExecuted, metadata, payload)
+    }
+}
+
+impl EventEnvelope<ResolverInstalled> {
+    pub fn resolver_installed(
+        event_id: impl Into<String>,
+        metadata: EventMetadata,
+        payload: ResolverInstalled,
+    ) -> Self {
+        Self::new(event_id, EventType::ResolverInstalled, metadata, payload)
+    }
+}
+
+impl EventEnvelope<ResolverExecuted> {
+    pub fn resolver_executed(
+        event_id: impl Into<String>,
+        metadata: EventMetadata,
+        payload: ResolverExecuted,
+    ) -> Self {
+        Self::new(event_id, EventType::ResolverExecuted, metadata, payload)
     }
 }
 
@@ -142,8 +172,11 @@ pub enum EventType {
     ResourcePatched,
     ResourceAppended,
     ResourceTransitioned,
+    ResourceLinked,
     OperationInstalled,
     OperationExecuted,
+    ResolverInstalled,
+    ResolverExecuted,
     ContractInstalled,
     ContractActivated,
 }
@@ -221,6 +254,16 @@ pub struct ResourceTransitioned {
     pub revision: Revision,
 }
 
+/// Payload for adding or updating a typed resource relation.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ResourceLinked {
+    pub link_type: LinkTypeId,
+    pub from: ResourceRef,
+    pub to: ResourceRef,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<Value>,
+}
+
 /// Payload for op registration.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OperationInstalled {
@@ -240,11 +283,40 @@ pub struct OperationExecuted {
     pub output: Option<Value>,
 }
 
+/// Payload for resolver registration.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ResolverInstalled {
+    pub resolver_id: ResolverId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_type: Option<ResourceTypeId>,
+}
+
+/// Payload for resolver execution.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ResolverExecuted {
+    pub resolver_id: ResolverId,
+    pub invocation_id: String,
+    pub status: ResolverExecutionStatus,
+    pub candidate_count: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selected: Option<ResourceRef>,
+}
+
 /// Outcome status for operation execution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum OperationExecutionStatus {
     Succeeded,
+    Failed,
+}
+
+/// Outcome status for resolver execution.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ResolverExecutionStatus {
+    Resolved,
+    Ambiguous,
+    NotFound,
     Failed,
 }
 
@@ -344,5 +416,56 @@ mod tests {
         assert!(contract_json.contains("\"backward_compatible\""));
         assert!(op_json.contains("\"event_type\":\"operation_executed\""));
         assert!(op_json.contains("\"status\":\"succeeded\""));
+    }
+
+    #[test]
+    fn serializes_link_and_resolver_events() {
+        let link_event = EventEnvelope::resource_linked(
+            "evt-link",
+            EventMetadata::new(Provenance::new(
+                ActorRef::service("runtime").expect("static actor id should be valid"),
+            )),
+            ResourceLinked {
+                link_type: LinkTypeId::new("attached_to")
+                    .expect("static link type should be valid"),
+                from: ResourceRef::new(
+                    ContractId::new("gx.case").expect("static contract id should be valid"),
+                    ResourceTypeId::new("case").expect("static resource type should be valid"),
+                    ResourceId::new("case-1").expect("static resource id should be valid"),
+                ),
+                to: ResourceRef::new(
+                    ContractId::new("gx.evidence").expect("static contract id should be valid"),
+                    ResourceTypeId::new("evidence").expect("static resource type should be valid"),
+                    ResourceId::new("evidence-1").expect("static resource id should be valid"),
+                ),
+                metadata: Some(json!({"source": "triage"})),
+            },
+        );
+        let resolver_event = EventEnvelope::resolver_executed(
+            "evt-resolve",
+            EventMetadata::new(Provenance::new(
+                ActorRef::service("resolver-runtime").expect("static actor id should be valid"),
+            )),
+            ResolverExecuted {
+                resolver_id: ResolverId::new("resolve.by_name")
+                    .expect("static resolver id should be valid"),
+                invocation_id: "resolve-1".to_owned(),
+                status: ResolverExecutionStatus::Resolved,
+                candidate_count: 1,
+                selected: Some(ResourceRef::new(
+                    ContractId::new("gx.case").expect("static contract id should be valid"),
+                    ResourceTypeId::new("case").expect("static resource type should be valid"),
+                    ResourceId::new("case-1").expect("static resource id should be valid"),
+                )),
+            },
+        );
+
+        let link_json = serde_json::to_string(&link_event).expect("link event must serialize");
+        let resolver_json =
+            serde_json::to_string(&resolver_event).expect("resolver event must serialize");
+
+        assert!(link_json.contains("\"event_type\":\"resource_linked\""));
+        assert!(resolver_json.contains("\"event_type\":\"resolver_executed\""));
+        assert!(resolver_json.contains("\"status\":\"resolved\""));
     }
 }

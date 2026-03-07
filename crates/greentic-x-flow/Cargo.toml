@@ -1,0 +1,21 @@
+[package]
+name = "greentic-x-flow"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+greentic-x-ops = { path = "../greentic-x-ops" }
+greentic-x-runtime = { path = "../greentic-x-runtime" }
+greentic-x-types = { path = "../greentic-x-types" }
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

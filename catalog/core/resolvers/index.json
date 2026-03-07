@@ -1,0 +1,21 @@
+{
+  "catalog_id": "gx.core.resolvers",
+  "version": "1.0.0",
+  "entries": [
+    {
+      "resolver_id": "resolve.by_name",
+      "description": "Resolve a resource by exact or normalized name.",
+      "output_spec": "gx.resolver.result.v1"
+    },
+    {
+      "resolver_id": "resolve.by_alias",
+      "description": "Resolve a resource through alternate names or aliases.",
+      "output_spec": "gx.resolver.result.v1"
+    },
+    {
+      "resolver_id": "resolve.by_label",
+      "description": "Resolve resources by label filters.",
+      "output_spec": "gx.resolver.result.v1"
+    }
+  ]
+}

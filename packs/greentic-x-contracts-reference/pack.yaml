@@ -1,0 +1,38 @@
+pack_id: greentic.x.contracts.reference
+version: 0.1.0
+kind: application
+publisher: Greentic
+components:
+- id: contract-hook
+  version: 0.1.0
+  world: greentic:provider/schema-core@1.0.0
+  supports: []
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/contract-hook/component.wasm
+  operations:
+  - name: validate
+    input_schema: {}
+    output_schema: {}
+dependencies: []
+flows:
+- id: main
+  file: flows/main.ygtc
+  tags: []
+  entrypoints:
+  - default
+assets: []
+extensions:
+  greentic.ext.capabilities.v1:
+    kind: greentic.ext.capabilities.v1
+    version: 1.0.0
+    inline:
+      offers: []
+      schema_version: 1

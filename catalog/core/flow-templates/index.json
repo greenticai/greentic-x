@@ -1,0 +1,43 @@
+{
+  "catalog_id": "gx.core.flow-templates",
+  "version": "1.0.0",
+  "entries": [
+    {
+      "template_id": "resolve-query-analyse-present",
+      "step_kinds": [
+        "resolve",
+        "query",
+        "analyse",
+        "present"
+      ]
+    },
+    {
+      "template_id": "resolve-query-correlate-rank-present",
+      "step_kinds": [
+        "resolve",
+        "query",
+        "correlate",
+        "present"
+      ]
+    },
+    {
+      "template_id": "resolve-expand-split-join-synthesise",
+      "step_kinds": [
+        "resolve",
+        "query",
+        "split",
+        "join",
+        "present"
+      ]
+    },
+    {
+      "template_id": "resolve-query-evaluate-present",
+      "step_kinds": [
+        "resolve",
+        "query",
+        "analyse",
+        "present"
+      ]
+    }
+  ]
+}

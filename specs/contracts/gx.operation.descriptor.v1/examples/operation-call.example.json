@@ -1,0 +1,19 @@
+{
+  "invocation_id": "invoke-17",
+  "operation_id": "present.summary",
+  "run_id": "run-1",
+  "scope_refs": [],
+  "input": {
+    "summary": "Ingress alarm correlated with change event"
+  },
+  "constraints": null,
+  "context": {
+    "channel": "generic"
+  },
+  "provenance": {
+    "actor": {
+      "kind": "service",
+      "actor_id": "flow-engine"
+    }
+  }
+}

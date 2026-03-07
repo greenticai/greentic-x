@@ -58,13 +58,15 @@ Do not duplicate cross-cutting models casually. If a new shared concept is neces
 
 ## Packaging and Tooling
 
-Contract and op artifacts are currently local JSON assets, not generated `.gtpack` bundles.
+Contract and op artifacts now have a first-cut packaging path through the
+wizard-backed source packs under `packs/`.
 
-Tooling integration with `greentic-pack` wizard should happen only after:
+The current governance caveat is narrower:
 
-- the manifest shapes are stable enough
-- the packaging story is clear
-- the repo is ready to support generated artifacts without churn
+- the pack scaffolds are now real and buildable
+- the bundled component providers are still placeholders
+- the mirrored assets in `assets/contracts/` and `assets/ops/` remain the
+  primary source of value
 
 ## Current Governance Gap
 

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/specs/gx.operation.descriptor.v1/schema.json",
+  "title": "gx.operation.descriptor.v1",
+  "type": "object",
+  "required": [
+    "operation_id",
+    "version",
+    "description",
+    "input_schema",
+    "output_schema"
+  ],
+  "properties": {
+    "operation_id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "input_schema": {
+      "type": "object"
+    },
+    "output_schema": {
+      "type": "object"
+    },
+    "compatibility": {
+      "type": "array"
+    },
+    "supported_contracts": {
+      "type": "array"
+    },
+    "permissions": {
+      "type": "array"
+    },
+    "examples": {
+      "type": "array"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

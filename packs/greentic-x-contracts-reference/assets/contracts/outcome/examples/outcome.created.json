@@ -1,0 +1,6 @@
+{
+  "outcome_id": "outcome-9",
+  "summary": "Route traffic away from degraded ingress",
+  "decision": "approved",
+  "state": "approved"
+}

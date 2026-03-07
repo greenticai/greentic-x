@@ -1,0 +1,84 @@
+{
+  "flow_id": "top.contributors.generic",
+  "steps": [
+    {
+      "id": "resolve",
+      "kind": {
+        "output_key": "resolved",
+        "query": {
+          "kind": "input",
+          "value": "query"
+        },
+        "resolver_id": "resolve.by_name",
+        "type": "resolve"
+      }
+    },
+    {
+      "id": "query_0",
+      "kind": {
+        "input": {
+          "kind": "context",
+          "value": "resolved"
+        },
+        "operation_id": "query.resource",
+        "output_key": "query_0_result",
+        "type": "call"
+      }
+    },
+    {
+      "id": "query_1",
+      "kind": {
+        "input": {
+          "kind": "context",
+          "value": "query_0_result.output"
+        },
+        "operation_id": "query.linked",
+        "output_key": "query_1_result",
+        "type": "call"
+      }
+    },
+    {
+      "id": "analyse_0",
+      "kind": {
+        "input": {
+          "kind": "context",
+          "value": "query_1_result.output"
+        },
+        "operation_id": "analyse.percentile",
+        "output_key": "analyse_0_result",
+        "type": "call"
+      }
+    },
+    {
+      "id": "present",
+      "kind": {
+        "input": {
+          "kind": "context",
+          "value": "analyse_0_result"
+        },
+        "operation_id": "present.table",
+        "output_key": "present_result",
+        "type": "call"
+      }
+    },
+    {
+      "id": "return",
+      "kind": {
+        "output": {
+          "kind": "context",
+          "value": "present_result.output"
+        },
+        "render": {
+          "renderer_id": "noop.summary",
+          "source": {
+            "kind": "all_evidence"
+          },
+          "summary": "Compiled from gx.observability.playbook.v1",
+          "title": "top.contributors.generic summary",
+          "view_id": "summary-card"
+        },
+        "type": "return"
+      }
+    }
+  ]
+}

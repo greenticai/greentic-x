@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/specs/gx.view.v1/schema.json",
+  "title": "gx.view.v1",
+  "type": "object",
+  "required": [
+    "view_id",
+    "view_type",
+    "title",
+    "summary",
+    "primary_data_refs"
+  ],
+  "properties": {
+    "view_id": {
+      "type": "string"
+    },
+    "view_type": {
+      "type": "string",
+      "enum": [
+        "summary",
+        "table",
+        "timeline",
+        "chart-series",
+        "card-model"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "primary_data_refs": {
+      "type": "array"
+    },
+    "channel_hints": {
+      "type": "array"
+    },
+    "next_actions": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

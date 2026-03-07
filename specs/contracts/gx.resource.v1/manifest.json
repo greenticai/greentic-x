@@ -1,0 +1,11 @@
+{
+  "spec_id": "gx.resource.v1",
+  "kind": "resource-envelope",
+  "version": "1.0.0",
+  "title": "Greentic-X Resource Envelope",
+  "description": "Generic resource envelope carrying identity, labels, properties, link refs, and revision metadata.",
+  "schema_file": "schema.json",
+  "example_files": [
+    "examples/resource.example.json"
+  ]
+}

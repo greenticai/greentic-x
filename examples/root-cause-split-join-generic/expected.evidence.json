@@ -1,0 +1,30 @@
+[
+  {
+    "evidence_id": "split-attribution-analysis",
+    "evidence_type": "analysis-result",
+    "producer": "analyse.percentile",
+    "timestamp": "2026-01-01T03:01:30Z",
+    "summary": "Attribution branch ranked nearby changes"
+  },
+  {
+    "evidence_id": "split-attribution-query",
+    "evidence_type": "query-result",
+    "producer": "query.linked",
+    "timestamp": "2026-01-01T03:00:30Z",
+    "summary": "Attribution candidates loaded"
+  },
+  {
+    "evidence_id": "split-telemetry-analysis",
+    "evidence_type": "analysis-result",
+    "producer": "analyse.threshold",
+    "timestamp": "2026-01-01T03:01:00Z",
+    "summary": "Telemetry branch threshold findings"
+  },
+  {
+    "evidence_id": "split-telemetry-query",
+    "evidence_type": "query-result",
+    "producer": "query.resource",
+    "timestamp": "2026-01-01T03:00:00Z",
+    "summary": "Telemetry signals loaded"
+  }
+]

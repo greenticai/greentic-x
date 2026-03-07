@@ -1,0 +1,7 @@
+{
+  "flow_id": "entity.utilisation.generic",
+  "version": "v1",
+  "description": "Profile-driven generic utilisation threshold analysis example.",
+  "flow": "flow.json",
+  "stubs": "stubs.json"
+}

@@ -1,0 +1,14 @@
+{
+  "invocation_id": "invoke-17",
+  "operation_id": "present.summary",
+  "status": "succeeded",
+  "output": {
+    "view_type": "summary",
+    "title": "Ingress Alarm Summary"
+  },
+  "evidence_refs": [],
+  "warnings": [],
+  "view_hints": [
+    "summary"
+  ]
+}

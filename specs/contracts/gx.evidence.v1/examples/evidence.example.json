@@ -1,0 +1,19 @@
+{
+  "evidence_id": "evidence-17",
+  "type": "summary-stats",
+  "producer": "analyse.threshold",
+  "timestamp": "2026-03-07T12:00:00Z",
+  "subject_refs": [
+    {
+      "contract_id": "gx.case",
+      "resource_type": "case",
+      "resource_id": "case-42"
+    }
+  ],
+  "summary": "Ingress packet drop exceeded threshold for 7 minutes.",
+  "payload": {
+    "metric": "drop_rate",
+    "value": 0.31
+  },
+  "hash": null
+}

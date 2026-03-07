@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://contracts/case/resources/case",
+  "title": "Case",
+  "type": "object",
+  "required": ["case_id", "title", "state"],
+  "properties": {
+    "case_id": { "type": "string" },
+    "title": { "type": "string" },
+    "summary": { "type": "string" },
+    "severity": { "type": "string" },
+    "owner": { "type": "string" },
+    "state": { "type": "string", "enum": ["new", "triaged", "investigating", "resolved", "closed"] }
+  },
+  "additionalProperties": true
+}

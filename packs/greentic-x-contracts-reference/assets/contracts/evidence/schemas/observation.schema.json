@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://contracts/evidence/resources/observation",
+  "title": "Observation",
+  "type": "object",
+  "required": ["observed_at", "detail"],
+  "properties": {
+    "observed_at": { "type": "string" },
+    "detail": { "type": "string" },
+    "source": { "type": "string" }
+  },
+  "additionalProperties": true
+}

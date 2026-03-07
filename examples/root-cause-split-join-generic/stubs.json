@@ -1,0 +1,98 @@
+{
+  "resolvers": [
+    {
+      "resolver_id": "resolve.by_name",
+      "status": "resolved",
+      "selected": {
+        "resource": {
+          "contract_id": "gx.resource",
+          "resource_type": "incident",
+          "resource_id": "incident-01"
+        },
+        "display": "Incident 01",
+        "confidence": 0.97
+      }
+    }
+  ],
+  "operations": [
+    {
+      "operation_id": "query.resource",
+      "output": {
+        "telemetry": [
+          { "signal": "cpu", "value": 91 },
+          { "signal": "latency", "value": 210 }
+        ]
+      },
+      "evidence": [
+        {
+          "evidence_id": "split-telemetry-query",
+          "evidence_type": "query-result",
+          "producer": "query.resource",
+          "timestamp": "2026-01-01T03:00:00Z",
+          "summary": "Telemetry signals loaded"
+        }
+      ]
+    },
+    {
+      "operation_id": "analyse.threshold",
+      "output": {
+        "telemetry_findings": [
+          { "signal": "cpu", "breach": true },
+          { "signal": "latency", "breach": true }
+        ]
+      },
+      "evidence": [
+        {
+          "evidence_id": "split-telemetry-analysis",
+          "evidence_type": "analysis-result",
+          "producer": "analyse.threshold",
+          "timestamp": "2026-01-01T03:01:00Z",
+          "summary": "Telemetry branch threshold findings"
+        }
+      ]
+    },
+    {
+      "operation_id": "query.linked",
+      "output": {
+        "changes": [
+          { "change_id": "chg-1", "distance": 1 },
+          { "change_id": "chg-2", "distance": 4 }
+        ]
+      },
+      "evidence": [
+        {
+          "evidence_id": "split-attribution-query",
+          "evidence_type": "query-result",
+          "producer": "query.linked",
+          "timestamp": "2026-01-01T03:00:30Z",
+          "summary": "Attribution candidates loaded"
+        }
+      ]
+    },
+    {
+      "operation_id": "analyse.percentile",
+      "output": {
+        "attribution_findings": [
+          { "change_id": "chg-1", "score": 0.93 },
+          { "change_id": "chg-2", "score": 0.52 }
+        ]
+      },
+      "evidence": [
+        {
+          "evidence_id": "split-attribution-analysis",
+          "evidence_type": "analysis-result",
+          "producer": "analyse.percentile",
+          "timestamp": "2026-01-01T03:01:30Z",
+          "summary": "Attribution branch ranked nearby changes"
+        }
+      ]
+    },
+    {
+      "operation_id": "present.summary",
+      "output": {
+        "headline": "Telemetry and attribution evidence synthesised",
+        "confidence": "high"
+      }
+    }
+  ]
+}

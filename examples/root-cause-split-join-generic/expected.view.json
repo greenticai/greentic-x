@@ -1,0 +1,42 @@
+{
+  "view_id": "summary-card",
+  "view_type": "summary",
+  "title": "root.cause.split.join.generic summary",
+  "summary": "Compiled from gx.observability.playbook.v1",
+  "primary_data_refs": [
+    "split-attribution-analysis",
+    "split-attribution-query",
+    "split-telemetry-analysis",
+    "split-telemetry-query"
+  ],
+  "body": [
+    {
+      "evidence_id": "split-attribution-analysis",
+      "evidence_type": "analysis-result",
+      "producer": "analyse.percentile",
+      "summary": "Attribution branch ranked nearby changes",
+      "timestamp": "2026-01-01T03:01:30Z"
+    },
+    {
+      "evidence_id": "split-attribution-query",
+      "evidence_type": "query-result",
+      "producer": "query.linked",
+      "summary": "Attribution candidates loaded",
+      "timestamp": "2026-01-01T03:00:30Z"
+    },
+    {
+      "evidence_id": "split-telemetry-analysis",
+      "evidence_type": "analysis-result",
+      "producer": "analyse.threshold",
+      "summary": "Telemetry branch threshold findings",
+      "timestamp": "2026-01-01T03:01:00Z"
+    },
+    {
+      "evidence_id": "split-telemetry-query",
+      "evidence_type": "query-result",
+      "producer": "query.resource",
+      "summary": "Telemetry signals loaded",
+      "timestamp": "2026-01-01T03:00:00Z"
+    }
+  ]
+}

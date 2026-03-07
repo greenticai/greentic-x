@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Greentic-X Runtime Capability Reference Pack input",
+  "type": "object",
+  "properties": {
+    "payload": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

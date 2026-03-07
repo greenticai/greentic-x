@@ -1,0 +1,13 @@
+{
+  "profile_id": "top.contributors.generic",
+  "resolver": "resolve.by_name",
+  "query_ops": [
+    "query.resource",
+    "query.linked"
+  ],
+  "analysis_ops": [
+    "analyse.percentile"
+  ],
+  "present_op": "present.table",
+  "split_join": null
+}

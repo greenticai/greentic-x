@@ -1,0 +1,50 @@
+pack_id: greentic.x.runtime.capability.reference
+version: 0.1.0
+kind: application
+publisher: Greentic
+components:
+- id: runtime-provider
+  version: 0.1.0
+  world: greentic:provider/schema-core@1.0.0
+  supports: []
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/runtime-provider/component.wasm
+  operations:
+  - name: evaluate
+    input_schema: {}
+    output_schema: {}
+dependencies: []
+flows:
+- id: main
+  file: flows/main.ygtc
+  tags: []
+  entrypoints:
+  - default
+assets: []
+extensions:
+  greentic.ext.capabilities.v1:
+    kind: greentic.ext.capabilities.v1
+    version: 1.0.0
+    inline:
+      offers:
+      - applies_to:
+          op_names:
+          - contract.validate
+          - op.execute
+        cap_id: greentic.cap.runtime.execution.v1
+        offer_id: greentic-x-runtime-evaluate
+        priority: 10
+        provider:
+          component_ref: runtime-provider
+          op: evaluate
+        requires_setup: false
+        version: v1
+      schema_version: 1

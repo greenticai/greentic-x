@@ -1,0 +1,7 @@
+{
+  "flow_id": "top.contributors.generic",
+  "version": "v1",
+  "description": "Profile-driven generic top contributors analysis example.",
+  "flow": "flow.json",
+  "stubs": "stubs.json"
+}

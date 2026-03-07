@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://contracts/evidence/resources/evidence",
+  "title": "Evidence",
+  "type": "object",
+  "required": ["evidence_id", "kind", "state"],
+  "properties": {
+    "evidence_id": { "type": "string" },
+    "kind": { "type": "string" },
+    "summary": { "type": "string" },
+    "confidence": { "type": "string" },
+    "state": { "type": "string", "enum": ["draft", "collected", "verified"] }
+  },
+  "additionalProperties": true
+}

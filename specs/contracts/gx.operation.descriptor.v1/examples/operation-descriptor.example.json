@@ -1,0 +1,27 @@
+{
+  "operation_id": "present.summary",
+  "version": "v1",
+  "description": "Render a neutral summary from upstream evidence or aggregated results.",
+  "input_schema": {
+    "schema_id": "gx.view.summary.input",
+    "version": "v1"
+  },
+  "output_schema": {
+    "schema_id": "gx.view.v1",
+    "version": "v1"
+  },
+  "compatibility": [],
+  "supported_contracts": [],
+  "permissions": [
+    {
+      "capability": "view:render",
+      "scope": "summary"
+    }
+  ],
+  "examples": [],
+  "risk_level": "low",
+  "tags": [
+    "present",
+    "view"
+  ]
+}

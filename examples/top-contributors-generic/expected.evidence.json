@@ -1,0 +1,23 @@
+[
+  {
+    "evidence_id": "top-analysis",
+    "evidence_type": "analysis-result",
+    "producer": "analyse.percentile",
+    "timestamp": "2026-01-01T00:02:00Z",
+    "summary": "Top contributors ranked by percentile"
+  },
+  {
+    "evidence_id": "top-linked",
+    "evidence_type": "linked-query-result",
+    "producer": "query.linked",
+    "timestamp": "2026-01-01T00:01:00Z",
+    "summary": "Linked contributor samples loaded"
+  },
+  {
+    "evidence_id": "top-query",
+    "evidence_type": "query-result",
+    "producer": "query.resource",
+    "timestamp": "2026-01-01T00:00:00Z",
+    "summary": "Base contributor samples loaded"
+  }
+]

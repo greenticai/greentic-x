@@ -1,0 +1,34 @@
+{
+  "view_id": "summary-card",
+  "view_type": "summary",
+  "title": "top.contributors.generic summary",
+  "summary": "Compiled from gx.observability.playbook.v1",
+  "primary_data_refs": [
+    "top-analysis",
+    "top-linked",
+    "top-query"
+  ],
+  "body": [
+    {
+      "evidence_id": "top-analysis",
+      "evidence_type": "analysis-result",
+      "producer": "analyse.percentile",
+      "summary": "Top contributors ranked by percentile",
+      "timestamp": "2026-01-01T00:02:00Z"
+    },
+    {
+      "evidence_id": "top-linked",
+      "evidence_type": "linked-query-result",
+      "producer": "query.linked",
+      "summary": "Linked contributor samples loaded",
+      "timestamp": "2026-01-01T00:01:00Z"
+    },
+    {
+      "evidence_id": "top-query",
+      "evidence_type": "query-result",
+      "producer": "query.resource",
+      "summary": "Base contributor samples loaded",
+      "timestamp": "2026-01-01T00:00:00Z"
+    }
+  ]
+}

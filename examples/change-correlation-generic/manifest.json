@@ -1,0 +1,7 @@
+{
+  "flow_id": "change.correlation.generic",
+  "version": "v1",
+  "description": "Raw-flow generic change correlation example.",
+  "flow": "flow.json",
+  "stubs": "stubs.json"
+}

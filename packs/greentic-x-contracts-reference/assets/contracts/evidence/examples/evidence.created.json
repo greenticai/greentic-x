@@ -1,0 +1,7 @@
+{
+  "evidence_id": "evidence-17",
+  "kind": "log-reference",
+  "summary": "Ingress logs for the affected region",
+  "confidence": "medium",
+  "state": "collected"
+}

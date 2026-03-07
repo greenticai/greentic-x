@@ -1,0 +1,63 @@
+{
+  "resolvers": [
+    {
+      "resolver_id": "resolve.by_label",
+      "status": "resolved",
+      "selected": {
+        "resource": {
+          "contract_id": "gx.resource",
+          "resource_type": "entity",
+          "resource_id": "entity-utilisation"
+        },
+        "display": "Utilisation series",
+        "confidence": 0.91
+      }
+    }
+  ],
+  "operations": [
+    {
+      "operation_id": "query.resource",
+      "output": {
+        "series": [
+          { "slot": "00:00", "value": 62 },
+          { "slot": "00:05", "value": 74 },
+          { "slot": "00:10", "value": 88 }
+        ]
+      },
+      "evidence": [
+        {
+          "evidence_id": "util-query",
+          "evidence_type": "query-result",
+          "producer": "query.resource",
+          "timestamp": "2026-01-01T01:00:00Z",
+          "summary": "Utilisation series loaded"
+        }
+      ]
+    },
+    {
+      "operation_id": "analyse.threshold",
+      "output": {
+        "threshold": 80,
+        "breaches": [
+          { "slot": "00:10", "value": 88 }
+        ]
+      },
+      "evidence": [
+        {
+          "evidence_id": "util-analysis",
+          "evidence_type": "analysis-result",
+          "producer": "analyse.threshold",
+          "timestamp": "2026-01-01T01:01:00Z",
+          "summary": "Threshold breach detected"
+        }
+      ]
+    },
+    {
+      "operation_id": "present.summary",
+      "output": {
+        "headline": "Utilisation threshold breach detected",
+        "breach_count": 1
+      }
+    }
+  ]
+}

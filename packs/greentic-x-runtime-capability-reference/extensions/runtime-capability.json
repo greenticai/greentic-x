@@ -1,0 +1,46 @@
+{
+  "canonical_extension_key": "greentic.ext.capabilities.v1",
+  "capabilities_extension": {
+    "offers": [
+      {
+        "applies_to": {
+          "op_names": [
+            "contract.validate",
+            "op.execute"
+          ]
+        },
+        "cap_id": "greentic.cap.runtime.execution.v1",
+        "offer_id": "greentic-x-runtime-evaluate",
+        "priority": 10,
+        "provider": {
+          "component_ref": "runtime-provider",
+          "op": "evaluate"
+        },
+        "requires_setup": false,
+        "version": "v1"
+      }
+    ],
+    "schema_version": 1
+  },
+  "catalog_ref": "file:///projects/ai/greentic-ng/greentic-pack/docs/extensions_capability_packs.catalog.v1.json",
+  "edit_answers": {
+    "cap_id": "greentic.cap.runtime.execution.v1",
+    "component_ref": "runtime-provider",
+    "create_offer": "true",
+    "entry_label": "runtime",
+    "hook_op_names": "contract.validate,op.execute",
+    "offer_id": "greentic-x-runtime-evaluate",
+    "op": "evaluate",
+    "priority": "10",
+    "qa_ref": "qa/runtime-setup.json",
+    "requires_setup": "false",
+    "version": "v1"
+  },
+  "extension_type": "runtime-capability",
+  "operation": "create_extension_pack",
+  "template_id": "runtime-capability-basic",
+  "template_qa_answers": {
+    "display_name": "Greentic-X Runtime Capability Reference Pack",
+    "pack_id": "greentic.x.runtime.capability.reference"
+  }
+}

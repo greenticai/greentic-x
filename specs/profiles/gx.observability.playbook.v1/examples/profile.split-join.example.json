@@ -1,0 +1,31 @@
+{
+  "profile_id": "obs-playbook-split-join",
+  "resolver": "resolve.by_name",
+  "query_ops": [],
+  "analysis_ops": [],
+  "present_op": "present.summary",
+  "split_join": {
+    "join_mode": "all_or_timeout",
+    "join_output_key": "merged_analysis",
+    "branches": [
+      {
+        "branch_id": "telemetry",
+        "query_ops": [
+          "query.resource"
+        ],
+        "analysis_ops": [
+          "analyse.threshold"
+        ]
+      },
+      {
+        "branch_id": "attribution",
+        "query_ops": [
+          "query.linked"
+        ],
+        "analysis_ops": [
+          "analyse.percentile"
+        ]
+      }
+    ]
+  }
+}

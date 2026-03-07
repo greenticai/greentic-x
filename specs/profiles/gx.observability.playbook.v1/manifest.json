@@ -1,0 +1,11 @@
+{
+  "profile_id": "gx.observability.playbook.v1",
+  "version": "1.0.0",
+  "title": "Greentic-X Observability Playbook Profile",
+  "description": "Compact authoring profile for resolve/query/analyse/present playbooks with optional split/join patterns.",
+  "schema_file": "schema.json",
+  "example_files": [
+    "examples/profile.example.json",
+    "examples/profile.split-join.example.json"
+  ]
+}

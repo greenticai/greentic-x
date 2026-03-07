@@ -1,0 +1,8 @@
+{
+  "case_id": "case-42",
+  "title": "Investigate ingress alarm",
+  "summary": "Unexpected ingress volume drop detected by monitoring.",
+  "severity": "high",
+  "owner": "triage-team",
+  "state": "new"
+}

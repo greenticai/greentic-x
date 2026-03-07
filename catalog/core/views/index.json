@@ -1,0 +1,31 @@
+{
+  "catalog_id": "gx.core.views",
+  "version": "1.0.0",
+  "entries": [
+    {
+      "view_id": "summary-card",
+      "view_type": "summary",
+      "spec_ref": "gx.view.v1"
+    },
+    {
+      "view_id": "summary-table",
+      "view_type": "table",
+      "spec_ref": "gx.view.v1"
+    },
+    {
+      "view_id": "ranked-list",
+      "view_type": "table",
+      "spec_ref": "gx.view.v1"
+    },
+    {
+      "view_id": "timeline",
+      "view_type": "timeline",
+      "spec_ref": "gx.view.v1"
+    },
+    {
+      "view_id": "chart-timeseries",
+      "view_type": "chart-series",
+      "spec_ref": "gx.view.v1"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "resolver_id": "resolve.by_name",
+  "status": "resolved",
+  "selected": {
+    "resource": {
+      "contract_id": "gx.case",
+      "resource_type": "case",
+      "resource_id": "case-42"
+    },
+    "display": "Case 42",
+    "confidence": 0.99
+  },
+  "candidates": [],
+  "warnings": []
+}

@@ -1,0 +1,145 @@
+{
+  "flow_id": "root.cause.split.join.generic",
+  "steps": [
+    {
+      "id": "resolve",
+      "kind": {
+        "output_key": "resolved",
+        "query": {
+          "kind": "input",
+          "value": "query"
+        },
+        "resolver_id": "resolve.by_name",
+        "type": "resolve"
+      }
+    },
+    {
+      "id": "split",
+      "kind": {
+        "branches": [
+          {
+            "branch_id": "telemetry",
+            "simulated_duration_ms": 0,
+            "steps": [
+              {
+                "id": "branch_telemetry_query_0",
+                "kind": {
+                  "input": {
+                    "kind": "input",
+                    "value": "query"
+                  },
+                  "operation_id": "query.resource",
+                  "output_key": "branch_telemetry_query_0_result",
+                  "type": "call"
+                }
+              },
+              {
+                "id": "branch_telemetry_analyse_0",
+                "kind": {
+                  "input": {
+                    "kind": "context",
+                    "value": "branch_telemetry_query_0_result.output"
+                  },
+                  "operation_id": "analyse.threshold",
+                  "output_key": "branch_telemetry_analyse_0_result",
+                  "type": "call"
+                }
+              },
+              {
+                "id": "return_telemetry",
+                "kind": {
+                  "output": {
+                    "kind": "context",
+                    "value": "branch_telemetry_analyse_0_result"
+                  },
+                  "type": "return"
+                }
+              }
+            ]
+          },
+          {
+            "branch_id": "attribution",
+            "simulated_duration_ms": 0,
+            "steps": [
+              {
+                "id": "branch_attribution_query_0",
+                "kind": {
+                  "input": {
+                    "kind": "input",
+                    "value": "query"
+                  },
+                  "operation_id": "query.linked",
+                  "output_key": "branch_attribution_query_0_result",
+                  "type": "call"
+                }
+              },
+              {
+                "id": "branch_attribution_analyse_0",
+                "kind": {
+                  "input": {
+                    "kind": "context",
+                    "value": "branch_attribution_query_0_result.output"
+                  },
+                  "operation_id": "analyse.percentile",
+                  "output_key": "branch_attribution_analyse_0_result",
+                  "type": "call"
+                }
+              },
+              {
+                "id": "return_attribution",
+                "kind": {
+                  "output": {
+                    "kind": "context",
+                    "value": "branch_attribution_analyse_0_result"
+                  },
+                  "type": "return"
+                }
+              }
+            ]
+          }
+        ],
+        "type": "split"
+      }
+    },
+    {
+      "id": "join",
+      "kind": {
+        "mode": "all_or_timeout",
+        "output_key": "merged_analysis",
+        "split_step_id": "split",
+        "type": "join"
+      }
+    },
+    {
+      "id": "present",
+      "kind": {
+        "input": {
+          "kind": "context",
+          "value": "merged_analysis"
+        },
+        "operation_id": "present.summary",
+        "output_key": "present_result",
+        "type": "call"
+      }
+    },
+    {
+      "id": "return",
+      "kind": {
+        "output": {
+          "kind": "context",
+          "value": "present_result.output"
+        },
+        "render": {
+          "renderer_id": "noop.summary",
+          "source": {
+            "kind": "all_evidence"
+          },
+          "summary": "Compiled from gx.observability.playbook.v1",
+          "title": "root.cause.split.join.generic summary",
+          "view_id": "summary-card"
+        },
+        "type": "return"
+      }
+    }
+  ]
+}

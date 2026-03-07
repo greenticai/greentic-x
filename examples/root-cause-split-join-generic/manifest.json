@@ -1,0 +1,7 @@
+{
+  "flow_id": "root.cause.split.join.generic",
+  "version": "v1",
+  "description": "Profile-driven generic split/join root cause example.",
+  "flow": "flow.json",
+  "stubs": "stubs.json"
+}

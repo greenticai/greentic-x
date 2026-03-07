@@ -39,9 +39,13 @@ These are the canonical runtime event shapes for the repo.
 
 ### Contracts
 
-`crates/greentic-x-contracts` defines the contract manifest format and structural validation helpers. The `contracts/` directory contains the local reference contract artifacts that use that format.
+`crates/greentic-x-contracts` defines the contract manifest format and
+structural validation helpers. The `contracts/` directory contains the local
+reference contract artifacts that use that format.
 
-At the moment, contract artifacts are local JSON manifests plus schemas and examples. They are not yet packaged as `.gtpack` bundles.
+The repo now also includes `packs/greentic-x-contracts-reference`, a
+wizard-backed source pack that mirrors the current contract manifests, schemas,
+and examples into `assets/contracts/` and can be built into a `.gtpack`.
 
 ### Runtime
 
@@ -55,11 +59,28 @@ At the moment, contract artifacts are local JSON manifests plus schemas and exam
 
 The runtime is intentionally storage-agnostic and uses in-memory adapters for tests and examples.
 
+### Flow execution
+
+`crates/greentic-x-flow` composes the runtime into executable GX flows:
+
+- sequential and branched step execution
+- split/join semantics
+- evidence capture through a store trait
+- neutral view rendering through a renderer trait
+
+This keeps orchestration above the core runtime instead of folding execution
+policy into contract/resource lifecycle code.
+
 ### Ops
 
-`crates/greentic-x-ops` defines operation manifests, supported-contract declarations, permission requirements, and example payloads. The `ops/` directory contains the local reference operation artifacts.
+`crates/greentic-x-ops` defines operation manifests, supported-contract
+declarations, permission requirements, and example payloads. The `ops/`
+directory contains the local reference operation artifacts.
 
-At the moment, the repo models and validates op descriptors, but the reference ops are not yet separate executable components or packaged bundles.
+The repo now also includes `packs/greentic-x-ops-reference`, a wizard-backed
+source pack that mirrors the current op manifests, schemas, notes, and examples
+into `assets/ops/`, but the generated component scaffold is still
+placeholder-only.
 
 ### Examples
 
@@ -95,12 +116,13 @@ The repo now has real first-cut implementations for:
 - events
 - contracts
 - runtime
+- flow execution
 - ops
 - examples
 
 The main remaining gaps are:
 
-- deeper schema validation
 - policy and migration integration
-- pack generation / wizard integration
-- richer documentation and governance details
+- richer flow predicates and external execution backends
+- richer pack contents and real executable provider components
+- richer documentation/governance details and a higher-level authoring UX

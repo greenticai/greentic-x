@@ -1,0 +1,12 @@
+{
+  "profile_id": "entity.utilisation.generic",
+  "resolver": "resolve.by_label",
+  "query_ops": [
+    "query.resource"
+  ],
+  "analysis_ops": [
+    "analyse.threshold"
+  ],
+  "present_op": "present.summary",
+  "split_join": null
+}

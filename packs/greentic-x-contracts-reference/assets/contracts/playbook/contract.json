@@ -1,0 +1,55 @@
+{
+  "contract_id": "gx.playbook",
+  "version": "v1",
+  "description": "Reusable playbook definitions and tracked playbook runs.",
+  "resources": [
+    {
+      "resource_type": "playbook",
+      "schema": {
+        "schema_id": "greentic-x://contracts/playbook/resources/playbook",
+        "version": "v1",
+        "uri": "schemas/playbook.schema.json"
+      },
+      "patch_rules": [
+        { "path": "/title", "kind": "allow" },
+        { "path": "/summary", "kind": "allow" }
+      ],
+      "append_collections": [],
+      "transitions": []
+    },
+    {
+      "resource_type": "playbook-run",
+      "schema": {
+        "schema_id": "greentic-x://contracts/playbook/resources/playbook-run",
+        "version": "v1",
+        "uri": "schemas/playbook-run.schema.json"
+      },
+      "patch_rules": [
+        { "path": "/status", "kind": "allow" },
+        { "path": "/selected_variant", "kind": "allow" }
+      ],
+      "append_collections": [
+        {
+          "name": "step_results",
+          "item_schema": {
+            "schema_id": "greentic-x://contracts/playbook/resources/step-result",
+            "version": "v1",
+            "uri": "schemas/step-result.schema.json"
+          },
+          "description": "Append-only execution results for each playbook step."
+        }
+      ],
+      "transitions": [
+        { "from_state": "pending", "to_state": "running" },
+        { "from_state": "running", "to_state": "completed" },
+        { "from_state": "running", "to_state": "failed" }
+      ]
+    }
+  ],
+  "event_declarations": [
+    { "event_type": "resource_created" },
+    { "event_type": "resource_patched" },
+    { "event_type": "resource_appended" },
+    { "event_type": "resource_transitioned" }
+  ]
+}

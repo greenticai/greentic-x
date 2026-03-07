@@ -1,0 +1,28 @@
+{
+  "operation_id": "approval-basic",
+  "version": "v1",
+  "description": "Produce a simple approval decision from proposal metadata.",
+  "input_schema": {
+    "schema_id": "greentic-x://ops/approval-basic/input",
+    "version": "v1",
+    "uri": "schemas/input.schema.json"
+  },
+  "output_schema": {
+    "schema_id": "greentic-x://ops/approval-basic/output",
+    "version": "v1",
+    "uri": "schemas/output.schema.json"
+  },
+  "supported_contracts": [
+    { "contract_id": "gx.outcome", "version": "v1" }
+  ],
+  "permissions": [
+    { "capability": "decision:write", "scope": "outcome" }
+  ],
+  "examples": [
+    {
+      "name": "approve low risk proposal",
+      "input": { "risk_score": 0.2, "requested_action": "reroute" },
+      "output": { "approved": true, "reason": "risk score within threshold" }
+    }
+  ]
+}

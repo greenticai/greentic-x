@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://ops/playbook-select/output",
+  "title": "PlaybookSelectOutput",
+  "type": "object",
+  "required": ["playbook_id", "route"],
+  "properties": {
+    "playbook_id": { "type": "string" },
+    "route": { "type": "string" }
+  },
+  "additionalProperties": true
+}

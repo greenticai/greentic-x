@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://ops/playbook-select/input",
+  "title": "PlaybookSelectInput",
+  "type": "object",
+  "required": ["severity", "signal_type"],
+  "properties": {
+    "severity": { "type": "string" },
+    "signal_type": { "type": "string" }
+  },
+  "additionalProperties": true
+}

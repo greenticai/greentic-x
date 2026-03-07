@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/specs/gx.observability.playbook.v1/schema.json",
+  "title": "gx.observability.playbook.v1",
+  "type": "object",
+  "required": [
+    "profile_id",
+    "resolver",
+    "query_ops",
+    "analysis_ops",
+    "present_op"
+  ],
+  "properties": {
+    "profile_id": {
+      "type": "string"
+    },
+    "resolver": {
+      "type": "string"
+    },
+    "query_ops": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "analysis_ops": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "present_op": {
+      "type": "string"
+    },
+    "split_join": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "branches"
+      ],
+      "properties": {
+        "join_mode": {
+          "type": "string",
+          "enum": [
+            "all",
+            "any",
+            "all_or_timeout"
+          ]
+        },
+        "join_output_key": {
+          "type": "string"
+        },
+        "branches": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "branch_id",
+              "query_ops",
+              "analysis_ops"
+            ],
+            "properties": {
+              "branch_id": {
+                "type": "string"
+              },
+              "query_ops": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "analysis_ops": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "simulated_duration_ms": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

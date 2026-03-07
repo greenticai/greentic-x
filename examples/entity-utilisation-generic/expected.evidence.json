@@ -1,0 +1,16 @@
+[
+  {
+    "evidence_id": "util-analysis",
+    "evidence_type": "analysis-result",
+    "producer": "analyse.threshold",
+    "timestamp": "2026-01-01T01:01:00Z",
+    "summary": "Threshold breach detected"
+  },
+  {
+    "evidence_id": "util-query",
+    "evidence_type": "query-result",
+    "producer": "query.resource",
+    "timestamp": "2026-01-01T01:00:00Z",
+    "summary": "Utilisation series loaded"
+  }
+]

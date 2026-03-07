@@ -15,6 +15,7 @@ greentic-x-contracts = { path = "../greentic-x-contracts" }
 greentic-x-events = { path = "../greentic-x-events" }
 greentic-x-ops = { path = "../greentic-x-ops" }
 greentic-x-types = { path = "../greentic-x-types" }
+jsonschema.workspace = true
 serde_json.workspace = true
 
 [lints]

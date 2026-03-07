@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/specs/gx.evidence.v1/schema.json",
+  "title": "gx.evidence.v1",
+  "type": "object",
+  "required": [
+    "evidence_id",
+    "type",
+    "producer",
+    "timestamp",
+    "subject_refs",
+    "summary"
+  ],
+  "properties": {
+    "evidence_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "producer": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "subject_refs": {
+      "type": "array"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "payload": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,11 @@
+{
+  "spec_id": "gx.flow.run.v1",
+  "kind": "flow-run",
+  "version": "1.0.0",
+  "title": "Greentic-X Flow Run State",
+  "description": "Persistent state envelope for flow runs, including step status, branch status, evidence refs, and final outputs.",
+  "schema_file": "schema.json",
+  "example_files": [
+    "examples/flow-run.example.json"
+  ]
+}

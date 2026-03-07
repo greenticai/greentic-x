@@ -1,0 +1,11 @@
+{
+  "spec_id": "gx.view.v1",
+  "kind": "neutral-view",
+  "version": "1.0.0",
+  "title": "Greentic-X Neutral View",
+  "description": "Generic summary/table/timeline/chart/card view model with channel hints and drill-down metadata.",
+  "schema_file": "schema.json",
+  "example_files": [
+    "examples/view.example.json"
+  ]
+}

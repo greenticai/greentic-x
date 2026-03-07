@@ -83,12 +83,20 @@ The repo currently includes:
 
 These are intentionally generic reference contracts, not domain-specific production models.
 
+The same reference material is also mirrored into the source pack at
+`packs/greentic-x-contracts-reference/assets/contracts/` so it can be bundled
+with `greentic-pack`.
+
 ## Current Limitation
 
-Contract validation is structural today:
+Contract validation is structural in the contracts crate, but the runtime now
+supports JSON Schema enforcement when the referenced schemas are registered.
 
-- required top-level fields
-- resource definitions present
-- non-empty paths / names / states
+What is still future work:
 
-Deeper schema validation against the referenced JSON Schemas is still future work.
+- policy hook execution
+- migration execution
+- broader schema-registration automation for non-local backends
+
+The current contract pack scaffold is useful for packaging and distribution, but
+its generated `contract-hook` component is still only a placeholder.

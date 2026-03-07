@@ -1,0 +1,27 @@
+[package]
+name = "gx"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+greentic-x-contracts = { path = "../greentic-x-contracts" }
+greentic-x-flow = { path = "../greentic-x-flow" }
+greentic-x-ops = { path = "../greentic-x-ops" }
+greentic-x-types = { path = "../greentic-x-types" }
+jsonschema.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true

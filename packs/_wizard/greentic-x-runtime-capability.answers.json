@@ -1,0 +1,43 @@
+{
+  "wizard_id": "greentic-pack.wizard.run",
+  "schema_id": "greentic-pack.wizard.answers",
+  "schema_version": "1.0.0",
+  "locale": "en-GB",
+  "answers": {
+    "dry_run": false,
+    "extension_catalog_ref": "file:///projects/ai/greentic-ng/greentic-pack/docs/extensions_capability_packs.catalog.v1.json",
+    "extension_edit_answers": {
+      "entry_label": "runtime",
+      "create_offer": "true",
+      "offer_id": "greentic-x-runtime-evaluate",
+      "cap_id": "greentic.cap.runtime.execution.v1",
+      "component_ref": "runtime-provider",
+      "op": "evaluate",
+      "version": "v1",
+      "priority": "10",
+      "requires_setup": "false",
+      "qa_ref": "qa/runtime-setup.json",
+      "hook_op_names": "contract.validate,op.execute"
+    },
+    "extension_operation": "create_extension_pack",
+    "extension_template_id": "runtime-capability-basic",
+    "extension_template_qa_answers": {
+      "display_name": "Greentic-X Runtime Capability Reference Pack",
+      "pack_id": "greentic.x.runtime.capability.reference"
+    },
+    "extension_type_id": "runtime-capability",
+    "mode": "interactive",
+    "pack_dir": "/projects/ai/greentic-ng/greentic-x/packs/greentic-x-runtime-capability-reference",
+    "run_build": false,
+    "run_delegate_component": false,
+    "run_delegate_flow": false,
+    "run_doctor": false,
+    "selected_actions": [
+      "main.create_extension_pack",
+      "create_extension_pack.start",
+      "main.exit"
+    ],
+    "sign": false
+  },
+  "locks": {}
+}

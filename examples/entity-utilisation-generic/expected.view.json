@@ -1,0 +1,26 @@
+{
+  "view_id": "summary-card",
+  "view_type": "summary",
+  "title": "entity.utilisation.generic summary",
+  "summary": "Compiled from gx.observability.playbook.v1",
+  "primary_data_refs": [
+    "util-analysis",
+    "util-query"
+  ],
+  "body": [
+    {
+      "evidence_id": "util-analysis",
+      "evidence_type": "analysis-result",
+      "producer": "analyse.threshold",
+      "summary": "Threshold breach detected",
+      "timestamp": "2026-01-01T01:01:00Z"
+    },
+    {
+      "evidence_id": "util-query",
+      "evidence_type": "query-result",
+      "producer": "query.resource",
+      "summary": "Utilisation series loaded",
+      "timestamp": "2026-01-01T01:00:00Z"
+    }
+  ]
+}

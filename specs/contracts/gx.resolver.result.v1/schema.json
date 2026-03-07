@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/specs/gx.resolver.result.v1/schema.json",
+  "title": "gx.resolver.result.v1",
+  "type": "object",
+  "required": [
+    "resolver_id",
+    "status",
+    "candidates",
+    "warnings"
+  ],
+  "properties": {
+    "resolver_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "resolved",
+        "ambiguous",
+        "not_found",
+        "error"
+      ]
+    },
+    "selected": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "resource"
+        ],
+        "properties": {
+          "resource": {
+            "type": "object",
+            "required": [
+              "contract_id",
+              "resource_type",
+              "resource_id"
+            ]
+          },
+          "display": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "confidence": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

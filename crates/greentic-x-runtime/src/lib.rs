@@ -94,16 +94,22 @@ use greentic_x_contracts::{
 };
 use greentic_x_events::{
     ContractActivated, ContractInstalled, EventEnvelope, EventMetadata, OperationExecuted,
-    OperationExecutionStatus, OperationInstalled, ResourceAppended, ResourceCreated,
-    ResourcePatched, ResourceTransitioned,
+    OperationExecutionStatus, OperationInstalled, ResolverExecuted, ResolverExecutionStatus,
+    ResolverInstalled, ResourceAppended, ResourceCreated, ResourceLinked, ResourcePatched,
+    ResourceTransitioned,
 };
 use greentic_x_ops::{OperationManifest, SupportedContract};
 use greentic_x_types::{
-    AppendRequest, ContractId, ContractVersion, OperationId, PatchOperation, PatchOperationKind,
-    Provenance, ResourceId, ResourcePatch, ResourceTypeId, Revision, TransitionRequest,
+    AppendRequest, ContractId, ContractVersion, InvocationStatus, OperationCallEnvelope,
+    OperationId, OperationResultEnvelope, PatchOperation, PatchOperationKind, Provenance,
+    ResolverDescriptor, ResolverQueryEnvelope, ResolverResultEnvelope, ResolverStatus, ResourceId,
+    ResourceLink, ResourcePatch, ResourceRef, ResourceTypeId, Revision, SchemaReference,
+    TransitionRequest,
 };
+use jsonschema::Validator;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
+use std::path::Path;
 use std::sync::Arc;
 
 /// Request for initial resource creation.
@@ -185,6 +191,16 @@ pub enum RuntimeError {
     ResourceNotFound {
         resource_id: ResourceId,
     },
+    ResolverAlreadyInstalled {
+        resolver_id: greentic_x_types::ResolverId,
+    },
+    ResolverNotFound {
+        resolver_id: greentic_x_types::ResolverId,
+    },
+    ResolverInvocationFailed {
+        resolver_id: greentic_x_types::ResolverId,
+        message: String,
+    },
     InvalidDocument(&'static str),
     PatchDenied {
         path: String,
@@ -218,6 +234,17 @@ pub enum RuntimeError {
     },
     OperationInvocationFailed {
         operation_id: OperationId,
+        message: String,
+    },
+    SchemaNotRegistered {
+        schema_id: String,
+    },
+    SchemaCompilationFailed {
+        schema_id: String,
+        message: String,
+    },
+    SchemaValidationFailed {
+        schema_id: String,
         message: String,
     },
     EventSink(String),
@@ -270,6 +297,18 @@ impl std::fmt::Display for RuntimeError {
             Self::ResourceNotFound { resource_id } => {
                 write!(formatter, "resource {resource_id} was not found")
             }
+            Self::ResolverAlreadyInstalled { resolver_id } => {
+                write!(formatter, "resolver {resolver_id} is already installed")
+            }
+            Self::ResolverNotFound { resolver_id } => {
+                write!(formatter, "resolver {resolver_id} was not found")
+            }
+            Self::ResolverInvocationFailed {
+                resolver_id,
+                message,
+            } => {
+                write!(formatter, "resolver {resolver_id} failed: {message}")
+            }
             Self::InvalidDocument(message) => formatter.write_str(message),
             Self::PatchDenied { path } => write!(formatter, "patch path {path} is not allowed"),
             Self::PatchPathInvalid { path } => write!(formatter, "patch path {path} is invalid"),
@@ -321,6 +360,18 @@ impl std::fmt::Display for RuntimeError {
             } => {
                 write!(formatter, "operation {operation_id} failed: {message}")
             }
+            Self::SchemaNotRegistered { schema_id } => {
+                write!(formatter, "schema {schema_id} is not registered")
+            }
+            Self::SchemaCompilationFailed { schema_id, message } => {
+                write!(
+                    formatter,
+                    "schema {schema_id} could not be compiled: {message}"
+                )
+            }
+            Self::SchemaValidationFailed { schema_id, message } => {
+                write!(formatter, "schema {schema_id} validation failed: {message}")
+            }
             Self::EventSink(message) | Self::Storage(message) => formatter.write_str(message),
         }
     }
@@ -337,8 +388,11 @@ pub enum RuntimeEvent {
     ResourcePatched(EventEnvelope<ResourcePatched>),
     ResourceAppended(EventEnvelope<ResourceAppended>),
     ResourceTransitioned(EventEnvelope<ResourceTransitioned>),
+    ResourceLinked(EventEnvelope<ResourceLinked>),
     OperationInstalled(EventEnvelope<OperationInstalled>),
     OperationExecuted(EventEnvelope<OperationExecuted>),
+    ResolverInstalled(EventEnvelope<ResolverInstalled>),
+    ResolverExecuted(EventEnvelope<ResolverExecuted>),
 }
 
 /// Storage adapter for persisted resources.
@@ -362,6 +416,11 @@ pub trait OperationHandler: Send + Sync {
     fn invoke(&self, input: Value) -> Result<Value, String>;
 }
 
+/// Resolver invocation extension point.
+pub trait ResolverHandler: Send + Sync {
+    fn resolve(&self, input: ResolverQueryEnvelope) -> Result<ResolverResultEnvelope, String>;
+}
+
 /// Static handler used in tests and examples.
 pub struct StaticOperationHandler {
     result: Result<Value, String>,
@@ -381,9 +440,31 @@ impl OperationHandler for StaticOperationHandler {
     }
 }
 
+/// Static resolver used in tests and examples.
+pub struct StaticResolverHandler {
+    result: Result<ResolverResultEnvelope, String>,
+}
+
+impl StaticResolverHandler {
+    pub fn new(result: Result<ResolverResultEnvelope, String>) -> Self {
+        Self { result }
+    }
+}
+
+impl ResolverHandler for StaticResolverHandler {
+    fn resolve(&self, _input: ResolverQueryEnvelope) -> Result<ResolverResultEnvelope, String> {
+        self.result.clone()
+    }
+}
+
 struct RegisteredOperation {
     manifest: OperationManifest,
     handler: Arc<dyn OperationHandler>,
+}
+
+struct RegisteredResolver {
+    descriptor: ResolverDescriptor,
+    handler: Arc<dyn ResolverHandler>,
 }
 
 /// In-memory store adapter used by tests and examples.
@@ -450,6 +531,9 @@ pub struct Runtime<S, E> {
     contracts: HashMap<ContractId, BTreeMap<ContractVersion, ContractManifest>>,
     active_contracts: HashMap<ContractId, ContractVersion>,
     operations: HashMap<OperationId, RegisteredOperation>,
+    resolvers: HashMap<greentic_x_types::ResolverId, RegisteredResolver>,
+    links: Vec<ResourceLink>,
+    schemas: HashMap<String, Value>,
     next_event_id: u64,
 }
 
@@ -465,8 +549,67 @@ where
             contracts: HashMap::new(),
             active_contracts: HashMap::new(),
             operations: HashMap::new(),
+            resolvers: HashMap::new(),
+            links: Vec::new(),
+            schemas: HashMap::new(),
             next_event_id: 1,
         }
+    }
+
+    pub fn register_schema_value(
+        &mut self,
+        schema_id: impl Into<String>,
+        schema: Value,
+    ) -> Result<(), RuntimeError> {
+        let schema_id = schema_id.into();
+        compile_validator(&schema_id, &schema)?;
+        self.schemas.insert(schema_id, schema);
+        Ok(())
+    }
+
+    pub fn register_schema_file(
+        &mut self,
+        schema: &SchemaReference,
+        base_dir: impl AsRef<Path>,
+    ) -> Result<(), RuntimeError> {
+        let uri = schema
+            .uri
+            .as_deref()
+            .ok_or_else(|| RuntimeError::SchemaNotRegistered {
+                schema_id: schema.schema_id.clone(),
+            })?;
+        let schema_path = base_dir.as_ref().join(uri);
+        let raw = std::fs::read_to_string(&schema_path).map_err(|err| {
+            RuntimeError::Storage(format!("failed to read {}: {err}", schema_path.display()))
+        })?;
+        let value = serde_json::from_str(&raw).map_err(|err| {
+            RuntimeError::Storage(format!("failed to parse {}: {err}", schema_path.display()))
+        })?;
+        self.register_schema_value(schema.schema_id.clone(), value)
+    }
+
+    pub fn register_contract_schemas(
+        &mut self,
+        manifest: &ContractManifest,
+        base_dir: impl AsRef<Path>,
+    ) -> Result<(), RuntimeError> {
+        for resource in &manifest.resources {
+            self.register_schema_file(&resource.schema, base_dir.as_ref())?;
+            for collection in &resource.append_collections {
+                self.register_schema_file(&collection.item_schema, base_dir.as_ref())?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn register_operation_schemas(
+        &mut self,
+        manifest: &OperationManifest,
+        base_dir: impl AsRef<Path>,
+    ) -> Result<(), RuntimeError> {
+        self.register_schema_file(&manifest.input_schema, base_dir.as_ref())?;
+        self.register_schema_file(&manifest.output_schema, base_dir.as_ref())?;
+        Ok(())
     }
 
     pub fn install_contract(
@@ -566,7 +709,10 @@ where
         request: CreateResourceRequest,
     ) -> Result<ResourceRecord, RuntimeError> {
         self.ensure_document_object(&request.document)?;
-        self.active_resource_definition(&request.contract_id, &request.resource_type)?;
+        let definition = self
+            .active_resource_definition(&request.contract_id, &request.resource_type)?
+            .clone();
+        self.validate_against_schema_if_registered(&definition.schema, &request.document)?;
 
         let key = ResourceKey::new(
             request.contract_id.clone(),
@@ -625,6 +771,72 @@ where
         self.store.list(contract_id, resource_type)
     }
 
+    pub fn upsert_link(
+        &mut self,
+        link: ResourceLink,
+        provenance: Provenance,
+    ) -> Result<ResourceLink, RuntimeError> {
+        self.get_existing_record(
+            &link.from.contract_id,
+            &link.from.resource_type,
+            &link.from.resource_id,
+        )?;
+        self.get_existing_record(
+            &link.to.contract_id,
+            &link.to.resource_type,
+            &link.to.resource_id,
+        )?;
+
+        if let Some(existing) = self.links.iter_mut().find(|existing| {
+            existing.link_type == link.link_type
+                && existing.from == link.from
+                && existing.to == link.to
+        }) {
+            *existing = link.clone();
+        } else {
+            self.links.push(link.clone());
+        }
+        self.links.sort_by(|left, right| {
+            left.from
+                .resource_id
+                .as_str()
+                .cmp(right.from.resource_id.as_str())
+                .then(left.link_type.as_str().cmp(right.link_type.as_str()))
+                .then(
+                    left.to
+                        .resource_id
+                        .as_str()
+                        .cmp(right.to.resource_id.as_str()),
+                )
+        });
+
+        let event = RuntimeEvent::ResourceLinked(EventEnvelope::resource_linked(
+            self.allocate_event_id(),
+            EventMetadata::new(provenance)
+                .with_partition_key(link.from.resource_id.as_str().to_owned()),
+            ResourceLinked {
+                link_type: link.link_type.clone(),
+                from: link.from.clone(),
+                to: link.to.clone(),
+                metadata: link.metadata.clone(),
+            },
+        ));
+        self.emit(event)?;
+        Ok(link)
+    }
+
+    pub fn list_links(&self, resource: Option<&ResourceRef>) -> Vec<ResourceLink> {
+        match resource {
+            Some(resource) => self
+                .links
+                .iter()
+                .filter(|link| &link.from == resource || &link.to == resource)
+                .cloned()
+                .collect(),
+            None => self.links.clone(),
+        }
+    }
+
     pub fn patch_resource(
         &mut self,
         request: ResourcePatch,
@@ -643,6 +855,7 @@ where
             self.ensure_patch_allowed(&definition, operation)?;
             apply_patch_operation(&mut record.document, operation)?;
         }
+        self.validate_against_schema_if_registered(&definition.schema, &record.document)?;
         record.revision = record.revision.next();
         self.store.put(record.clone())?;
 
@@ -682,11 +895,23 @@ where
             &request.resource_id,
         )?;
         self.ensure_revision(record.revision, request.base_revision)?;
+        let collection_definition = definition
+            .append_collections
+            .iter()
+            .find(|collection| collection.name == request.collection)
+            .ok_or_else(|| RuntimeError::AppendCollectionNotAllowed {
+                collection: request.collection.clone(),
+            })?;
+        self.validate_against_schema_if_registered(
+            &collection_definition.item_schema,
+            &request.value,
+        )?;
         append_to_collection(
             &mut record.document,
             &request.collection,
             request.value.clone(),
         )?;
+        self.validate_against_schema_if_registered(&definition.schema, &record.document)?;
         record.revision = record.revision.next();
         self.store.put(record.clone())?;
 
@@ -724,6 +949,7 @@ where
         let from_state = current_state(&record.document)?;
         ensure_transition_allowed(&definition.transitions, &from_state, &request.target_state)?;
         set_current_state(&mut record.document, request.target_state.clone())?;
+        self.validate_against_schema_if_registered(&definition.schema, &record.document)?;
         record.revision = record.revision.next();
         self.store.put(record.clone())?;
 
@@ -782,6 +1008,37 @@ where
         self.emit(event)
     }
 
+    pub fn install_resolver(
+        &mut self,
+        descriptor: ResolverDescriptor,
+        handler: Arc<dyn ResolverHandler>,
+        provenance: Provenance,
+    ) -> Result<(), RuntimeError> {
+        if self.resolvers.contains_key(&descriptor.resolver_id) {
+            return Err(RuntimeError::ResolverAlreadyInstalled {
+                resolver_id: descriptor.resolver_id.clone(),
+            });
+        }
+
+        self.resolvers.insert(
+            descriptor.resolver_id.clone(),
+            RegisteredResolver {
+                descriptor: descriptor.clone(),
+                handler,
+            },
+        );
+
+        let event = RuntimeEvent::ResolverInstalled(EventEnvelope::resolver_installed(
+            self.allocate_event_id(),
+            EventMetadata::new(provenance),
+            ResolverInstalled {
+                resolver_id: descriptor.resolver_id,
+                target_type: descriptor.target_type,
+            },
+        ));
+        self.emit(event)
+    }
+
     pub fn list_operations(&self) -> Vec<OperationManifest> {
         let mut operations = self
             .operations
@@ -799,6 +1056,25 @@ where
             .map(|operation| operation.manifest.clone())
     }
 
+    pub fn list_resolvers(&self) -> Vec<ResolverDescriptor> {
+        let mut resolvers = self
+            .resolvers
+            .values()
+            .map(|resolver| resolver.descriptor.clone())
+            .collect::<Vec<_>>();
+        resolvers.sort_by(|left, right| left.resolver_id.as_str().cmp(right.resolver_id.as_str()));
+        resolvers
+    }
+
+    pub fn describe_resolver(
+        &self,
+        resolver_id: &greentic_x_types::ResolverId,
+    ) -> Option<ResolverDescriptor> {
+        self.resolvers
+            .get(resolver_id)
+            .map(|resolver| resolver.descriptor.clone())
+    }
+
     pub fn invoke_operation(
         &mut self,
         operation_id: &OperationId,
@@ -806,14 +1082,40 @@ where
         input: Value,
         provenance: Provenance,
     ) -> Result<Value, RuntimeError> {
-        let invocation_id = invocation_id.into();
-        let operation =
-            self.operations
-                .get(operation_id)
-                .ok_or_else(|| RuntimeError::OperationNotFound {
-                    operation_id: operation_id.clone(),
-                })?;
-        let result = operation.handler.invoke(input);
+        self.invoke_operation_enveloped(OperationCallEnvelope::new(
+            invocation_id,
+            operation_id.clone(),
+            input,
+            provenance,
+        ))
+        .and_then(|result| {
+            result
+                .output
+                .ok_or_else(|| RuntimeError::OperationInvocationFailed {
+                    operation_id: result.operation_id,
+                    message: "operation completed without an output payload".to_owned(),
+                })
+        })
+    }
+
+    pub fn invoke_operation_enveloped(
+        &mut self,
+        envelope: OperationCallEnvelope,
+    ) -> Result<OperationResultEnvelope, RuntimeError> {
+        let (input_schema, output_schema, handler) = {
+            let operation = self.operations.get(&envelope.operation_id).ok_or_else(|| {
+                RuntimeError::OperationNotFound {
+                    operation_id: envelope.operation_id.clone(),
+                }
+            })?;
+            (
+                operation.manifest.input_schema.clone(),
+                operation.manifest.output_schema.clone(),
+                Arc::clone(&operation.handler),
+            )
+        };
+        self.validate_against_schema_if_registered(&input_schema, &envelope.input)?;
+        let result = handler.invoke(envelope.input.clone());
 
         let status = if result.is_ok() {
             OperationExecutionStatus::Succeeded
@@ -823,18 +1125,77 @@ where
         let output = result.clone().ok();
         let event = RuntimeEvent::OperationExecuted(EventEnvelope::operation_executed(
             self.allocate_event_id(),
-            EventMetadata::new(provenance),
+            EventMetadata::new(envelope.provenance.clone()),
             OperationExecuted {
-                operation_id: operation_id.clone(),
-                invocation_id: invocation_id.clone(),
+                operation_id: envelope.operation_id.clone(),
+                invocation_id: envelope.invocation_id.clone(),
                 status,
-                output,
+                output: output.clone(),
             },
         ));
         self.emit(event)?;
 
-        result.map_err(|message| RuntimeError::OperationInvocationFailed {
-            operation_id: operation_id.clone(),
+        match result {
+            Ok(output_value) => {
+                self.validate_against_schema_if_registered(&output_schema, &output_value)?;
+                Ok(OperationResultEnvelope {
+                    invocation_id: envelope.invocation_id,
+                    operation_id: envelope.operation_id,
+                    status: InvocationStatus::Succeeded,
+                    output: Some(output_value),
+                    evidence_refs: Vec::new(),
+                    warnings: Vec::new(),
+                    view_hints: Vec::new(),
+                })
+            }
+            Err(message) => Err(RuntimeError::OperationInvocationFailed {
+                operation_id: envelope.operation_id,
+                message,
+            }),
+        }
+    }
+
+    pub fn resolve(
+        &mut self,
+        envelope: ResolverQueryEnvelope,
+        invocation_id: impl Into<String>,
+    ) -> Result<ResolverResultEnvelope, RuntimeError> {
+        let invocation_id = invocation_id.into();
+        let resolver = self.resolvers.get(&envelope.resolver_id).ok_or_else(|| {
+            RuntimeError::ResolverNotFound {
+                resolver_id: envelope.resolver_id.clone(),
+            }
+        })?;
+        let result = resolver.handler.resolve(envelope.clone());
+        let resolver_status = match &result {
+            Ok(result) => map_resolver_status(result.status),
+            Err(_) => ResolverExecutionStatus::Failed,
+        };
+        let candidate_count = result
+            .as_ref()
+            .map(|result| result.candidates.len())
+            .unwrap_or(0);
+        let selected = result.as_ref().ok().and_then(|result| {
+            result
+                .selected
+                .as_ref()
+                .map(|candidate| candidate.resource.clone())
+        });
+        let event = RuntimeEvent::ResolverExecuted(EventEnvelope::resolver_executed(
+            self.allocate_event_id(),
+            EventMetadata::new(envelope.provenance.clone()),
+            ResolverExecuted {
+                resolver_id: envelope.resolver_id.clone(),
+                invocation_id,
+                status: resolver_status,
+                candidate_count,
+                selected,
+            },
+        ));
+        self.emit(event)?;
+
+        result.map_err(|message| RuntimeError::ResolverInvocationFailed {
+            resolver_id: envelope.resolver_id,
             message,
         })
     }
@@ -979,6 +1340,45 @@ where
         }
         Ok(())
     }
+
+    fn validate_against_schema(
+        &self,
+        schema: &SchemaReference,
+        instance: &Value,
+    ) -> Result<(), RuntimeError> {
+        let raw = self.schemas.get(&schema.schema_id).ok_or_else(|| {
+            RuntimeError::SchemaNotRegistered {
+                schema_id: schema.schema_id.clone(),
+            }
+        })?;
+        let validator = compile_validator(&schema.schema_id, raw)?;
+        if let Err(error) = validator.validate(instance) {
+            return Err(RuntimeError::SchemaValidationFailed {
+                schema_id: schema.schema_id.clone(),
+                message: error.to_string(),
+            });
+        }
+        Ok(())
+    }
+
+    fn validate_against_schema_if_registered(
+        &self,
+        schema: &SchemaReference,
+        instance: &Value,
+    ) -> Result<(), RuntimeError> {
+        if self.schemas.contains_key(&schema.schema_id) {
+            self.validate_against_schema(schema, instance)
+        } else {
+            Ok(())
+        }
+    }
+}
+
+fn compile_validator(schema_id: &str, schema: &Value) -> Result<Validator, RuntimeError> {
+    jsonschema::validator_for(schema).map_err(|err| RuntimeError::SchemaCompilationFailed {
+        schema_id: schema_id.to_owned(),
+        message: err.to_string(),
+    })
 }
 
 fn apply_patch_operation(
@@ -990,6 +1390,15 @@ fn apply_patch_operation(
         PatchOperationKind::Add => add_value(document, &tokens, operation.value.clone()),
         PatchOperationKind::Replace => replace_value(document, &tokens, operation.value.clone()),
         PatchOperationKind::Remove => remove_value(document, &tokens),
+    }
+}
+
+fn map_resolver_status(status: ResolverStatus) -> ResolverExecutionStatus {
+    match status {
+        ResolverStatus::Resolved => ResolverExecutionStatus::Resolved,
+        ResolverStatus::Ambiguous => ResolverExecutionStatus::Ambiguous,
+        ResolverStatus::NotFound => ResolverExecutionStatus::NotFound,
+        ResolverStatus::Error => ResolverExecutionStatus::Failed,
     }
 }
 
@@ -1192,7 +1601,10 @@ mod tests {
         ResourceDefinition, TransitionDefinition,
     };
     use greentic_x_ops::OperationManifest;
-    use greentic_x_types::{ActorRef, SchemaReference};
+    use greentic_x_types::{
+        ActorRef, LinkTypeId, ResolverCandidate, ResolverId, ResourceLink, ResourceRef,
+        SchemaReference,
+    };
 
     fn case_manifest() -> ContractManifest {
         ContractManifest {
@@ -1205,7 +1617,8 @@ mod tests {
                     "greentic-x://contracts/case/resources/case",
                     ContractVersion::new("v1").expect("static version should be valid"),
                 )
-                .expect("static schema should be valid"),
+                .expect("static schema should be valid")
+                .with_uri("schemas/case.schema.json"),
                 patch_rules: vec![
                     MutationRule::allow("/title"),
                     MutationRule::allow("/severity"),
@@ -1216,7 +1629,8 @@ mod tests {
                         "greentic-x://contracts/case/resources/evidence-entry",
                         ContractVersion::new("v1").expect("static version should be valid"),
                     )
-                    .expect("static schema should be valid"),
+                    .expect("static schema should be valid")
+                    .with_uri("schemas/evidence-entry.schema.json"),
                 )],
                 transitions: vec![
                     TransitionDefinition::new("new", "triaged"),
@@ -1234,6 +1648,12 @@ mod tests {
         Provenance::new(ActorRef::service("runtime").expect("static actor id should be valid"))
     }
 
+    fn repo_root() -> std::path::PathBuf {
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../..")
+            .to_path_buf()
+    }
+
     fn runtime() -> Runtime<InMemoryResourceStore, RecordingEventSink> {
         Runtime::new(
             InMemoryResourceStore::default(),
@@ -1245,6 +1665,9 @@ mod tests {
         runtime: &mut Runtime<InMemoryResourceStore, RecordingEventSink>,
     ) -> ContractManifest {
         let manifest = case_manifest();
+        runtime
+            .register_contract_schemas(&manifest, repo_root().join("contracts/case"))
+            .expect("contract schemas should register");
         runtime
             .install_contract(manifest.clone(), provenance())
             .expect("contract installation should succeed");
@@ -1265,6 +1688,7 @@ mod tests {
                     .expect("static resource type should be valid"),
                 resource_id: ResourceId::new("case-1").expect("static resource id should be valid"),
                 document: serde_json::json!({
+                    "case_id": "case-1",
                     "title": "Investigate ingress",
                     "severity": "high",
                     "state": "new"
@@ -1284,12 +1708,14 @@ mod tests {
                 "greentic-x://ops/approval-basic/input",
                 ContractVersion::new("v1").expect("static version should be valid"),
             )
-            .expect("static schema should be valid"),
+            .expect("static schema should be valid")
+            .with_uri("schemas/input.schema.json"),
             output_schema: SchemaReference::new(
                 "greentic-x://ops/approval-basic/output",
                 ContractVersion::new("v1").expect("static version should be valid"),
             )
-            .expect("static schema should be valid"),
+            .expect("static schema should be valid")
+            .with_uri("schemas/output.schema.json"),
             compatibility: Vec::new(),
             supported_contracts: vec![SupportedContract {
                 contract_id: ContractId::new("gx.case")
@@ -1299,6 +1725,36 @@ mod tests {
             permissions: Vec::new(),
             examples: Vec::new(),
         }
+    }
+
+    fn resolver_descriptor() -> ResolverDescriptor {
+        ResolverDescriptor {
+            resolver_id: ResolverId::new("resolve.by_name")
+                .expect("static resolver id should be valid"),
+            description: "Resolve case by exact name".to_owned(),
+            target_type: Some(
+                ResourceTypeId::new("case").expect("static resource type should be valid"),
+            ),
+            tags: vec!["exact".to_owned(), "demo".to_owned()],
+        }
+    }
+
+    fn install_approval_operation(
+        runtime: &mut Runtime<InMemoryResourceStore, RecordingEventSink>,
+    ) {
+        let manifest = approval_basic_manifest();
+        runtime
+            .register_operation_schemas(&manifest, repo_root().join("ops/approval-basic"))
+            .expect("operation schemas should register");
+        runtime
+            .install_operation(
+                manifest,
+                Arc::new(StaticOperationHandler::new(Ok(
+                    serde_json::json!({"approved": true}),
+                ))),
+                provenance(),
+            )
+            .expect("operation install should succeed");
     }
 
     #[test]
@@ -1444,20 +1900,15 @@ mod tests {
         let manifest = install_case_contract(&mut runtime);
         let record = create_case(&mut runtime, &manifest.contract_id);
 
-        runtime
-            .install_operation(
-                approval_basic_manifest(),
-                Arc::new(StaticOperationHandler::new(Ok(
-                    serde_json::json!({"approved": true}),
-                ))),
-                provenance(),
-            )
-            .expect("operation install should succeed");
+        install_approval_operation(&mut runtime);
         let output = runtime
             .invoke_operation(
                 &OperationId::new("approval-basic").expect("static operation id should be valid"),
                 "invoke-1",
-                serde_json::json!({"case_id": record.resource_id.as_str()}),
+                serde_json::json!({
+                    "case_id": record.resource_id.as_str(),
+                    "risk_score": 0.2
+                }),
                 provenance(),
             )
             .expect("operation invocation should succeed");
@@ -1515,5 +1966,166 @@ mod tests {
             err,
             RuntimeError::OperationCompatibilityMissingContract { .. }
         ));
+    }
+
+    #[test]
+    fn supports_typed_links_between_resources() {
+        let mut runtime = runtime();
+        let manifest = install_case_contract(&mut runtime);
+        let case = create_case(&mut runtime, &manifest.contract_id);
+        let second = runtime
+            .create_resource(CreateResourceRequest {
+                contract_id: manifest.contract_id.clone(),
+                resource_type: ResourceTypeId::new("case")
+                    .expect("static resource type should be valid"),
+                resource_id: ResourceId::new("case-2").expect("static resource id should be valid"),
+                document: serde_json::json!({
+                    "case_id": "case-2",
+                    "title": "Investigate egress",
+                    "severity": "medium",
+                    "state": "new"
+                }),
+                provenance: provenance(),
+            })
+            .expect("second resource creation should succeed");
+
+        runtime
+            .upsert_link(
+                ResourceLink::new(
+                    LinkTypeId::new("depends_on").expect("static link type should be valid"),
+                    ResourceRef::new(
+                        manifest.contract_id.clone(),
+                        ResourceTypeId::new("case").expect("static resource type should be valid"),
+                        case.resource_id.clone(),
+                    ),
+                    ResourceRef::new(
+                        manifest.contract_id,
+                        ResourceTypeId::new("case").expect("static resource type should be valid"),
+                        second.resource_id.clone(),
+                    ),
+                ),
+                provenance(),
+            )
+            .expect("link upsert should succeed");
+
+        let links = runtime.list_links(None);
+        assert_eq!(links.len(), 1);
+        assert_eq!(links[0].link_type.as_str(), "depends_on");
+        assert_eq!(links[0].to.resource_id, second.resource_id);
+    }
+
+    #[test]
+    fn registers_and_invokes_resolvers() {
+        let mut runtime = runtime();
+        let manifest = install_case_contract(&mut runtime);
+        let case = create_case(&mut runtime, &manifest.contract_id);
+
+        runtime
+            .install_resolver(
+                resolver_descriptor(),
+                Arc::new(StaticResolverHandler::new(Ok(ResolverResultEnvelope {
+                    resolver_id: ResolverId::new("resolve.by_name")
+                        .expect("static resolver id should be valid"),
+                    status: ResolverStatus::Resolved,
+                    selected: Some(ResolverCandidate {
+                        resource: ResourceRef::new(
+                            manifest.contract_id.clone(),
+                            ResourceTypeId::new("case")
+                                .expect("static resource type should be valid"),
+                            case.resource_id.clone(),
+                        ),
+                        display: Some("Case 1".to_owned()),
+                        confidence: Some(1.0),
+                        metadata: None,
+                    }),
+                    candidates: Vec::new(),
+                    warnings: Vec::new(),
+                }))),
+                provenance(),
+            )
+            .expect("resolver install should succeed");
+
+        let result = runtime
+            .resolve(
+                ResolverQueryEnvelope::new(
+                    ResolverId::new("resolve.by_name").expect("static resolver id should be valid"),
+                    serde_json::json!({"name": "Case 1"}),
+                    provenance(),
+                ),
+                "resolve-1",
+            )
+            .expect("resolver invocation should succeed");
+
+        assert_eq!(result.status, ResolverStatus::Resolved);
+        assert_eq!(
+            result
+                .selected
+                .expect("resolved result should contain a selected candidate")
+                .resource
+                .resource_id,
+            case.resource_id
+        );
+    }
+
+    #[test]
+    fn supports_operation_call_envelopes() {
+        let mut runtime = runtime();
+        install_case_contract(&mut runtime);
+        install_approval_operation(&mut runtime);
+
+        let result = runtime
+            .invoke_operation_enveloped(
+                OperationCallEnvelope::new(
+                    "invoke-1",
+                    OperationId::new("approval-basic")
+                        .expect("static operation id should be valid"),
+                    serde_json::json!({"risk_score": 0.2}),
+                    provenance(),
+                )
+                .with_run_id("run-1"),
+            )
+            .expect("operation invocation should succeed");
+
+        assert_eq!(result.status, InvocationStatus::Succeeded);
+        assert_eq!(result.output.expect("output is present")["approved"], true);
+    }
+
+    #[test]
+    fn validates_resource_documents_against_registered_schemas() {
+        let mut runtime = runtime();
+        let manifest = install_case_contract(&mut runtime);
+
+        let err = runtime
+            .create_resource(CreateResourceRequest {
+                contract_id: manifest.contract_id,
+                resource_type: ResourceTypeId::new("case")
+                    .expect("static resource type should be valid"),
+                resource_id: ResourceId::new("case-invalid")
+                    .expect("static resource id should be valid"),
+                document: serde_json::json!({
+                    "case_id": "case-invalid",
+                    "title": "Invalid case"
+                }),
+                provenance: provenance(),
+            })
+            .expect_err("missing required state field should fail schema validation");
+        assert!(matches!(err, RuntimeError::SchemaValidationFailed { .. }));
+    }
+
+    #[test]
+    fn validates_operation_payloads_against_registered_schemas() {
+        let mut runtime = runtime();
+        install_case_contract(&mut runtime);
+        install_approval_operation(&mut runtime);
+
+        let err = runtime
+            .invoke_operation(
+                &OperationId::new("approval-basic").expect("static operation id should be valid"),
+                "invoke-bad",
+                serde_json::json!({"unexpected": true}),
+                provenance(),
+            )
+            .expect_err("invalid op input should fail schema validation");
+        assert!(matches!(err, RuntimeError::SchemaValidationFailed { .. }));
     }
 }

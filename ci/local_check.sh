@@ -59,6 +59,21 @@ cargo build --all-features
 step "cargo doc"
 cargo doc --no-deps --all-features
 
+if [ -d "specs" ] && [ -d "catalog" ]; then
+  step "specs and catalog"
+  python3 ci/check_specs_catalog.py
+fi
+
+if [ -d "crates/gx" ]; then
+  step "gx doctor"
+  cargo run -p gx -- doctor .
+fi
+
+if command -v greentic-pack >/dev/null 2>&1 && [ -d "packs" ]; then
+  step "greentic-pack"
+  bash ci/check_packs.sh
+fi
+
 if [ ! -s "$crate_details_file" ]; then
   step "Packaging checks"
   printf 'No publishable crates found in workspace.\n'

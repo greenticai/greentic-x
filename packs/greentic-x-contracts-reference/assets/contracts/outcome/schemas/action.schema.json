@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://contracts/outcome/resources/action",
+  "title": "OutcomeAction",
+  "type": "object",
+  "required": ["action", "status"],
+  "properties": {
+    "action": { "type": "string" },
+    "status": { "type": "string" },
+    "note": { "type": "string" }
+  },
+  "additionalProperties": true
+}

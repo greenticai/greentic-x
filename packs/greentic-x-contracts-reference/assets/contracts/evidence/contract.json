@@ -1,0 +1,40 @@
+{
+  "contract_id": "gx.evidence",
+  "version": "v1",
+  "description": "Append-friendly evidence records that capture references, findings, and collection context.",
+  "resources": [
+    {
+      "resource_type": "evidence",
+      "schema": {
+        "schema_id": "greentic-x://contracts/evidence/resources/evidence",
+        "version": "v1",
+        "uri": "schemas/evidence.schema.json"
+      },
+      "patch_rules": [
+        { "path": "/summary", "kind": "allow" },
+        { "path": "/confidence", "kind": "allow" }
+      ],
+      "append_collections": [
+        {
+          "name": "observations",
+          "item_schema": {
+            "schema_id": "greentic-x://contracts/evidence/resources/observation",
+            "version": "v1",
+            "uri": "schemas/observation.schema.json"
+          },
+          "description": "Append-only observations collected over time."
+        }
+      ],
+      "transitions": [
+        { "from_state": "draft", "to_state": "collected" },
+        { "from_state": "collected", "to_state": "verified" }
+      ]
+    }
+  ],
+  "event_declarations": [
+    { "event_type": "resource_created" },
+    { "event_type": "resource_patched" },
+    { "event_type": "resource_appended" },
+    { "event_type": "resource_transitioned" }
+  ]
+}

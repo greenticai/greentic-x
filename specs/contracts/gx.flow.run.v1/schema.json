@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/specs/gx.flow.run.v1/schema.json",
+  "title": "gx.flow.run.v1",
+  "type": "object",
+  "required": [
+    "run_id",
+    "flow_id",
+    "status",
+    "step_states",
+    "branch_states",
+    "evidence_refs",
+    "result"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "flow_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "running",
+        "succeeded",
+        "failed",
+        "partial"
+      ]
+    },
+    "input": {
+      "type": "object"
+    },
+    "step_states": {
+      "type": "array"
+    },
+    "branch_states": {
+      "type": "array"
+    },
+    "evidence_refs": {
+      "type": "array"
+    },
+    "result": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

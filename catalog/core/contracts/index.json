@@ -1,0 +1,36 @@
+{
+  "catalog_id": "gx.core.contracts",
+  "version": "1.0.0",
+  "entries": [
+    {
+      "entry_id": "gx.resource.v1",
+      "kind": "spec",
+      "spec_ref": "../../../specs/contracts/gx.resource.v1/manifest.json"
+    },
+    {
+      "entry_id": "gx.resolver.result.v1",
+      "kind": "spec",
+      "spec_ref": "../../../specs/contracts/gx.resolver.result.v1/manifest.json"
+    },
+    {
+      "entry_id": "gx.operation.descriptor.v1",
+      "kind": "spec",
+      "spec_ref": "../../../specs/contracts/gx.operation.descriptor.v1/manifest.json"
+    },
+    {
+      "entry_id": "gx.flow.run.v1",
+      "kind": "spec",
+      "spec_ref": "../../../specs/contracts/gx.flow.run.v1/manifest.json"
+    },
+    {
+      "entry_id": "gx.evidence.v1",
+      "kind": "spec",
+      "spec_ref": "../../../specs/contracts/gx.evidence.v1/manifest.json"
+    },
+    {
+      "entry_id": "gx.view.v1",
+      "kind": "spec",
+      "spec_ref": "../../../specs/contracts/gx.view.v1/manifest.json"
+    }
+  ]
+}

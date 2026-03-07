@@ -1,0 +1,13 @@
+{
+  "spec_id": "gx.operation.descriptor.v1",
+  "kind": "operation-descriptor",
+  "version": "1.0.0",
+  "title": "Greentic-X Operation Descriptor",
+  "description": "Generic operation descriptor with schema references, compatibility, permissions, and call/result envelope references.",
+  "schema_file": "schema.json",
+  "example_files": [
+    "examples/operation-descriptor.example.json",
+    "examples/operation-call.example.json",
+    "examples/operation-result.example.json"
+  ]
+}

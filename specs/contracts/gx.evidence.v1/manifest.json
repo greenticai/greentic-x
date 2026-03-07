@@ -1,0 +1,11 @@
+{
+  "spec_id": "gx.evidence.v1",
+  "kind": "evidence-envelope",
+  "version": "1.0.0",
+  "title": "Greentic-X Evidence Envelope",
+  "description": "Neutral evidence item envelope with provenance, subject refs, summary, and payload metadata.",
+  "schema_file": "schema.json",
+  "example_files": [
+    "examples/evidence.example.json"
+  ]
+}

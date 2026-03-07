@@ -2,6 +2,11 @@
 
 This page explains how the runnable examples in `examples/` exercise the current Greentic-X crates and reference artifacts.
 
+There are now two example layers:
+
+- Rust smoke apps that drive the runtime directly
+- flow/profile-driven reference packages that run through `gx simulate`
+
 ## `simple-case-app`
 
 Exercises:
@@ -60,3 +65,22 @@ Run:
 ```bash
 cargo run -p end-to-end-demo
 ```
+
+## Flow/Profile-Driven Reference Packages
+
+These packages demonstrate the intended GX authoring shape:
+
+- `examples/top-contributors-generic/`
+- `examples/entity-utilisation-generic/`
+- `examples/change-correlation-generic/`
+- `examples/root-cause-split-join-generic/`
+
+Run them with:
+
+```bash
+cargo run -p gx -- flow validate examples/top-contributors-generic
+cargo run -p gx -- simulate examples/top-contributors-generic
+```
+
+The profile-driven examples include `profile.json` alongside the compiled
+`flow.json`. The raw-flow example keeps only the flow package form.

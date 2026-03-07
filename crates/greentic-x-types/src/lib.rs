@@ -123,9 +123,11 @@ macro_rules! string_id {
 string_id!(ActorId);
 string_id!(ContractId);
 string_id!(ContractVersion);
+string_id!(LinkTypeId);
 string_id!(OperationId);
 string_id!(ResourceId);
 string_id!(ResourceTypeId);
+string_id!(ResolverId);
 
 /// Monotonic revision used for optimistic concurrency.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -264,6 +266,223 @@ pub enum CompatibilityMode {
 pub struct CompatibilityReference {
     pub schema: SchemaReference,
     pub mode: CompatibilityMode,
+}
+
+/// Stable reference to a resource instance.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ResourceRef {
+    pub contract_id: ContractId,
+    pub resource_type: ResourceTypeId,
+    pub resource_id: ResourceId,
+}
+
+impl ResourceRef {
+    pub fn new(
+        contract_id: ContractId,
+        resource_type: ResourceTypeId,
+        resource_id: ResourceId,
+    ) -> Self {
+        Self {
+            contract_id,
+            resource_type,
+            resource_id,
+        }
+    }
+}
+
+/// Typed relation between two resources.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ResourceLink {
+    pub link_type: LinkTypeId,
+    pub from: ResourceRef,
+    pub to: ResourceRef,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<Value>,
+}
+
+impl ResourceLink {
+    pub fn new(link_type: LinkTypeId, from: ResourceRef, to: ResourceRef) -> Self {
+        Self {
+            link_type,
+            from,
+            to,
+            metadata: None,
+        }
+    }
+
+    pub fn with_metadata(mut self, metadata: Value) -> Self {
+        self.metadata = Some(metadata);
+        self
+    }
+}
+
+/// Resolver metadata used during registration and discovery.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ResolverDescriptor {
+    pub resolver_id: ResolverId,
+    pub description: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_type: Option<ResourceTypeId>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub tags: Vec<String>,
+}
+
+/// Standardized operation call envelope.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct OperationCallEnvelope {
+    pub invocation_id: String,
+    pub operation_id: OperationId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub run_id: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub scope_refs: Vec<ResourceRef>,
+    pub input: Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub constraints: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context: Option<Value>,
+    pub provenance: Provenance,
+}
+
+impl OperationCallEnvelope {
+    pub fn new(
+        invocation_id: impl Into<String>,
+        operation_id: OperationId,
+        input: Value,
+        provenance: Provenance,
+    ) -> Self {
+        Self {
+            invocation_id: invocation_id.into(),
+            operation_id,
+            run_id: None,
+            scope_refs: Vec::new(),
+            input,
+            constraints: None,
+            context: None,
+            provenance,
+        }
+    }
+
+    pub fn with_run_id(mut self, run_id: impl Into<String>) -> Self {
+        self.run_id = Some(run_id.into());
+        self
+    }
+
+    pub fn with_scope_refs(mut self, scope_refs: Vec<ResourceRef>) -> Self {
+        self.scope_refs = scope_refs;
+        self
+    }
+
+    pub fn with_constraints(mut self, constraints: Value) -> Self {
+        self.constraints = Some(constraints);
+        self
+    }
+
+    pub fn with_context(mut self, context: Value) -> Self {
+        self.context = Some(context);
+        self
+    }
+}
+
+/// Standardized operation outcome.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum InvocationStatus {
+    Succeeded,
+    Failed,
+}
+
+/// Standardized operation result envelope.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct OperationResultEnvelope {
+    pub invocation_id: String,
+    pub operation_id: OperationId,
+    pub status: InvocationStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output: Option<Value>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub evidence_refs: Vec<ResourceRef>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub warnings: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub view_hints: Vec<String>,
+}
+
+/// Standardized resolver query envelope.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ResolverQueryEnvelope {
+    pub resolver_id: ResolverId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_type: Option<ResourceTypeId>,
+    pub query: Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub constraints: Option<Value>,
+    pub provenance: Provenance,
+}
+
+impl ResolverQueryEnvelope {
+    pub fn new(resolver_id: ResolverId, query: Value, provenance: Provenance) -> Self {
+        Self {
+            resolver_id,
+            target_type: None,
+            query,
+            context: None,
+            constraints: None,
+            provenance,
+        }
+    }
+
+    pub fn with_target_type(mut self, target_type: ResourceTypeId) -> Self {
+        self.target_type = Some(target_type);
+        self
+    }
+
+    pub fn with_context(mut self, context: Value) -> Self {
+        self.context = Some(context);
+        self
+    }
+
+    pub fn with_constraints(mut self, constraints: Value) -> Self {
+        self.constraints = Some(constraints);
+        self
+    }
+}
+
+/// Candidate resource returned by a resolver.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ResolverCandidate {
+    pub resource: ResourceRef,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub confidence: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<Value>,
+}
+
+/// Normalized resolver outcome.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ResolverStatus {
+    Resolved,
+    Ambiguous,
+    NotFound,
+    Error,
+}
+
+/// Standardized resolver result envelope.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ResolverResultEnvelope {
+    pub resolver_id: ResolverId,
+    pub status: ResolverStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selected: Option<ResolverCandidate>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub candidates: Vec<ResolverCandidate>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub warnings: Vec<String>,
 }
 
 /// JSON Patch-like mutation operation.
@@ -458,5 +677,55 @@ mod tests {
         assert!(append_json.contains("\"collection\":\"evidence\""));
         assert!(transition_json.contains("\"target_state\":\"resolved\""));
         assert!(transition_json.contains("\"reason\":\"triage complete\""));
+    }
+
+    #[test]
+    fn serializes_runtime_envelopes_and_links() {
+        let resource = ResourceRef::new(
+            ContractId::new("gx.case").expect("static contract id should be valid"),
+            ResourceTypeId::new("case").expect("static resource type should be valid"),
+            ResourceId::new("case-123").expect("static resource id should be valid"),
+        );
+        let link = ResourceLink::new(
+            LinkTypeId::new("attached_to").expect("static link type should be valid"),
+            resource.clone(),
+            ResourceRef::new(
+                ContractId::new("gx.evidence").expect("static contract id should be valid"),
+                ResourceTypeId::new("evidence").expect("static resource type should be valid"),
+                ResourceId::new("evidence-1").expect("static resource id should be valid"),
+            ),
+        )
+        .with_metadata(json!({"source": "triage"}));
+
+        let op_call = OperationCallEnvelope::new(
+            "invoke-1",
+            OperationId::new("approval-basic").expect("static operation id should be valid"),
+            json!({"risk_score": 0.2}),
+            Provenance::new(ActorRef::service("runner").expect("static actor id should be valid")),
+        )
+        .with_run_id("run-1")
+        .with_scope_refs(vec![resource.clone()]);
+        let resolver_result = ResolverResultEnvelope {
+            resolver_id: ResolverId::new("resolve.by_name")
+                .expect("static resolver id should be valid"),
+            status: ResolverStatus::Resolved,
+            selected: Some(ResolverCandidate {
+                resource,
+                display: Some("Case 123".to_owned()),
+                confidence: Some(0.98),
+                metadata: None,
+            }),
+            candidates: Vec::new(),
+            warnings: Vec::new(),
+        };
+
+        let link_json = serde_json::to_value(&link).expect("link must serialize");
+        let op_call_json = serde_json::to_value(&op_call).expect("call envelope must serialize");
+        let resolver_json =
+            serde_json::to_value(&resolver_result).expect("resolver result must serialize");
+
+        assert_eq!(link_json["link_type"], "attached_to");
+        assert_eq!(op_call_json["run_id"], "run-1");
+        assert_eq!(resolver_json["status"], "resolved");
     }
 }

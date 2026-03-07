@@ -107,3 +107,8 @@ The runtime uses contract and op metadata structurally, but it does not yet:
 - enforce policy hooks
 - execute migrations
 - integrate with production storage or transport backends
+
+The repo now also contains a runtime-capability source pack scaffold under
+`packs/greentic-x-runtime-capability-reference/`. It demonstrates the intended
+`greentic.ext.capabilities.v1` shape, but the provider component and capability
+offer remain illustrative rather than production-ready.

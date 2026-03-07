@@ -1,0 +1,72 @@
+{
+  "flow_id": "change.correlation.generic",
+  "steps": [
+    {
+      "id": "resolve",
+      "kind": {
+        "resolver_id": "resolve.by_alias",
+        "query": {
+          "kind": "input",
+          "value": "query"
+        },
+        "output_key": "resolved",
+        "type": "resolve"
+      }
+    },
+    {
+      "id": "query",
+      "kind": {
+        "input": {
+          "kind": "context",
+          "value": "resolved"
+        },
+        "operation_id": "query.resource",
+        "output_key": "query_result",
+        "type": "call"
+      }
+    },
+    {
+      "id": "analyse",
+      "kind": {
+        "input": {
+          "kind": "context",
+          "value": "query_result.output"
+        },
+        "operation_id": "correlate.time_window",
+        "output_key": "analysis_result",
+        "type": "call"
+      }
+    },
+    {
+      "id": "present",
+      "kind": {
+        "input": {
+          "kind": "context",
+          "value": "analysis_result.output"
+        },
+        "operation_id": "present.timeline",
+        "output_key": "present_result",
+        "type": "call"
+      }
+    },
+    {
+      "id": "return",
+      "kind": {
+        "output": {
+          "kind": "context",
+          "value": "present_result.output"
+        },
+        "render": {
+          "renderer_id": "noop.summary",
+          "source": {
+            "kind": "all_evidence"
+          },
+          "summary": "Raw flow timeline output",
+          "title": "Change Correlation Timeline",
+          "view_id": "timeline"
+        },
+        "type": "return"
+      }
+    }
+  ]
+}

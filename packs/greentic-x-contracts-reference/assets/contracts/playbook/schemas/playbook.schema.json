@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "greentic-x://contracts/playbook/resources/playbook",
+  "title": "Playbook",
+  "type": "object",
+  "required": ["playbook_id", "title"],
+  "properties": {
+    "playbook_id": { "type": "string" },
+    "title": { "type": "string" },
+    "summary": { "type": "string" }
+  },
+  "additionalProperties": true
+}
