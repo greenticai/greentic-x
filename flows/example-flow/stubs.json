@@ -1,0 +1,19 @@
+{
+  "operations": [
+    {
+      "evidence": [
+        {
+          "evidence_id": "evidence-1",
+          "evidence_type": "summary",
+          "producer": "present.summary",
+          "summary": "Example evidence emitted during simulation",
+          "timestamp": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "operation_id": "present.summary",
+      "output": {
+        "summary": "Example summary"
+      }
+    }
+  ]
+}

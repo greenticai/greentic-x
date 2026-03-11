@@ -1,0 +1,7 @@
+{
+  "description": "Generic GX flow scaffold with stubbed simulation data.",
+  "flow": "flow.json",
+  "flow_id": "example.flow",
+  "stubs": "stubs.json",
+  "version": "v1"
+}

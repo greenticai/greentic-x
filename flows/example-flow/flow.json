@@ -1,0 +1,38 @@
+{
+  "flow_id": "example.flow",
+  "steps": [
+    {
+      "id": "present",
+      "kind": {
+        "input": {
+          "kind": "literal",
+          "value": {
+            "summary": "Example summary"
+          }
+        },
+        "operation_id": "present.summary",
+        "output_key": "present_result",
+        "type": "call"
+      }
+    },
+    {
+      "id": "return",
+      "kind": {
+        "output": {
+          "kind": "context",
+          "value": "present_result.output"
+        },
+        "render": {
+          "renderer_id": "noop.summary",
+          "source": {
+            "kind": "evidence_refs"
+          },
+          "summary": "Rendered from the final flow output",
+          "title": "Simulation Summary",
+          "view_id": "summary-card"
+        },
+        "type": "return"
+      }
+    }
+  ]
+}
