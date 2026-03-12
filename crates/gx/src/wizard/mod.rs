@@ -6,6 +6,7 @@ mod remote;
 mod template;
 
 use std::collections::BTreeMap;
+use std::fs;
 use std::io::IsTerminal;
 use std::path::Path;
 
@@ -75,8 +76,10 @@ pub(crate) fn run_wizard(
         "gx_action".to_owned(),
         Value::String(wizard_action_name(action).to_owned()),
     );
-    if should_collect_interactive_answers(action, execution, &args) {
-        collect_interactive_answers(&mut document, args.mode.as_deref(), &locale)?;
+    if should_collect_interactive_answers(action, execution, &args)
+        && !collect_interactive_answers(&mut document, args.mode.as_deref(), &locale)?
+    {
+        return Ok(String::new());
     }
     let resolve_remote = matches!(execution, WizardExecutionMode::Execute)
         && matches!(action, WizardAction::Run | WizardAction::Apply);
@@ -135,6 +138,14 @@ pub(crate) fn run_wizard(
         .map_err(|err| format!("failed to serialize wizard plan: {err}"))
 }
 
+pub(crate) fn run_default_wizard(cwd: &Path, args: WizardCommonArgs) -> Result<String, String> {
+    if should_run_interactive_session(&args) {
+        run_interactive_session(cwd, args)?;
+        return Ok(String::new());
+    }
+    run_wizard(cwd, WizardAction::Run, args)
+}
+
 fn should_collect_interactive_answers(
     action: WizardAction,
     execution: WizardExecutionMode,
@@ -143,6 +154,15 @@ fn should_collect_interactive_answers(
     args.answers.is_none()
         && matches!(action, WizardAction::Run | WizardAction::Apply)
         && matches!(execution, WizardExecutionMode::Execute)
+        && !is_automated_context()
+        && std::io::stdin().is_terminal()
+        && std::io::stdout().is_terminal()
+}
+
+fn should_run_interactive_session(args: &WizardCommonArgs) -> bool {
+    args.answers.is_none()
+        && args.emit_answers.is_none()
+        && !args.dry_run
         && !is_automated_context()
         && std::io::stdin().is_terminal()
         && std::io::stdout().is_terminal()
@@ -206,5 +226,67 @@ fn wizard_execute_plan(
         }
         run_bundle_handoff(cwd, action, &handoff_answers_path)?;
     }
+    Ok(())
+}
+
+fn run_interactive_session(cwd: &Path, args: WizardCommonArgs) -> Result<(), String> {
+    loop {
+        let mut session_args = args.clone();
+        session_args.bundle_handoff = true;
+        let plan_json = run_wizard(cwd, WizardAction::Apply, session_args)?;
+        if plan_json.trim().is_empty() {
+            return Ok(());
+        }
+        let plan: WizardPlanEnvelope = serde_json::from_str(&plan_json)
+            .map_err(|err| format!("failed to parse interactive wizard result: {err}"))?;
+        print_completion_message(cwd, &plan)?;
+    }
+}
+
+fn print_completion_message(cwd: &Path, plan: &WizardPlanEnvelope) -> Result<(), String> {
+    let workflow = plan
+        .normalized_input_summary
+        .get("workflow")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    match workflow {
+        "assistant_bundle" => {
+            let path = plan
+                .normalized_input_summary
+                .get("bundle_output_path")
+                .and_then(Value::as_str)
+                .ok_or_else(|| "interactive wizard missing bundle_output_path".to_owned())?;
+            let resolved = resolve_wizard_path(cwd, Path::new(path));
+            if !resolved.exists() {
+                return Err(format!(
+                    "bundle handoff completed but no .gtbundle was found at {}",
+                    resolved.display()
+                ));
+            }
+            println!("Bundle written successfully: {}", resolved.display());
+        }
+        "assistant_template_create"
+        | "assistant_template_update"
+        | "domain_template_create"
+        | "domain_template_update" => {
+            let path = plan
+                .normalized_input_summary
+                .get("template_output_path")
+                .and_then(Value::as_str)
+                .ok_or_else(|| "interactive wizard missing template_output_path".to_owned())?;
+            let resolved = resolve_wizard_path(cwd, Path::new(path));
+            if !resolved.exists() {
+                return Err(format!(
+                    "template generation completed but no output was found at {}",
+                    resolved.display()
+                ));
+            }
+            let _ = fs::metadata(&resolved)
+                .map_err(|err| format!("failed to confirm template output {}: {err}", resolved.display()))?;
+            println!("Template written successfully: {}", resolved.display());
+        }
+        _ => {}
+    }
+    println!();
     Ok(())
 }

@@ -201,14 +201,6 @@ fn add_bundle_summary(summary: &mut BTreeMap<String, Value>, bundle_answers: &Wi
         Value::String(bundle_answers.domain_template_source.clone()),
     );
     summary.insert(
-        "deployment_profile".to_owned(),
-        Value::String(bundle_answers.deployment_profile.clone()),
-    );
-    summary.insert(
-        "deployment_target".to_owned(),
-        Value::String(bundle_answers.deployment_target.clone()),
-    );
-    summary.insert(
         "provider_categories".to_owned(),
         Value::Array(
             bundle_answers

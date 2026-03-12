@@ -165,10 +165,16 @@ fn normalize_bundle_answers(
             tr(locale, "wizard.err.unsupported_workflow")
         ));
     }
+    document.answers.remove("deployment_profile");
+    document.answers.remove("deployment_target");
+    document.answers.remove("bundle_output_path");
+    document.locks.remove("deployment_profile");
+    document.locks.remove("deployment_target");
+    document.locks.remove("bundle_output_path");
     let assistant_template_source = upsert_string_answer(
         document,
         "assistant_template_source",
-        "local://templates/assistant/default",
+        "templates/assistant/default.json",
     );
     validate_supported_source_ref(
         "assistant_template_source",
@@ -178,21 +184,15 @@ fn normalize_bundle_answers(
     let domain_template_source = upsert_string_answer(
         document,
         "domain_template_source",
-        "local://templates/domain/default",
+        "templates/domain/default.json",
     );
     validate_supported_source_ref("domain_template_source", &domain_template_source, locale)?;
-    let deployment_profile = upsert_string_answer(document, "deployment_profile", "default");
-    let deployment_target = upsert_string_answer(document, "deployment_target", "local");
     let provider_categories =
         upsert_string_array_answer(document, "provider_categories", &["llm"])?;
-    let bundle_output_path =
-        upsert_string_answer(document, "bundle_output_path", "dist/app.gtbundle");
-    if !bundle_output_path.ends_with(".gtbundle") {
-        return Err(format!(
-            "{}, got {bundle_output_path}",
-            tr(locale, "wizard.err.bundle_output_ext")
-        ));
-    }
+    let bundle_name = upsert_string_answer(document, "bundle_name", "GX Bundle");
+    let bundle_id = upsert_string_answer(document, "bundle_id", "gx-bundle");
+    let output_dir = upsert_string_answer(document, "output_dir", "dist/bundle");
+    let bundle_output_path = format!("{output_dir}/dist/{bundle_id}.gtbundle");
     let latest_policy = resolve_latest_policy(
         document,
         locale,
@@ -205,9 +205,10 @@ fn normalize_bundle_answers(
         assistant_template_source.as_str(),
         domain_template_source.as_str(),
     ]);
-    let bundle_name = upsert_string_answer(document, "bundle_name", "GX Bundle");
-    let bundle_id = upsert_string_answer(document, "bundle_id", "gx-bundle");
-    let output_dir = upsert_string_answer(document, "output_dir", "dist/bundle");
+    document.answers.insert(
+        "bundle_output_path".to_owned(),
+        Value::String(bundle_output_path.clone()),
+    );
     let mode = upsert_string_answer(document, "mode", "create");
     if mode != "create" && mode != "update" && mode != "doctor" {
         return Err(format!(
@@ -222,8 +223,6 @@ fn normalize_bundle_answers(
         output_dir,
         assistant_template_source,
         domain_template_source,
-        deployment_profile,
-        deployment_target,
         provider_categories,
         bundle_output_path,
         latest_policy,
@@ -245,7 +244,7 @@ fn normalize_template_answers(
     let template_source = upsert_string_answer(
         document,
         "template_source",
-        &format!("local://templates/{template_kind}/default"),
+        &format!("templates/{template_kind}/default.json"),
     );
     validate_supported_source_ref("template_source", &template_source, locale)?;
     let template_output_path = upsert_string_answer(
@@ -523,12 +522,7 @@ fn find_latest_refs<'a>(refs: impl IntoIterator<Item = &'a str>) -> Vec<String> 
 }
 
 fn is_remote_source_ref(value: &str) -> bool {
-    value.starts_with("oci://")
-        || value.starts_with("repo://")
-        || value.starts_with("store://")
-        || value.starts_with("file://")
-        || value.starts_with("https://")
-        || value.starts_with("http://")
+    value.starts_with("oci://") || value.starts_with("repo://") || value.starts_with("store://")
 }
 
 fn validate_supported_source_ref(field: &str, value: &str, locale: &str) -> Result<(), String> {
@@ -537,14 +531,12 @@ fn validate_supported_source_ref(field: &str, value: &str, locale: &str) -> Resu
         return Err(format!("answers.{field} must not be empty"));
     }
     if trimmed.contains("://") {
-        let allowed = trimmed.starts_with("local://")
-            || trimmed.starts_with("file://")
-            || trimmed.starts_with("oci://")
+        let allowed = trimmed.starts_with("oci://")
             || trimmed.starts_with("repo://")
             || trimmed.starts_with("store://");
         if !allowed {
             return Err(format!(
-                "answers.{field} {} in {trimmed}; expected local://, file://, oci://, repo://, or store://",
+                "answers.{field} {} in {trimmed}; expected an absolute/relative path, oci://, repo://, or store://",
                 tr(locale, "wizard.err.unsupported_source_ref_scheme")
             ));
         }

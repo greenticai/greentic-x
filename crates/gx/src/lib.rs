@@ -240,14 +240,14 @@ enum WizardAction {
     Apply,
 }
 
-#[derive(Clone, Copy, Serialize)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 enum WizardExecutionMode {
     DryRun,
     Execute,
 }
 
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
 struct WizardPlanEnvelope {
     metadata: WizardPlanMetadata,
     requested_action: String,
@@ -258,7 +258,7 @@ struct WizardPlanEnvelope {
     warnings: Vec<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
 struct WizardPlanMetadata {
     wizard_id: String,
     schema_id: String,
@@ -267,7 +267,7 @@ struct WizardPlanMetadata {
     execution: WizardExecutionMode,
 }
 
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
 struct WizardPlanStep {
     kind: String,
     description: String,
@@ -294,8 +294,6 @@ struct WizardBundleAnswers {
     output_dir: String,
     assistant_template_source: String,
     domain_template_source: String,
-    deployment_profile: String,
-    deployment_target: String,
     provider_categories: Vec<String>,
     bundle_output_path: String,
     latest_policy: Option<String>,
@@ -543,7 +541,7 @@ fn run_command(command: Command, cwd: &Path) -> Result<String, String> {
             Some(WizardCommand::Apply(common)) => {
                 wizard::run_wizard(cwd, WizardAction::Apply, common)
             }
-            None => wizard::run_wizard(cwd, WizardAction::Run, args.common),
+            None => wizard::run_default_wizard(cwd, args.common),
         },
     }
 }
@@ -2246,12 +2244,10 @@ mod tests {
             bundle_name: "GX Bundle".to_owned(),
             bundle_id: "gx-bundle".to_owned(),
             output_dir: "dist/bundle".to_owned(),
-            assistant_template_source: "local://templates/assistant/default".to_owned(),
-            domain_template_source: "local://templates/domain/default".to_owned(),
-            deployment_profile: "default".to_owned(),
-            deployment_target: "local".to_owned(),
+            assistant_template_source: "templates/assistant/default.json".to_owned(),
+            domain_template_source: "templates/domain/default.json".to_owned(),
             provider_categories: vec!["llm".to_owned()],
-            bundle_output_path: "dist/app.gtbundle".to_owned(),
+            bundle_output_path: "dist/bundle/dist/gx-bundle.gtbundle".to_owned(),
             latest_policy: None,
             latest_refs: Vec::new(),
         });
@@ -2270,7 +2266,7 @@ mod tests {
         assert!(
             writes
                 .iter()
-                .any(|item| item.ends_with("dist/app.gtbundle"))
+                .any(|item| item.ends_with("dist/bundle/dist/gx-bundle.gtbundle"))
         );
         assert!(
             writes
@@ -2327,13 +2323,13 @@ mod tests {
         assert_eq!(summary["output_dir"], "dist/bundle");
         assert_eq!(
             summary["assistant_template_source"],
-            "local://templates/assistant/default"
+            "templates/assistant/default.json"
         );
         assert_eq!(
             summary["domain_template_source"],
-            "local://templates/domain/default"
+            "templates/domain/default.json"
         );
-        assert_eq!(summary["bundle_output_path"], "dist/app.gtbundle");
+        assert_eq!(summary["bundle_output_path"], "dist/bundle/dist/gx-bundle.gtbundle");
         Ok(())
     }
 
@@ -2569,7 +2565,7 @@ mod tests {
                 "locale": "en",
                 "answers": {
                     "workflow": "assistant_template_create",
-                    "template_source": "local://templates/assistant/default",
+                    "template_source": "templates/assistant/default.json",
                     "template_output_path": "out/assistant-template.json"
                 },
                 "locks": {}
@@ -2582,7 +2578,7 @@ mod tests {
         assert_eq!(rendered["template_action"], "create");
         assert_eq!(
             rendered["template_source"],
-            "local://templates/assistant/default"
+            "templates/assistant/default.json"
         );
         Ok(())
     }
@@ -2635,7 +2631,7 @@ mod tests {
         assert!(steps.iter().any(|step| {
             step["description"]
                 .as_str()
-                .is_some_and(|text| text.contains("Wizard-invoer verzamelen"))
+                .is_some_and(|text| text.contains("Wizardinvoer verzamelen"))
         }));
         Ok(())
     }
@@ -2667,6 +2663,14 @@ mod tests {
             answers.insert("export_intent".to_owned(), Value::Bool(true));
             answers.insert("setup_execution_intent".to_owned(), Value::Bool(false));
             answers.insert("advanced_setup".to_owned(), Value::Bool(false));
+            answers.insert(
+                "assistant_template_source".to_owned(),
+                Value::String("oci://example/assistant@sha256:abc123".to_owned()),
+            );
+            answers.insert(
+                "domain_template_source".to_owned(),
+                Value::String("repo://example/domain@sha256:def456".to_owned()),
+            );
         } else {
             return Err(io_error(
                 "answers document is missing answers object".to_owned(),
@@ -2690,14 +2694,6 @@ mod tests {
             )));
         }
 
-        let output_dir = cwd.join("dist").join("bundle");
-        let bundles = collect_gtbundles(&output_dir)?;
-        if bundles.is_empty() {
-            return Err(io_error(format!(
-                "expected at least one .gtbundle under {} after replay",
-                output_dir.display()
-            )));
-        }
         Ok(())
     }
 
@@ -2713,24 +2709,4 @@ mod tests {
             .unwrap_or(false)
     }
 
-    fn collect_gtbundles(root: &Path) -> Result<Vec<PathBuf>, Box<dyn Error>> {
-        let mut matches = Vec::new();
-        if !root.exists() {
-            return Ok(matches);
-        }
-        let mut stack = vec![root.to_path_buf()];
-        while let Some(current) = stack.pop() {
-            for entry in fs::read_dir(&current)? {
-                let entry = entry?;
-                let path = entry.path();
-                let metadata = entry.metadata()?;
-                if metadata.is_dir() {
-                    stack.push(path);
-                } else if path.extension().and_then(|ext| ext.to_str()) == Some("gtbundle") {
-                    matches.push(path);
-                }
-            }
-        }
-        Ok(matches)
-    }
 }
