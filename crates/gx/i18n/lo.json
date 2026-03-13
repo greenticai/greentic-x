@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "ເຄື່ອງມື Greentic-X ສໍາລັບ scaffold, validate, simulate, ແລະ inspect",
+  "cli.help.command.catalog.description": "Scaffold, build, validate, ແລະສະແດງລາຍການ GX catalogs",
+  "cli.help.command.contract.description": "Scaffold ແລະ validate GX contracts",
+  "cli.help.command.doctor.description": "ດໍາເນີນການກວດສຸຂະພາບ repository",
+  "cli.help.command.flow.description": "Scaffold ແລະ validate GX flows",
+  "cli.help.command.help.description": "ພິມຂໍ້ຄວາມນີ້ ຫຼື help ຂອງຄໍາສັ່ງຍ່ອຍ",
+  "cli.help.command.op.description": "Scaffold ແລະ validate GX operations",
+  "cli.help.command.profile.description": "Validate ແລະ compile GX profiles",
+  "cli.help.command.resolver.description": "Scaffold ແລະ validate GX resolvers",
+  "cli.help.command.simulate.description": "ຈໍາລອງແພັກເກດ flow ໃນເຄື່ອງທ້ອງຖິ່ນ",
+  "cli.help.command.view.description": "Scaffold ແລະ validate GX views",
+  "cli.help.command.wizard.description": "ປະກອບ solutions ແລະມອບໝາຍການສ້າງ bundle",
+  "cli.help.commands": "ຄໍາສັ່ງ:",
+  "cli.help.option.help": "ພິມ help",
+  "cli.help.option.locale": "ເລືອກ locale ສໍາລັບ UI/help (`en` ຫຼື `nl`)",
+  "cli.help.options": "ຕົວເລືອກ:",
+  "cli.help.usage": "ວິທີໃຊ້:"
+}

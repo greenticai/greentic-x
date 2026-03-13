@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X टूलिंग को स्कैफोल्ड, वैलिडेट, सिम्युलेट और निरीक्षण करें",
+  "cli.help.command.catalog.description": "GX कैटलॉग को स्कैफोल्ड, बिल्ड, वैलिडेट और सूचीबद्ध करें",
+  "cli.help.command.contract.description": "GX कॉन्ट्रैक्ट को स्कैफोल्ड और वैलिडेट करें",
+  "cli.help.command.doctor.description": "रिपॉज़िटरी स्वास्थ्य जांच चलाएँ",
+  "cli.help.command.flow.description": "GX फ्लो को स्कैफोल्ड और वैलिडेट करें",
+  "cli.help.command.help.description": "यह संदेश या किसी सबकमांड की सहायता प्रिंट करें",
+  "cli.help.command.op.description": "GX ऑपरेशन को स्कैफोल्ड और वैलिडेट करें",
+  "cli.help.command.profile.description": "GX प्रोफ़ाइल को वैलिडेट और कम्पाइल करें",
+  "cli.help.command.resolver.description": "GX रिज़ॉल्वर को स्कैफोल्ड और वैलिडेट करें",
+  "cli.help.command.simulate.description": "किसी फ्लो पैकेज को लोकली सिम्युलेट करें",
+  "cli.help.command.view.description": "GX व्यू को स्कैफोल्ड और वैलिडेट करें",
+  "cli.help.command.wizard.description": "समाधान संयोजित करें और बंडल जनरेशन सौंपें",
+  "cli.help.commands": "कमांड्स:",
+  "cli.help.option.help": "सहायता प्रिंट करें",
+  "cli.help.option.locale": "UI/help लोकेल चुनें (`en` या `nl`)",
+  "cli.help.options": "विकल्प:",
+  "cli.help.usage": "उपयोग:"
+}

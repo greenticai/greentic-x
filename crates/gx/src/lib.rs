@@ -3,7 +3,7 @@ mod i18n;
 mod profile;
 mod wizard;
 
-use clap::{Args, Parser, Subcommand, ValueEnum};
+use clap::{Args, Parser, Subcommand, ValueEnum, error::ErrorKind};
 use greentic_x_contracts::ContractManifest;
 use greentic_x_flow::{
     EvidenceItem, FlowDefinition, FlowEngine, FlowError, NoopViewRenderer, OperationCallStep,
@@ -26,7 +26,8 @@ use std::path::{Path, PathBuf};
 #[derive(Parser)]
 #[command(
     name = "greentic-x",
-    about = "Greentic-X scaffold, validate, simulate, and inspect tooling"
+    about = "Greentic-X scaffold, validate, simulate, and inspect tooling",
+    version
 )]
 struct Cli {
     #[arg(long, global = true)]
@@ -648,7 +649,18 @@ where
     if let Some(help) = maybe_render_top_level_help(&argv) {
         return Ok(help);
     }
-    let cli = Cli::try_parse_from(&argv).map_err(|err| err.to_string())?;
+    let cli = match Cli::try_parse_from(&argv) {
+        Ok(cli) => cli,
+        Err(err)
+            if matches!(
+                err.kind(),
+                ErrorKind::DisplayHelp | ErrorKind::DisplayVersion
+            ) =>
+        {
+            return Ok(err.to_string().trim_end().to_owned());
+        }
+        Err(err) => return Err(err.to_string()),
+    };
     run_command(cli.command, &cwd)
 }
 
@@ -2071,9 +2083,22 @@ mod tests {
         let cwd = temp.path();
         let output = run_ok(&["--help", "--locale", "nl"], cwd)?;
         assert!(output.contains("Gebruik:"));
-        assert!(output.contains("Commando's:"));
+        assert!(output.contains("contract"));
+        assert!(output.contains("wizard"));
         assert!(output.contains("--locale <LOCALE>"));
         assert!(output.contains("Oplossingen samenstellen en bundelgeneratie delegeren"));
+        Ok(())
+    }
+
+    #[test]
+    fn top_level_version_uses_cargo_version() -> Result<(), Box<dyn Error>> {
+        let temp = TempDir::new()?;
+        let cwd = temp.path();
+        let output = run_ok(&["--version"], cwd)?;
+        assert_eq!(
+            output.trim(),
+            format!("greentic-x {}", env!("CARGO_PKG_VERSION"))
+        );
         Ok(())
     }
 

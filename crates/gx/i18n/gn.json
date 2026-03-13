@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X rembiasakue omoheñói, omoneĩ, osimula ha ohecha hag̃ua tembiporu",
+  "cli.help.command.catalog.description": "Emoheñói, embopu, emoneĩ ha embohysýi GX catálogo-kuérape",
+  "cli.help.command.contract.description": "Emoheñói ha emoneĩ GX contrato-kuérape",
+  "cli.help.command.doctor.description": "Emboguata jehechajey tesãi rehegua repositorio-pe",
+  "cli.help.command.flow.description": "Emoheñói ha emoneĩ GX flujo-kuérape",
+  "cli.help.command.help.description": "Emoĩ hag̃ua ko marandu térã peteĩ subcomando pytyvõ",
+  "cli.help.command.op.description": "Emoheñói ha emoneĩ GX operación-kuérape",
+  "cli.help.command.profile.description": "Emoneĩ ha embyaty GX perfil-kuérape",
+  "cli.help.command.resolver.description": "Emoheñói ha emoneĩ GX resolver-kuérape",
+  "cli.help.command.simulate.description": "Esimula peteĩ paquete flujo rehegua localmente",
+  "cli.help.command.view.description": "Emoheñói ha emoneĩ GX vista-kuérape",
+  "cli.help.command.wizard.description": "Embyaty solución-kuérape ha emondo bundle ñemoheñói hag̃ua",
+  "cli.help.commands": "Comando-kuéra:",
+  "cli.help.option.help": "Emoĩ pytyvõ",
+  "cli.help.option.locale": "Eiporavo UI/pytyvõ ñe'ẽ (`en` térã `nl`)",
+  "cli.help.options": "Opción-kuéra:",
+  "cli.help.usage": "Jepuru:"
+}

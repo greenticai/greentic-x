@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X स्कॅफोल्ड, पडताळणी, सिम्युलेट, आणि तपासणी साधने",
+  "cli.help.command.catalog.description": "GX कॅटलॉग स्कॅफोल्ड, बिल्ड, पडताळणी, आणि सूचीबद्ध करा",
+  "cli.help.command.contract.description": "GX कॉन्ट्रॅक्ट स्कॅफोल्ड आणि पडताळणी करा",
+  "cli.help.command.doctor.description": "रिपॉझिटरी आरोग्य तपासण्या चालवा",
+  "cli.help.command.flow.description": "GX फ्लो स्कॅफोल्ड आणि पडताळणी करा",
+  "cli.help.command.help.description": "हा संदेश किंवा उपकमांडची मदत मुद्रित करा",
+  "cli.help.command.op.description": "GX ऑपरेशन्स स्कॅफोल्ड आणि पडताळणी करा",
+  "cli.help.command.profile.description": "GX प्रोफाइल्स पडताळा आणि संकलित करा",
+  "cli.help.command.resolver.description": "GX रिझॉल्व्हर्स स्कॅफोल्ड आणि पडताळणी करा",
+  "cli.help.command.simulate.description": "फ्लो पॅकेज स्थानिकरित्या सिम्युलेट करा",
+  "cli.help.command.view.description": "GX व्ह्यूज स्कॅफोल्ड आणि पडताळणी करा",
+  "cli.help.command.wizard.description": "उपाय रचा आणि बंडल निर्मिती सोपवा",
+  "cli.help.commands": "कमांड्स:",
+  "cli.help.option.help": "मदत मुद्रित करा",
+  "cli.help.option.locale": "UI/help लोकॅल निवडा (`en` किंवा `nl`)",
+  "cli.help.options": "पर्याय:",
+  "cli.help.usage": "वापर:"
+}

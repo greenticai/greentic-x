@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "ابزار Greentic-X برای اسکفولد، اعتبارسنجی، شبیه‌سازی و بازرسی",
+  "cli.help.command.catalog.description": "اسکفولد، ساخت، اعتبارسنجی و فهرست‌کردن کاتالوگ‌های GX",
+  "cli.help.command.contract.description": "اسکفولد و اعتبارسنجی قراردادهای GX",
+  "cli.help.command.doctor.description": "اجرای بررسی‌های سلامت مخزن",
+  "cli.help.command.flow.description": "اسکفولد و اعتبارسنجی فلوهای GX",
+  "cli.help.command.help.description": "چاپ این پیام یا راهنمای یک زیر‌دستور",
+  "cli.help.command.op.description": "اسکفولد و اعتبارسنجی عملیات‌های GX",
+  "cli.help.command.profile.description": "اعتبارسنجی و کامپایل پروفایل‌های GX",
+  "cli.help.command.resolver.description": "اسکفولد و اعتبارسنجی حل‌کننده‌های GX",
+  "cli.help.command.simulate.description": "شبیه‌سازی محلی یک بستهٔ فلو",
+  "cli.help.command.view.description": "اسکفولد و اعتبارسنجی نماهای GX",
+  "cli.help.command.wizard.description": "ترکیب راه‌حل‌ها و واگذاری تولید باندل",
+  "cli.help.commands": "دستورها:",
+  "cli.help.option.help": "چاپ راهنما",
+  "cli.help.option.locale": "انتخاب زبان رابط/راهنما (`en` یا `nl`)",
+  "cli.help.options": "گزینه‌ها:",
+  "cli.help.usage": "نحوهٔ استفاده:"
+}

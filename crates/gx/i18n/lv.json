@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X rīki veidņu ģenerēšanai, validācijai, simulācijai un pārbaudei",
+  "cli.help.command.catalog.description": "Ģenerēt veidnes, būvēt, validēt un uzskaitīt GX katalogus",
+  "cli.help.command.contract.description": "Ģenerēt veidnes un validēt GX līgumus",
+  "cli.help.command.doctor.description": "Palaist repozitorija veselības pārbaudes",
+  "cli.help.command.flow.description": "Ģenerēt veidnes un validēt GX plūsmas",
+  "cli.help.command.help.description": "Parādīt šo ziņojumu vai apakškomandas palīdzību",
+  "cli.help.command.op.description": "Ģenerēt veidnes un validēt GX operācijas",
+  "cli.help.command.profile.description": "Validēt un kompilēt GX profilus",
+  "cli.help.command.resolver.description": "Ģenerēt veidnes un validēt GX atrisinātājus",
+  "cli.help.command.simulate.description": "Simulēt plūsmas pakotni lokāli",
+  "cli.help.command.view.description": "Ģenerēt veidnes un validēt GX skatus",
+  "cli.help.command.wizard.description": "Veidot risinājumus un deleģēt pakotņu ģenerēšanu",
+  "cli.help.commands": "Komandas:",
+  "cli.help.option.help": "Parādīt palīdzību",
+  "cli.help.option.locale": "Atlasīt UI/palīdzības lokalizāciju (`en` vai `nl`)",
+  "cli.help.options": "Opcijas:",
+  "cli.help.usage": "Lietojums:"
+}

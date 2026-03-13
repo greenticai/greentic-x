@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Công cụ Greentic-X để tạo khung, xác thực, mô phỏng và kiểm tra",
+  "cli.help.command.catalog.description": "Tạo khung, xây dựng, xác thực và liệt kê các danh mục GX",
+  "cli.help.command.contract.description": "Tạo khung và xác thực các hợp đồng GX",
+  "cli.help.command.doctor.description": "Chạy kiểm tra tình trạng kho lưu trữ",
+  "cli.help.command.flow.description": "Tạo khung và xác thực các luồng GX",
+  "cli.help.command.help.description": "In thông báo này hoặc phần trợ giúp của một lệnh con",
+  "cli.help.command.op.description": "Tạo khung và xác thực các thao tác GX",
+  "cli.help.command.profile.description": "Xác thực và biên dịch các hồ sơ GX",
+  "cli.help.command.resolver.description": "Tạo khung và xác thực các bộ phân giải GX",
+  "cli.help.command.simulate.description": "Mô phỏng một gói luồng trên máy cục bộ",
+  "cli.help.command.view.description": "Tạo khung và xác thực các khung nhìn GX",
+  "cli.help.command.wizard.description": "Soạn giải pháp và ủy quyền tạo gói bundle",
+  "cli.help.commands": "Các lệnh:",
+  "cli.help.option.help": "In trợ giúp",
+  "cli.help.option.locale": "Chọn ngôn ngữ UI/trợ giúp (`en` hoặc `nl`)",
+  "cli.help.options": "Tùy chọn:",
+  "cli.help.usage": "Cách dùng:"
+}

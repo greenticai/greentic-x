@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X ಸ್ಕಾಫ್‌ಫೋಲ್ಡ್, ಮಾನ್ಯಗೊಳಿಸಲು, ಅನುಕರಿಸಲು ಮತ್ತು ಪರಿಶೀಲಿಸಲು ಉಪಕರಣಗಳು",
+  "cli.help.command.catalog.description": "GX ಕ್ಯಾಟಲಾಗ್‌ಗಳನ್ನು ಸ್ಕಾಫ್‌ಫೋಲ್ಡ್ ಮಾಡಿ, ನಿರ್ಮಿಸಿ, ಮಾನ್ಯಗೊಳಿಸಿ ಮತ್ತು ಪಟ್ಟಿ ಮಾಡಿ",
+  "cli.help.command.contract.description": "GX ಒಪ್ಪಂದಗಳನ್ನು ಸ್ಕಾಫ್‌ಫೋಲ್ಡ್ ಮಾಡಿ ಮತ್ತು ಮಾನ್ಯಗೊಳಿಸಿ",
+  "cli.help.command.doctor.description": "ರೆಪೊಸಿಟರಿಯ ಆರೋಗ್ಯ ಪರಿಶೀಲನೆಗಳನ್ನು ಚಲಾಯಿಸಿ",
+  "cli.help.command.flow.description": "GX ಫ್ಲೋಗಳನ್ನು ಸ್ಕಾಫ್‌ಫೋಲ್ಡ್ ಮಾಡಿ ಮತ್ತು ಮಾನ್ಯಗೊಳಿಸಿ",
+  "cli.help.command.help.description": "ಈ ಸಂದೇಶವನ್ನು ಅಥವಾ ಉಪಆಜ್ಞೆಯ ಸಹಾಯವನ್ನು ಮುದ್ರಿಸಿ",
+  "cli.help.command.op.description": "GX ಕಾರ್ಯಾಚರಣೆಗಳನ್ನು ಸ್ಕಾಫ್‌ಫೋಲ್ಡ್ ಮಾಡಿ ಮತ್ತು ಮಾನ್ಯಗೊಳಿಸಿ",
+  "cli.help.command.profile.description": "GX ಪ್ರೊಫೈಲ್‌ಗಳನ್ನು ಮಾನ್ಯಗೊಳಿಸಿ ಮತ್ತು ಸಂಯೋಜಿಸಿ",
+  "cli.help.command.resolver.description": "GX ರಿಸಾಲ್ವರ್‌ಗಳನ್ನು ಸ್ಕಾಫ್‌ಫೋಲ್ಡ್ ಮಾಡಿ ಮತ್ತು ಮಾನ್ಯಗೊಳಿಸಿ",
+  "cli.help.command.simulate.description": "ಒಂದು ಫ್ಲೋ ಪ್ಯಾಕೇಜ್ ಅನ್ನು ಸ್ಥಳೀಯವಾಗಿ ಅನುಕರಿಸಿ",
+  "cli.help.command.view.description": "GX ವೀಕ್ಷಣೆಗಳನ್ನು ಸ್ಕಾಫ್‌ಫೋಲ್ಡ್ ಮಾಡಿ ಮತ್ತು ಮಾನ್ಯಗೊಳಿಸಿ",
+  "cli.help.command.wizard.description": "ಪರಿಹಾರಗಳನ್ನು ರಚಿಸಿ ಮತ್ತು ಬಂಡಲ್ ತಯಾರಿಕೆಯನ್ನು ವಹಿಸಿ",
+  "cli.help.commands": "ಆಜ್ಞೆಗಳು:",
+  "cli.help.option.help": "ಸಹಾಯವನ್ನು ಮುದ್ರಿಸಿ",
+  "cli.help.option.locale": "UI/help ಸ್ಥಳೀಕರಣವನ್ನು ಆಯ್ಕೆಮಾಡಿ (`en` ಅಥವಾ `nl`)",
+  "cli.help.options": "ಆಯ್ಕೆಗಳು:",
+  "cli.help.usage": "ಬಳಕೆ:"
+}

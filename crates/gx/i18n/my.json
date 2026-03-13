@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X ကိရိယာများကို scaffold လုပ်ရန်၊ validate လုပ်ရန်၊ simulate လုပ်ရန်နှင့် inspect လုပ်ရန်",
+  "cli.help.command.catalog.description": "GX catalog များကို scaffold လုပ်ရန်၊ build လုပ်ရန်၊ validate လုပ်ရန်နှင့် စာရင်းပြုစုရန်",
+  "cli.help.command.contract.description": "GX contract များကို scaffold လုပ်ရန်နှင့် validate လုပ်ရန်",
+  "cli.help.command.doctor.description": "repository အခြေအနေ စစ်ဆေးမှုများကို လုပ်ဆောင်ရန်",
+  "cli.help.command.flow.description": "GX flow များကို scaffold လုပ်ရန်နှင့် validate လုပ်ရန်",
+  "cli.help.command.help.description": "ဤစာတို သို့မဟုတ် subcommand တစ်ခု၏ အကူအညီကို ပြသရန်",
+  "cli.help.command.op.description": "GX operation များကို scaffold လုပ်ရန်နှင့် validate လုပ်ရန်",
+  "cli.help.command.profile.description": "GX profile များကို validate လုပ်ရန်နှင့် compile လုပ်ရန်",
+  "cli.help.command.resolver.description": "GX resolver များကို scaffold လုပ်ရန်နှင့် validate လုပ်ရန်",
+  "cli.help.command.simulate.description": "flow package တစ်ခုကို local တွင် simulate လုပ်ရန်",
+  "cli.help.command.view.description": "GX view များကို scaffold လုပ်ရန်နှင့် validate လုပ်ရန်",
+  "cli.help.command.wizard.description": "solution များကို ဖွဲ့စည်းပြီး bundle generation ကို delegate လုပ်ရန်",
+  "cli.help.commands": "Commands:",
+  "cli.help.option.help": "အကူအညီကို ပြသရန်",
+  "cli.help.option.locale": "UI/help locale ကို ရွေးချယ်ရန် (`en` သို့မဟုတ် `nl`)",
+  "cli.help.options": "Options:",
+  "cli.help.usage": "အသုံးပြုပုံ:"
+}

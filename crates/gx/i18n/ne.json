@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X स्क्याफोल्ड, प्रमाणित, अनुकरण, र निरीक्षण गर्ने टुलिङ",
+  "cli.help.command.catalog.description": "GX क्याटलगहरू स्क्याफोल्ड, निर्माण, प्रमाणित, र सूचीबद्ध गर्नुहोस्",
+  "cli.help.command.contract.description": "GX कन्ट्र्याक्टहरू स्क्याफोल्ड र प्रमाणित गर्नुहोस्",
+  "cli.help.command.doctor.description": "रिपोजिटरी स्वास्थ्य जाँचहरू चलाउनुहोस्",
+  "cli.help.command.flow.description": "GX फ्लोहरू स्क्याफोल्ड र प्रमाणित गर्नुहोस्",
+  "cli.help.command.help.description": "यो सन्देश वा उपकमाण्डको मद्दत छाप्नुहोस्",
+  "cli.help.command.op.description": "GX अपरेशनहरू स्क्याफोल्ड र प्रमाणित गर्नुहोस्",
+  "cli.help.command.profile.description": "GX प्रोफाइलहरू प्रमाणित र कम्पाइल गर्नुहोस्",
+  "cli.help.command.resolver.description": "GX रिजोल्भरहरू स्क्याफोल्ड र प्रमाणित गर्नुहोस्",
+  "cli.help.command.simulate.description": "फ्लो प्याकेजलाई स्थानीय रूपमा अनुकरण गर्नुहोस्",
+  "cli.help.command.view.description": "GX दृश्यहरू स्क्याफोल्ड र प्रमाणित गर्नुहोस्",
+  "cli.help.command.wizard.description": "समाधानहरू संयोजन गर्नुहोस् र बन्डल उत्पन्न गर्ने काम प्रत्यायोजन गर्नुहोस्",
+  "cli.help.commands": "कमाण्डहरू:",
+  "cli.help.option.help": "मद्दत छाप्नुहोस्",
+  "cli.help.option.locale": "UI/help लोकेल चयन गर्नुहोस् (`en` वा `nl`)",
+  "cli.help.options": "विकल्पहरू:",
+  "cli.help.usage": "प्रयोग:"
+}

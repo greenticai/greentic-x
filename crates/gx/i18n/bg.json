@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X инструментариум за създаване, валидиране, симулиране и инспектиране",
+  "cli.help.command.catalog.description": "Създаване, изграждане, валидиране и изброяване на GX каталози",
+  "cli.help.command.contract.description": "Създаване и валидиране на GX договори",
+  "cli.help.command.doctor.description": "Изпълнение на проверки за състоянието на хранилището",
+  "cli.help.command.flow.description": "Създаване и валидиране на GX потоци",
+  "cli.help.command.help.description": "Показване на това съобщение или помощта за подкоманда",
+  "cli.help.command.op.description": "Създаване и валидиране на GX операции",
+  "cli.help.command.profile.description": "Валидиране и компилиране на GX профили",
+  "cli.help.command.resolver.description": "Създаване и валидиране на GX резолвери",
+  "cli.help.command.simulate.description": "Локално симулиране на пакет с поток",
+  "cli.help.command.view.description": "Създаване и валидиране на GX изгледи",
+  "cli.help.command.wizard.description": "Съставяне на решения и делегиране на генерирането на пакети",
+  "cli.help.commands": "Команди:",
+  "cli.help.option.help": "Показване на помощ",
+  "cli.help.option.locale": "Избор на локал за UI/помощта (`en` или `nl`)",
+  "cli.help.options": "Опции:",
+  "cli.help.usage": "Употреба:"
+}

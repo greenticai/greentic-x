@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X സ്കാഫോൾഡ്, സാധൂകരിക്കൽ, സിമുലേറ്റ് ചെയ്യൽ, പരിശോധന ഉപകരണങ്ങൾ",
+  "cli.help.command.catalog.description": "GX കാറ്റലോഗുകൾ സ്കാഫോൾഡ് ചെയ്യുക, ബിൽഡ് ചെയ്യുക, സാധൂകരിക്കുക, പട്ടികപ്പെടുത്തുക",
+  "cli.help.command.contract.description": "GX കരാറുകൾ സ്കാഫോൾഡ് ചെയ്യുകയും സാധൂകരിക്കുകയും ചെയ്യുക",
+  "cli.help.command.doctor.description": "റിപ്പോസിറ്ററി ആരോഗ്യ പരിശോധനകൾ നടത്തുക",
+  "cli.help.command.flow.description": "GX ഫ്ലോകൾ സ്കാഫോൾഡ് ചെയ്യുകയും സാധൂകരിക്കുകയും ചെയ്യുക",
+  "cli.help.command.help.description": "ഈ സന്ദേശം അല്ലെങ്കിൽ ഒരു ഉപകമാൻഡിന്റെ സഹായം പ്രിന്റ് ചെയ്യുക",
+  "cli.help.command.op.description": "GX ഓപ്പറേഷനുകൾ സ്കാഫോൾഡ് ചെയ്യുകയും സാധൂകരിക്കുകയും ചെയ്യുക",
+  "cli.help.command.profile.description": "GX പ്രൊഫൈലുകൾ സാധൂകരിക്കുകയും കമ്പൈൽ ചെയ്യുകയും ചെയ്യുക",
+  "cli.help.command.resolver.description": "GX റിസോൾവറുകൾ സ്കാഫോൾഡ് ചെയ്യുകയും സാധൂകരിക്കുകയും ചെയ്യുക",
+  "cli.help.command.simulate.description": "ഒരു ഫ്ലോ പാക്കേജ് ലോക്കലായി സിമുലേറ്റ് ചെയ്യുക",
+  "cli.help.command.view.description": "GX വ്യൂകൾ സ്കാഫോൾഡ് ചെയ്യുകയും സാധൂകരിക്കുകയും ചെയ്യുക",
+  "cli.help.command.wizard.description": "പരിഹാരങ്ങൾ രചിക്കുകയും ബണ്ടിൽ ജനറേഷൻ ഏൽപ്പിക്കുകയും ചെയ്യുക",
+  "cli.help.commands": "കമാൻഡുകൾ:",
+  "cli.help.option.help": "സഹായം പ്രിന്റ് ചെയ്യുക",
+  "cli.help.option.locale": "UI/help ലൊക്കേൽ തിരഞ്ഞെടുക്കുക (`en` അല്ലെങ്കിൽ `nl`)",
+  "cli.help.options": "ഓപ്ഷനുകൾ:",
+  "cli.help.usage": "ഉപയോഗം:"
+}

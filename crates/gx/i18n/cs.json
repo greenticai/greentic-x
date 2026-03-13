@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Nástroje Greentic-X pro vytváření šablon, validaci, simulaci a inspekci",
+  "cli.help.command.catalog.description": "Vytvářet šablony, sestavovat, validovat a vypisovat katalogy GX",
+  "cli.help.command.contract.description": "Vytvářet šablony a validovat kontrakty GX",
+  "cli.help.command.doctor.description": "Spustit kontroly stavu repozitáře",
+  "cli.help.command.flow.description": "Vytvářet šablony a validovat toky GX",
+  "cli.help.command.help.description": "Vypsat tuto zprávu nebo nápovědu podpříkazu",
+  "cli.help.command.op.description": "Vytvářet šablony a validovat operace GX",
+  "cli.help.command.profile.description": "Validovat a kompilovat profily GX",
+  "cli.help.command.resolver.description": "Vytvářet šablony a validovat resolvery GX",
+  "cli.help.command.simulate.description": "Lokálně simulovat balíček toku",
+  "cli.help.command.view.description": "Vytvářet šablony a validovat zobrazení GX",
+  "cli.help.command.wizard.description": "Sestavovat řešení a delegovat generování balíčku",
+  "cli.help.commands": "Příkazy:",
+  "cli.help.option.help": "Vypsat nápovědu",
+  "cli.help.option.locale": "Vybrat lokalizaci UI/nápovědy (`en` nebo `nl`)",
+  "cli.help.options": "Možnosti:",
+  "cli.help.usage": "Použití:"
+}

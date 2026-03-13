@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X: инструмент для создания каркаса, проверки, симуляции и инспекции",
+  "cli.help.command.catalog.description": "Создание каркаса, сборка, проверка и вывод списка каталогов GX",
+  "cli.help.command.contract.description": "Создание каркаса и проверка контрактов GX",
+  "cli.help.command.doctor.description": "Запуск проверок состояния репозитория",
+  "cli.help.command.flow.description": "Создание каркаса и проверка потоков GX",
+  "cli.help.command.help.description": "Вывести это сообщение или справку по подкоманде",
+  "cli.help.command.op.description": "Создание каркаса и проверка операций GX",
+  "cli.help.command.profile.description": "Проверка и компиляция профилей GX",
+  "cli.help.command.resolver.description": "Создание каркаса и проверка резолверов GX",
+  "cli.help.command.simulate.description": "Локальная симуляция пакета потока",
+  "cli.help.command.view.description": "Создание каркаса и проверка представлений GX",
+  "cli.help.command.wizard.description": "Составление решений и делегирование генерации бандла",
+  "cli.help.commands": "Команды:",
+  "cli.help.option.help": "Вывести справку",
+  "cli.help.option.locale": "Выбрать локаль UI/справки (`en` или `nl`)",
+  "cli.help.options": "Параметры:",
+  "cli.help.usage": "Использование:"
+}

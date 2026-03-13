@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X-værktøjer til at generere skeletter, validere, simulere og inspicere",
+  "cli.help.command.catalog.description": "Generer skeletter, byg, validér og list GX-kataloger",
+  "cli.help.command.contract.description": "Generer skeletter og validér GX-kontrakter",
+  "cli.help.command.doctor.description": "Kør repository-sundhedstjek",
+  "cli.help.command.flow.description": "Generer skeletter og validér GX-flows",
+  "cli.help.command.help.description": "Udskriv denne besked eller hjælpen for en underkommando",
+  "cli.help.command.op.description": "Generer skeletter og validér GX-operationer",
+  "cli.help.command.profile.description": "Validér og kompiler GX-profiler",
+  "cli.help.command.resolver.description": "Generer skeletter og validér GX-resolvers",
+  "cli.help.command.simulate.description": "Simulér en flow-pakke lokalt",
+  "cli.help.command.view.description": "Generer skeletter og validér GX-visninger",
+  "cli.help.command.wizard.description": "Sammensæt løsninger og delegér bundlegenerering",
+  "cli.help.commands": "Kommandoer:",
+  "cli.help.option.help": "Udskriv hjælp",
+  "cli.help.option.locale": "Vælg UI-/hjælpesprog (`en` eller `nl`)",
+  "cli.help.options": "Indstillinger:",
+  "cli.help.usage": "Brug:"
+}

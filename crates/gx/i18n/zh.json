@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X 脚手架、校验、模拟与检查工具",
+  "cli.help.command.catalog.description": "脚手架、构建、校验并列出 GX 目录",
+  "cli.help.command.contract.description": "脚手架并校验 GX 合约",
+  "cli.help.command.doctor.description": "运行仓库健康检查",
+  "cli.help.command.flow.description": "脚手架并校验 GX 流程",
+  "cli.help.command.help.description": "打印此消息或子命令的帮助",
+  "cli.help.command.op.description": "脚手架并校验 GX 操作",
+  "cli.help.command.profile.description": "校验并编译 GX 配置文件",
+  "cli.help.command.resolver.description": "脚手架并校验 GX 解析器",
+  "cli.help.command.simulate.description": "在本地模拟一个流程包",
+  "cli.help.command.view.description": "脚手架并校验 GX 视图",
+  "cli.help.command.wizard.description": "组合解决方案并委派 bundle 生成",
+  "cli.help.commands": "命令：",
+  "cli.help.option.help": "打印帮助",
+  "cli.help.option.locale": "选择 UI/帮助语言区域设置（`en` 或 `nl`）",
+  "cli.help.options": "选项：",
+  "cli.help.usage": "用法："
+}

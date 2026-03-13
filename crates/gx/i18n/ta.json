@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X ஸ்காஃஃபோல்ட், சரிபார்ப்பு, ஒத்திகை, மற்றும் ஆய்வு கருவிகள்",
+  "cli.help.command.catalog.description": "GX பட்டியல்களை ஸ்காஃஃபோல்ட் செய்ய, கட்டமைக்க, சரிபார்க்க, மற்றும் பட்டியலிட",
+  "cli.help.command.contract.description": "GX ஒப்பந்தங்களை ஸ்காஃஃபோல்ட் செய்து சரிபார்க்க",
+  "cli.help.command.doctor.description": "களஞ்சிய ஆரோக்கியச் சரிபார்ப்புகளை இயக்கு",
+  "cli.help.command.flow.description": "GX ஓட்டங்களை ஸ்காஃஃபோல்ட் செய்து சரிபார்க்க",
+  "cli.help.command.help.description": "இந்தச் செய்தியை அல்லது துணைக்கட்டளையின் உதவியை அச்சிடு",
+  "cli.help.command.op.description": "GX செயல்பாடுகளை ஸ்காஃஃபோல்ட் செய்து சரிபார்க்க",
+  "cli.help.command.profile.description": "GX சுயவிவரங்களை சரிபார்த்து தொகுக்க",
+  "cli.help.command.resolver.description": "GX தீர்விகளை ஸ்காஃஃபோல்ட் செய்து சரிபார்க்க",
+  "cli.help.command.simulate.description": "ஒரு ஓட்டத் தொகுப்பை உள்ளூரில் ஒத்திகை செய்",
+  "cli.help.command.view.description": "GX காட்சிகளை ஸ்காஃஃபோல்ட் செய்து சரிபார்க்க",
+  "cli.help.command.wizard.description": "தீர்வுகளை அமைத்து bundle உருவாக்கத்தை ஒப்படை",
+  "cli.help.commands": "கட்டளைகள்:",
+  "cli.help.option.help": "உதவியை அச்சிடு",
+  "cli.help.option.locale": "UI/help locale-ஐ தேர்ந்தெடு (`en` அல்லது `nl`)",
+  "cli.help.options": "விருப்பங்கள்:",
+  "cli.help.usage": "பயன்பாடு:"
+}

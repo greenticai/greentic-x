@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X ruranapaq, allinchaspa qhawaq, yuyayman churay, hinaspa qhawaq herramientas",
+  "cli.help.command.catalog.description": "GX catálogokuna ruranapaq, hatarichiy, allinchay, hinaspa listay",
+  "cli.help.command.contract.description": "GX contratos ruranapaq hinaspa allinchay",
+  "cli.help.command.doctor.description": "Repositorioq kawsaynin qhawaykunata purichiy",
+  "cli.help.command.flow.description": "GX flows ruranapaq hinaspa allinchay",
+  "cli.help.command.help.description": "Kay willakuyta utaq huk subcomandoq yanapayninta imprimir",
+  "cli.help.command.op.description": "GX operaciones ruranapaq hinaspa allinchay",
+  "cli.help.command.profile.description": "GX perfiles allinchay hinaspa huñuy",
+  "cli.help.command.resolver.description": "GX resolvedorkuna ruranapaq hinaspa allinchay",
+  "cli.help.command.simulate.description": "Huk flow paquete localpi yuyayman churay",
+  "cli.help.command.view.description": "GX vistas ruranapaq hinaspa allinchay",
+  "cli.help.command.wizard.description": "Solucionkunata huñuy hinaspa bundle paqarichiyta rakiy",
+  "cli.help.commands": "Comandokuna:",
+  "cli.help.option.help": "Yanapayta imprimir",
+  "cli.help.option.locale": "UI/yanapay simita akllay (`en` utaq `nl`)",
+  "cli.help.options": "Akllanakuna:",
+  "cli.help.usage": "Imayna llamk'achiy:"
+}

@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "ឧបករណ៍ Greentic-X សម្រាប់បង្កើតគ្រោងផ្ទាំង, ផ្ទៀងផ្ទាត់, សាកល្បង, និងត្រួតពិនិត្យ",
+  "cli.help.command.catalog.description": "បង្កើតគ្រោងផ្ទាំង, បង្កើត, ផ្ទៀងផ្ទាត់, និងរាយបញ្ជីកាតាឡុក GX",
+  "cli.help.command.contract.description": "បង្កើតគ្រោងផ្ទាំង និងផ្ទៀងផ្ទាត់កិច្ចសន្យា GX",
+  "cli.help.command.doctor.description": "ដំណើរការការត្រួតពិនិត្យសុខភាពឃ្លាំង",
+  "cli.help.command.flow.description": "បង្កើតគ្រោងផ្ទាំង និងផ្ទៀងផ្ទាត់លំហូរ GX",
+  "cli.help.command.help.description": "បោះពុម្ពសារនេះ ឬជំនួយរបស់ពាក្យបញ្ជារង",
+  "cli.help.command.op.description": "បង្កើតគ្រោងផ្ទាំង និងផ្ទៀងផ្ទាត់ប្រតិបត្តិការ GX",
+  "cli.help.command.profile.description": "ផ្ទៀងផ្ទាត់ និងចងក្រងប្រវត្តិរូប GX",
+  "cli.help.command.resolver.description": "បង្កើតគ្រោងផ្ទាំង និងផ្ទៀងផ្ទាត់កម្មវិធីដោះស្រាយ GX",
+  "cli.help.command.simulate.description": "សាកល្បងកញ្ចប់លំហូរនៅមូលដ្ឋាន",
+  "cli.help.command.view.description": "បង្កើតគ្រោងផ្ទាំង និងផ្ទៀងផ្ទាត់ទិដ្ឋភាព GX",
+  "cli.help.command.wizard.description": "តែងដំណោះស្រាយ និងផ្ទេរការបង្កើតបណ្ណុំ",
+  "cli.help.commands": "ពាក្យបញ្ជា:",
+  "cli.help.option.help": "បោះពុម្ពជំនួយ",
+  "cli.help.option.locale": "ជ្រើសរើសមូលដ្ឋានភាសា UI/ជំនួយ (`en` ឬ `nl`)",
+  "cli.help.options": "ជម្រើស:",
+  "cli.help.usage": "របៀបប្រើប្រាស់:"
+}

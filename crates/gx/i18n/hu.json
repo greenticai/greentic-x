@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X eszközök sablonozásához, ellenőrzéséhez, szimulálásához és vizsgálatához",
+  "cli.help.command.catalog.description": "GX katalógusok sablonozása, buildelése, ellenőrzése és listázása",
+  "cli.help.command.contract.description": "GX szerződések sablonozása és ellenőrzése",
+  "cli.help.command.doctor.description": "Tárolóállapot-ellenőrzések futtatása",
+  "cli.help.command.flow.description": "GX folyamatok sablonozása és ellenőrzése",
+  "cli.help.command.help.description": "Üzenet vagy egy alparancs súgójának kiírása",
+  "cli.help.command.op.description": "GX műveletek sablonozása és ellenőrzése",
+  "cli.help.command.profile.description": "GX profilok ellenőrzése és fordítása",
+  "cli.help.command.resolver.description": "GX feloldók sablonozása és ellenőrzése",
+  "cli.help.command.simulate.description": "Folyamatcsomag helyi szimulálása",
+  "cli.help.command.view.description": "GX nézetek sablonozása és ellenőrzése",
+  "cli.help.command.wizard.description": "Megoldások összeállítása és a csomaggenerálás delegálása",
+  "cli.help.commands": "Parancsok:",
+  "cli.help.option.help": "Súgó kiírása",
+  "cli.help.option.locale": "A UI/súgó nyelvi beállításának kiválasztása (`en` vagy `nl`)",
+  "cli.help.options": "Beállítások:",
+  "cli.help.usage": "Használat:"
+}

@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Zouti Greentic-X pou kreye, valide, simile, ak enspekte",
+  "cli.help.command.catalog.description": "Kreye, konstwi, valide, epi bay lis katalòg GX yo",
+  "cli.help.command.contract.description": "Kreye epi valide kontra GX yo",
+  "cli.help.command.doctor.description": "Kouri verifikasyon sante depo a",
+  "cli.help.command.flow.description": "Kreye epi valide flow GX yo",
+  "cli.help.command.help.description": "Afiche mesaj sa a oswa èd pou yon soukòmand",
+  "cli.help.command.op.description": "Kreye epi valide operasyon GX yo",
+  "cli.help.command.profile.description": "Valide epi konpile pwofil GX yo",
+  "cli.help.command.resolver.description": "Kreye epi valide resolver GX yo",
+  "cli.help.command.simulate.description": "Simile yon pakè flow lokalman",
+  "cli.help.command.view.description": "Kreye epi valide view GX yo",
+  "cli.help.command.wizard.description": "Konpoze solisyon epi delege jenerasyon bundle",
+  "cli.help.commands": "Kòmand yo:",
+  "cli.help.option.help": "Afiche èd",
+  "cli.help.option.locale": "Chwazi lokal UI/èd la (`en` oswa `nl`)",
+  "cli.help.options": "Opsyon yo:",
+  "cli.help.usage": "Itilizasyon:"
+}

@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X scaffold, validate, simulate, සහ inspect මෙවලම්",
+  "cli.help.command.catalog.description": "GX catalogs scaffold, build, validate, සහ ලැයිස්තුගත කරන්න",
+  "cli.help.command.contract.description": "GX contracts scaffold කර validate කරන්න",
+  "cli.help.command.doctor.description": "repository සෞඛ්‍ය පරීක්ෂණ ධාවනය කරන්න",
+  "cli.help.command.flow.description": "GX flows scaffold කර validate කරන්න",
+  "cli.help.command.help.description": "මෙම පණිවිඩය හෝ subcommand එකක help මුද්‍රණය කරන්න",
+  "cli.help.command.op.description": "GX operations scaffold කර validate කරන්න",
+  "cli.help.command.profile.description": "GX profiles validate කර compile කරන්න",
+  "cli.help.command.resolver.description": "GX resolvers scaffold කර validate කරන්න",
+  "cli.help.command.simulate.description": "flow package එකක් දේශීයව simulate කරන්න",
+  "cli.help.command.view.description": "GX views scaffold කර validate කරන්න",
+  "cli.help.command.wizard.description": "solutions compose කර bundle generation delegate කරන්න",
+  "cli.help.commands": "විධාන:",
+  "cli.help.option.help": "help මුද්‍රණය කරන්න",
+  "cli.help.option.locale": "UI/help locale එක තෝරන්න (`en` හෝ `nl`)",
+  "cli.help.options": "විකල්ප:",
+  "cli.help.usage": "භාවිතය:"
+}

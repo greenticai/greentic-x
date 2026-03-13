@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Narzędzia Greentic-X do tworzenia szkieletów, walidacji, symulacji i inspekcji",
+  "cli.help.command.catalog.description": "Tworzenie szkieletów, budowanie, walidacja i wyświetlanie katalogów GX",
+  "cli.help.command.contract.description": "Tworzenie szkieletów i walidacja kontraktów GX",
+  "cli.help.command.doctor.description": "Uruchamianie kontroli kondycji repozytorium",
+  "cli.help.command.flow.description": "Tworzenie szkieletów i walidacja przepływów GX",
+  "cli.help.command.help.description": "Wyświetl ten komunikat lub pomoc dla podpolecenia",
+  "cli.help.command.op.description": "Tworzenie szkieletów i walidacja operacji GX",
+  "cli.help.command.profile.description": "Walidacja i kompilacja profili GX",
+  "cli.help.command.resolver.description": "Tworzenie szkieletów i walidacja resolverów GX",
+  "cli.help.command.simulate.description": "Symulacja pakietu przepływu lokalnie",
+  "cli.help.command.view.description": "Tworzenie szkieletów i walidacja widoków GX",
+  "cli.help.command.wizard.description": "Tworzenie rozwiązań i delegowanie generowania pakietów",
+  "cli.help.commands": "Polecenia:",
+  "cli.help.option.help": "Wyświetl pomoc",
+  "cli.help.option.locale": "Wybierz ustawienia regionalne UI/pomocy (`en` lub `nl`)",
+  "cli.help.options": "Opcje:",
+  "cli.help.usage": "Użycie:"
+}

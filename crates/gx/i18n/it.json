@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Strumenti Greentic-X per creare scaffold, validare, simulare e ispezionare",
+  "cli.help.command.catalog.description": "Crea scaffold, compila, valida ed elenca i cataloghi GX",
+  "cli.help.command.contract.description": "Crea scaffold e valida i contratti GX",
+  "cli.help.command.doctor.description": "Esegui controlli sullo stato del repository",
+  "cli.help.command.flow.description": "Crea scaffold e valida i flussi GX",
+  "cli.help.command.help.description": "Stampa questo messaggio o l'aiuto di un sottocomando",
+  "cli.help.command.op.description": "Crea scaffold e valida le operazioni GX",
+  "cli.help.command.profile.description": "Valida e compila i profili GX",
+  "cli.help.command.resolver.description": "Crea scaffold e valida i resolver GX",
+  "cli.help.command.simulate.description": "Simula localmente un pacchetto di flusso",
+  "cli.help.command.view.description": "Crea scaffold e valida le viste GX",
+  "cli.help.command.wizard.description": "Componi soluzioni e delega la generazione dei bundle",
+  "cli.help.commands": "Comandi:",
+  "cli.help.option.help": "Stampa l'aiuto",
+  "cli.help.option.locale": "Seleziona la lingua dell'interfaccia/dell'aiuto (`en` o `nl`)",
+  "cli.help.options": "Opzioni:",
+  "cli.help.usage": "Utilizzo:"
+}

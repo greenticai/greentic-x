@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X સ્કેફોલ્ડ, વૅલિડેટ, સિમ્યુલેટ, અને ઇન્સ્પેક્ટ ટૂલિંગ",
+  "cli.help.command.catalog.description": "GX કેટલોગ્સને સ્કેફોલ્ડ, બિલ્ડ, વૅલિડેટ, અને સૂચિબદ્ધ કરો",
+  "cli.help.command.contract.description": "GX કોન્ટ્રાક્ટ્સને સ્કેફોલ્ડ કરો અને વૅલિડેટ કરો",
+  "cli.help.command.doctor.description": "રિપોઝિટરી હેલ્થ ચેક્સ ચલાવો",
+  "cli.help.command.flow.description": "GX ફ્લોઝને સ્કેફોલ્ડ કરો અને વૅલિડેટ કરો",
+  "cli.help.command.help.description": "આ સંદેશ અથવા ઉપકમાન્ડની મદદ દર્શાવો",
+  "cli.help.command.op.description": "GX ઑપરેશન્સને સ્કેફોલ્ડ કરો અને વૅલિડેટ કરો",
+  "cli.help.command.profile.description": "GX પ્રોફાઇલ્સને વૅલિડેટ કરો અને કમ્પાઇલ કરો",
+  "cli.help.command.resolver.description": "GX રિઝોલ્વર્સને સ્કેફોલ્ડ કરો અને વૅલિડેટ કરો",
+  "cli.help.command.simulate.description": "ફ્લો પેકેજને સ્થાનિક રીતે સિમ્યુલેટ કરો",
+  "cli.help.command.view.description": "GX વ્યૂઝને સ્કેફોલ્ડ કરો અને વૅલિડેટ કરો",
+  "cli.help.command.wizard.description": "સોલ્યુશન્સ રચો અને બંડલ જનરેશન સોંપો",
+  "cli.help.commands": "કમાન્ડ્સ:",
+  "cli.help.option.help": "મદદ દર્શાવો",
+  "cli.help.option.locale": "UI/મદદ લોકેલ પસંદ કરો (`en` અથવા `nl`)",
+  "cli.help.options": "વિકલ્પો:",
+  "cli.help.usage": "ઉપયોગ:"
+}

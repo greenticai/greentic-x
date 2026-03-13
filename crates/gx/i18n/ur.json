@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X اسکیفولڈ، توثیق، سیمولیٹ، اور ٹولنگ کا معائنہ",
+  "cli.help.command.catalog.description": "GX کیٹلاگز کو اسکیفولڈ، بلڈ، توثیق، اور فہرست بنائیں",
+  "cli.help.command.contract.description": "GX کنٹریکٹس کو اسکیفولڈ کریں اور ان کی توثیق کریں",
+  "cli.help.command.doctor.description": "ریپوزٹری کی صحت کی جانچ چلائیں",
+  "cli.help.command.flow.description": "GX فلوز کو اسکیفولڈ کریں اور ان کی توثیق کریں",
+  "cli.help.command.help.description": "یہ پیغام یا کسی ذیلی کمانڈ کی مدد پرنٹ کریں",
+  "cli.help.command.op.description": "GX آپریشنز کو اسکیفولڈ کریں اور ان کی توثیق کریں",
+  "cli.help.command.profile.description": "GX پروفائلز کی توثیق کریں اور انہیں کمپائل کریں",
+  "cli.help.command.resolver.description": "GX ریزولورز کو اسکیفولڈ کریں اور ان کی توثیق کریں",
+  "cli.help.command.simulate.description": "ایک فلو پیکیج کو مقامی طور پر سیمولیٹ کریں",
+  "cli.help.command.view.description": "GX ویوز کو اسکیفولڈ کریں اور ان کی توثیق کریں",
+  "cli.help.command.wizard.description": "حل مرتب کریں اور بنڈل جنریشن تفویض کریں",
+  "cli.help.commands": "کمانڈز:",
+  "cli.help.option.help": "مدد پرنٹ کریں",
+  "cli.help.option.locale": "UI/مدد کی لوکیل منتخب کریں (`en` یا `nl`)",
+  "cli.help.options": "اختیارات:",
+  "cli.help.usage": "استعمال:"
+}

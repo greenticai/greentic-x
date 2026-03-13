@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Perkakas Greentic-X untuk membuat scaffold, memvalidasi, mensimulasikan, dan memeriksa",
+  "cli.help.command.catalog.description": "Membuat scaffold, membangun, memvalidasi, dan mencantumkan katalog GX",
+  "cli.help.command.contract.description": "Membuat scaffold dan memvalidasi kontrak GX",
+  "cli.help.command.doctor.description": "Menjalankan pemeriksaan kesehatan repositori",
+  "cli.help.command.flow.description": "Membuat scaffold dan memvalidasi flow GX",
+  "cli.help.command.help.description": "Mencetak pesan ini atau bantuan dari subperintah",
+  "cli.help.command.op.description": "Membuat scaffold dan memvalidasi operasi GX",
+  "cli.help.command.profile.description": "Memvalidasi dan mengompilasi profil GX",
+  "cli.help.command.resolver.description": "Membuat scaffold dan memvalidasi resolver GX",
+  "cli.help.command.simulate.description": "Mensimulasikan paket flow secara lokal",
+  "cli.help.command.view.description": "Membuat scaffold dan memvalidasi tampilan GX",
+  "cli.help.command.wizard.description": "Menyusun solusi dan mendelegasikan pembuatan bundle",
+  "cli.help.commands": "Perintah:",
+  "cli.help.option.help": "Cetak bantuan",
+  "cli.help.option.locale": "Pilih locale UI/bantuan (`en` atau `nl`)",
+  "cli.help.options": "Opsi:",
+  "cli.help.usage": "Penggunaan:"
+}

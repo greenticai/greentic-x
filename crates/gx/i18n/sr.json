@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X alati za generisanje, validaciju, simulaciju i inspekciju",
+  "cli.help.command.catalog.description": "Generiši, izgradi, validiraj i prikaži GX kataloge",
+  "cli.help.command.contract.description": "Generiši i validiraj GX ugovore",
+  "cli.help.command.doctor.description": "Pokreni provere stanja repozitorijuma",
+  "cli.help.command.flow.description": "Generiši i validiraj GX tokove",
+  "cli.help.command.help.description": "Prikaži ovu poruku ili pomoć za potkomandu",
+  "cli.help.command.op.description": "Generiši i validiraj GX operacije",
+  "cli.help.command.profile.description": "Validiraj i kompajliraj GX profile",
+  "cli.help.command.resolver.description": "Generiši i validiraj GX razrešivače",
+  "cli.help.command.simulate.description": "Lokalno simuliraj paket toka",
+  "cli.help.command.view.description": "Generiši i validiraj GX prikaze",
+  "cli.help.command.wizard.description": "Sastavi rešenja i delegiraj generisanje paketa",
+  "cli.help.commands": "Komande:",
+  "cli.help.option.help": "Prikaži pomoć",
+  "cli.help.option.locale": "Izaberi lokalizaciju UI-ja/pomoći (`en` ili `nl`)",
+  "cli.help.options": "Opcije:",
+  "cli.help.usage": "Upotreba:"
+}

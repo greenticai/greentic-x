@@ -47,6 +47,9 @@ python3 ci/publishable_crates.py --format details > "$crate_details_file"
 step "cargo fmt"
 cargo fmt --all -- --check
 
+step "i18n validate"
+bash tools/i18n.sh validate
+
 step "cargo clippy"
 cargo clippy --all-targets --all-features -- -D warnings
 

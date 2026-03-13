@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Εργαλείο Greentic-X για δημιουργία σκελετού, επικύρωση, προσομοίωση και επιθεώρηση",
+  "cli.help.command.catalog.description": "Δημιουργία σκελετού, κατασκευή, επικύρωση και καταχώριση καταλόγων GX",
+  "cli.help.command.contract.description": "Δημιουργία σκελετού και επικύρωση συμβολαίων GX",
+  "cli.help.command.doctor.description": "Εκτέλεση ελέγχων υγείας αποθετηρίου",
+  "cli.help.command.flow.description": "Δημιουργία σκελετού και επικύρωση ροών GX",
+  "cli.help.command.help.description": "Εκτύπωση αυτού του μηνύματος ή της βοήθειας μιας υποεντολής",
+  "cli.help.command.op.description": "Δημιουργία σκελετού και επικύρωση λειτουργιών GX",
+  "cli.help.command.profile.description": "Επικύρωση και μεταγλώττιση προφίλ GX",
+  "cli.help.command.resolver.description": "Δημιουργία σκελετού και επικύρωση επιλυτών GX",
+  "cli.help.command.simulate.description": "Τοπική προσομοίωση πακέτου ροής",
+  "cli.help.command.view.description": "Δημιουργία σκελετού και επικύρωση προβολών GX",
+  "cli.help.command.wizard.description": "Σύνθεση λύσεων και ανάθεση δημιουργίας bundle",
+  "cli.help.commands": "Εντολές:",
+  "cli.help.option.help": "Εκτύπωση βοήθειας",
+  "cli.help.option.locale": "Επιλέξτε τη γλώσσα UI/βοήθειας (`en` ή `nl`)",
+  "cli.help.options": "Επιλογές:",
+  "cli.help.usage": "Χρήση:"
+}

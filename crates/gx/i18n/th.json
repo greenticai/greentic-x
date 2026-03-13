@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "เครื่องมือสำหรับสร้างโครง, ตรวจสอบความถูกต้อง, จำลอง, และตรวจสอบ Greentic-X",
+  "cli.help.command.catalog.description": "สร้างโครง, สร้าง, ตรวจสอบความถูกต้อง, และแสดงรายการแค็ตตาล็อก GX",
+  "cli.help.command.contract.description": "สร้างโครงและตรวจสอบความถูกต้องของสัญญา GX",
+  "cli.help.command.doctor.description": "เรียกใช้การตรวจสอบสุขภาพของรีโพสิตอรี",
+  "cli.help.command.flow.description": "สร้างโครงและตรวจสอบความถูกต้องของโฟลว์ GX",
+  "cli.help.command.help.description": "พิมพ์ข้อความนี้หรือความช่วยเหลือของคำสั่งย่อย",
+  "cli.help.command.op.description": "สร้างโครงและตรวจสอบความถูกต้องของการดำเนินการ GX",
+  "cli.help.command.profile.description": "ตรวจสอบความถูกต้องและคอมไพล์โปรไฟล์ GX",
+  "cli.help.command.resolver.description": "สร้างโครงและตรวจสอบความถูกต้องของตัวแก้ไข GX",
+  "cli.help.command.simulate.description": "จำลองแพ็กเกจโฟลว์ในเครื่อง",
+  "cli.help.command.view.description": "สร้างโครงและตรวจสอบความถูกต้องของวิว GX",
+  "cli.help.command.wizard.description": "ประกอบโซลูชันและมอบหมายการสร้างบันเดิล",
+  "cli.help.commands": "คำสั่ง:",
+  "cli.help.option.help": "พิมพ์ความช่วยเหลือ",
+  "cli.help.option.locale": "เลือกโลแคล UI/ความช่วยเหลือ (`en` หรือ `nl`)",
+  "cli.help.options": "ตัวเลือก:",
+  "cli.help.usage": "การใช้งาน:"
+}

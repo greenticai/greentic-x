@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X iskeleti oluşturma, doğrulama, simülasyon ve inceleme araçları",
+  "cli.help.command.catalog.description": "GX kataloglarını iskelet olarak oluştur, derle, doğrula ve listele",
+  "cli.help.command.contract.description": "GX sözleşmelerini iskelet olarak oluştur ve doğrula",
+  "cli.help.command.doctor.description": "Depo sağlık kontrollerini çalıştır",
+  "cli.help.command.flow.description": "GX akışlarını iskelet olarak oluştur ve doğrula",
+  "cli.help.command.help.description": "Bu mesajı veya bir alt komutun yardımını yazdır",
+  "cli.help.command.op.description": "GX işlemlerini iskelet olarak oluştur ve doğrula",
+  "cli.help.command.profile.description": "GX profillerini doğrula ve derle",
+  "cli.help.command.resolver.description": "GX çözücülerini iskelet olarak oluştur ve doğrula",
+  "cli.help.command.simulate.description": "Bir akış paketini yerelde simüle et",
+  "cli.help.command.view.description": "GX görünümlerini iskelet olarak oluştur ve doğrula",
+  "cli.help.command.wizard.description": "Çözümler oluştur ve paket üretimini devret",
+  "cli.help.commands": "Komutlar:",
+  "cli.help.option.help": "Yardımı yazdır",
+  "cli.help.option.locale": "UI/yardım yerel ayarını seç (`en` veya `nl`)",
+  "cli.help.options": "Seçenekler:",
+  "cli.help.usage": "Kullanım:"
+}

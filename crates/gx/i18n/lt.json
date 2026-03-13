@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X įrankis GX šablonams generuoti, tikrinti, simuliuoti ir tikrinti",
+  "cli.help.command.catalog.description": "Generuoti šablonus, kurti, tikrinti ir išvardyti GX katalogus",
+  "cli.help.command.contract.description": "Generuoti šablonus ir tikrinti GX kontraktus",
+  "cli.help.command.doctor.description": "Vykdyti saugyklos būklės patikras",
+  "cli.help.command.flow.description": "Generuoti šablonus ir tikrinti GX srautus",
+  "cli.help.command.help.description": "Spausdinti šį pranešimą arba pokomandės pagalbą",
+  "cli.help.command.op.description": "Generuoti šablonus ir tikrinti GX operacijas",
+  "cli.help.command.profile.description": "Tikrinti ir kompiliuoti GX profilius",
+  "cli.help.command.resolver.description": "Generuoti šablonus ir tikrinti GX sprendiklius",
+  "cli.help.command.simulate.description": "Lokaliai simuliuoti srauto paketą",
+  "cli.help.command.view.description": "Generuoti šablonus ir tikrinti GX rodinius",
+  "cli.help.command.wizard.description": "Kurti sprendimus ir deleguoti rinkinio generavimą",
+  "cli.help.commands": "Komandos:",
+  "cli.help.option.help": "Spausdinti pagalbą",
+  "cli.help.option.locale": "Pasirinkti UI/pagalbos lokalę (`en` arba `nl`)",
+  "cli.help.options": "Parinktys:",
+  "cli.help.usage": "Naudojimas:"
+}

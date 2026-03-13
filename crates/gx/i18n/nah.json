@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X kitzaloa, yekchihua, simula, ihuan tlachiya tepostli",
+  "cli.help.command.catalog.description": "Kitzaloa, chihua, yekchihua, ihuan lista GX catálogos",
+  "cli.help.command.contract.description": "Kitzaloa ihuan yekchihua GX contratos",
+  "cli.help.command.doctor.description": "Mochihua tlanemiliztli tlayekoliztin ipan repositorio",
+  "cli.help.command.flow.description": "Kitzaloa ihuan yekchihua GX flows",
+  "cli.help.command.help.description": "Quiquixtia inin mensaje noso in ayuda se subcomando",
+  "cli.help.command.op.description": "Kitzaloa ihuan yekchihua GX operaciones",
+  "cli.help.command.profile.description": "Yekchihua ihuan compila GX perfiles",
+  "cli.help.command.resolver.description": "Kitzaloa ihuan yekchihua GX resolvers",
+  "cli.help.command.simulate.description": "Simula se paquete de flow nican",
+  "cli.help.command.view.description": "Kitzaloa ihuan yekchihua GX vistas",
+  "cli.help.command.wizard.description": "Tlachihua soluciones ihuan temaca bundle generation",
+  "cli.help.commands": "Comandos:",
+  "cli.help.option.help": "Quiquixtia ayuda",
+  "cli.help.option.locale": "Xihpehpena in UI/help locale (`en` noso `nl`)",
+  "cli.help.options": "Opciones:",
+  "cli.help.usage": "Uso:"
+}

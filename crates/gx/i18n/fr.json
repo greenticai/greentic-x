@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Outil Greentic-X pour générer, valider, simuler et inspecter",
+  "cli.help.command.catalog.description": "Générer, construire, valider et lister les catalogues GX",
+  "cli.help.command.contract.description": "Générer et valider les contrats GX",
+  "cli.help.command.doctor.description": "Exécuter les vérifications d'intégrité du dépôt",
+  "cli.help.command.flow.description": "Générer et valider les flux GX",
+  "cli.help.command.help.description": "Afficher ce message ou l'aide d'une sous-commande",
+  "cli.help.command.op.description": "Générer et valider les opérations GX",
+  "cli.help.command.profile.description": "Valider et compiler les profils GX",
+  "cli.help.command.resolver.description": "Générer et valider les résolveurs GX",
+  "cli.help.command.simulate.description": "Simuler localement un package de flux",
+  "cli.help.command.view.description": "Générer et valider les vues GX",
+  "cli.help.command.wizard.description": "Composer des solutions et déléguer la génération de bundles",
+  "cli.help.commands": "Commandes:",
+  "cli.help.option.help": "Afficher l'aide",
+  "cli.help.option.locale": "Sélectionner la langue de l'interface/de l'aide (`en` ou `nl`)",
+  "cli.help.options": "Options:",
+  "cli.help.usage": "Utilisation:"
+}

@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X tööriistad karkassi loomiseks, valideerimiseks, simuleerimiseks ja uurimiseks",
+  "cli.help.command.catalog.description": "Loo karkass, ehita, valideeri ja loetle GX katalooge",
+  "cli.help.command.contract.description": "Loo karkass ja valideeri GX lepinguid",
+  "cli.help.command.doctor.description": "Käivita hoidla seisukorra kontrollid",
+  "cli.help.command.flow.description": "Loo karkass ja valideeri GX voogusid",
+  "cli.help.command.help.description": "Kuva see teade või alamkäsu abi",
+  "cli.help.command.op.description": "Loo karkass ja valideeri GX operatsioone",
+  "cli.help.command.profile.description": "Valideeri ja kompileeri GX profiile",
+  "cli.help.command.resolver.description": "Loo karkass ja valideeri GX lahendajaid",
+  "cli.help.command.simulate.description": "Simuleeri voo paketti lokaalselt",
+  "cli.help.command.view.description": "Loo karkass ja valideeri GX vaateid",
+  "cli.help.command.wizard.description": "Koosta lahendusi ja delegeeri kimbu genereerimine",
+  "cli.help.commands": "Käsud:",
+  "cli.help.option.help": "Kuva abi",
+  "cli.help.option.locale": "Vali UI/abi lokaat (`en` või `nl`)",
+  "cli.help.options": "Valikud:",
+  "cli.help.usage": "Kasutus:"
+}

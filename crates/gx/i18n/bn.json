@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X স্ক্যাফোল্ড, যাচাই, সিমুলেট এবং পরিদর্শন টুলিং",
+  "cli.help.command.catalog.description": "GX ক্যাটালগ স্ক্যাফোল্ড, বিল্ড, যাচাই এবং তালিকাভুক্ত করুন",
+  "cli.help.command.contract.description": "GX কনট্র্যাক্ট স্ক্যাফোল্ড এবং যাচাই করুন",
+  "cli.help.command.doctor.description": "রিপোজিটরির স্বাস্থ্য পরীক্ষা চালান",
+  "cli.help.command.flow.description": "GX ফ্লো স্ক্যাফোল্ড এবং যাচাই করুন",
+  "cli.help.command.help.description": "এই বার্তা অথবা একটি সাবকমান্ডের সহায়তা মুদ্রণ করুন",
+  "cli.help.command.op.description": "GX অপারেশন স্ক্যাফোল্ড এবং যাচাই করুন",
+  "cli.help.command.profile.description": "GX প্রোফাইল যাচাই এবং কম্পাইল করুন",
+  "cli.help.command.resolver.description": "GX রিজলভার স্ক্যাফোল্ড এবং যাচাই করুন",
+  "cli.help.command.simulate.description": "স্থানীয়ভাবে একটি ফ্লো প্যাকেজ সিমুলেট করুন",
+  "cli.help.command.view.description": "GX ভিউ স্ক্যাফোল্ড এবং যাচাই করুন",
+  "cli.help.command.wizard.description": "সমাধান কম্পোজ করুন এবং বান্ডল জেনারেশন ডেলিগেট করুন",
+  "cli.help.commands": "কমান্ডসমূহ:",
+  "cli.help.option.help": "সহায়তা মুদ্রণ করুন",
+  "cli.help.option.locale": "UI/help লোকেল নির্বাচন করুন (`en` বা `nl`)",
+  "cli.help.options": "অপশনসমূহ:",
+  "cli.help.usage": "ব্যবহার:"
+}

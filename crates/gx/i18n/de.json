@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X-Tooling zum Erstellen von Gerüsten, Validieren, Simulieren und Prüfen",
+  "cli.help.command.catalog.description": "GX-Kataloge als Gerüst erstellen, bauen, validieren und auflisten",
+  "cli.help.command.contract.description": "GX-Verträge als Gerüst erstellen und validieren",
+  "cli.help.command.doctor.description": "Repository-Integritätsprüfungen ausführen",
+  "cli.help.command.flow.description": "GX-Flows als Gerüst erstellen und validieren",
+  "cli.help.command.help.description": "Diese Meldung oder die Hilfe eines Unterbefehls ausgeben",
+  "cli.help.command.op.description": "GX-Operationen als Gerüst erstellen und validieren",
+  "cli.help.command.profile.description": "GX-Profile validieren und kompilieren",
+  "cli.help.command.resolver.description": "GX-Resolver als Gerüst erstellen und validieren",
+  "cli.help.command.simulate.description": "Ein Flow-Paket lokal simulieren",
+  "cli.help.command.view.description": "GX-Views als Gerüst erstellen und validieren",
+  "cli.help.command.wizard.description": "Lösungen zusammenstellen und die Bundle-Generierung delegieren",
+  "cli.help.commands": "Befehle:",
+  "cli.help.option.help": "Hilfe ausgeben",
+  "cli.help.option.locale": "Die UI-/Hilfe-Sprache auswählen (`en` oder `nl`)",
+  "cli.help.options": "Optionen:",
+  "cli.help.usage": "Verwendung:"
+}

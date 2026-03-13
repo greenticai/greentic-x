@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X 스캐폴드, 검증, 시뮬레이션 및 검사 도구",
+  "cli.help.command.catalog.description": "GX 카탈로그를 스캐폴드, 빌드, 검증하고 나열합니다",
+  "cli.help.command.contract.description": "GX 계약을 스캐폴드하고 검증합니다",
+  "cli.help.command.doctor.description": "리포지토리 상태 점검을 실행합니다",
+  "cli.help.command.flow.description": "GX 플로우를 스캐폴드하고 검증합니다",
+  "cli.help.command.help.description": "이 메시지 또는 하위 명령의 도움말을 출력합니다",
+  "cli.help.command.op.description": "GX 작업을 스캐폴드하고 검증합니다",
+  "cli.help.command.profile.description": "GX 프로필을 검증하고 컴파일합니다",
+  "cli.help.command.resolver.description": "GX 리졸버를 스캐폴드하고 검증합니다",
+  "cli.help.command.simulate.description": "플로우 패키지를 로컬에서 시뮬레이션합니다",
+  "cli.help.command.view.description": "GX 뷰를 스캐폴드하고 검증합니다",
+  "cli.help.command.wizard.description": "솔루션을 구성하고 번들 생성을 위임합니다",
+  "cli.help.commands": "명령:",
+  "cli.help.option.help": "도움말 출력",
+  "cli.help.option.locale": "UI/도움말 로캘을 선택합니다 (`en` 또는 `nl`)",
+  "cli.help.options": "옵션:",
+  "cli.help.usage": "사용법:"
+}

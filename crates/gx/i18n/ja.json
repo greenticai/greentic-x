@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X のスキャフォールド、検証、シミュレーション、および検査ツール",
+  "cli.help.command.catalog.description": "GX カタログのスキャフォールド、ビルド、検証、および一覧表示",
+  "cli.help.command.contract.description": "GX コントラクトのスキャフォールドと検証",
+  "cli.help.command.doctor.description": "リポジトリの健全性チェックを実行",
+  "cli.help.command.flow.description": "GX フローのスキャフォールドと検証",
+  "cli.help.command.help.description": "このメッセージまたはサブコマンドのヘルプを表示",
+  "cli.help.command.op.description": "GX オペレーションのスキャフォールドと検証",
+  "cli.help.command.profile.description": "GX プロファイルの検証とコンパイル",
+  "cli.help.command.resolver.description": "GX リゾルバーのスキャフォールドと検証",
+  "cli.help.command.simulate.description": "フローパッケージをローカルでシミュレーション",
+  "cli.help.command.view.description": "GX ビューのスキャフォールドと検証",
+  "cli.help.command.wizard.description": "ソリューションを構成し、バンドル生成を委任",
+  "cli.help.commands": "コマンド:",
+  "cli.help.option.help": "ヘルプを表示",
+  "cli.help.option.locale": "UI/ヘルプのロケールを選択 (`en` または `nl`)",
+  "cli.help.options": "オプション:",
+  "cli.help.usage": "使用方法:"
+}

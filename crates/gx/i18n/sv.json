@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X-verktyg för att skapa ställningar, validera, simulera och inspektera",
+  "cli.help.command.catalog.description": "Skapa ställningar, bygg, validera och lista GX-kataloger",
+  "cli.help.command.contract.description": "Skapa ställningar och validera GX-kontrakt",
+  "cli.help.command.doctor.description": "Kör hälsokontroller för repot",
+  "cli.help.command.flow.description": "Skapa ställningar och validera GX-flöden",
+  "cli.help.command.help.description": "Skriv ut detta meddelande eller hjälpen för ett underkommando",
+  "cli.help.command.op.description": "Skapa ställningar och validera GX-operationer",
+  "cli.help.command.profile.description": "Validera och kompilera GX-profiler",
+  "cli.help.command.resolver.description": "Skapa ställningar och validera GX-resolvers",
+  "cli.help.command.simulate.description": "Simulera ett flödespaket lokalt",
+  "cli.help.command.view.description": "Skapa ställningar och validera GX-vyer",
+  "cli.help.command.wizard.description": "Komponera lösningar och delegera generering av paket",
+  "cli.help.commands": "Kommandon:",
+  "cli.help.option.help": "Skriv ut hjälp",
+  "cli.help.option.locale": "Välj språkvariant för UI/hjälp (`en` eller `nl`)",
+  "cli.help.options": "Alternativ:",
+  "cli.help.usage": "Användning:"
+}

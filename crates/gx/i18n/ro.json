@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Instrumente Greentic-X pentru generare schelete, validare, simulare și inspectare",
+  "cli.help.command.catalog.description": "Generează schelete, construiește, validează și listează cataloage GX",
+  "cli.help.command.contract.description": "Generează schelete și validează contracte GX",
+  "cli.help.command.doctor.description": "Rulează verificări de sănătate ale depozitului",
+  "cli.help.command.flow.description": "Generează schelete și validează fluxuri GX",
+  "cli.help.command.help.description": "Afișează acest mesaj sau ajutorul unei subcomenzi",
+  "cli.help.command.op.description": "Generează schelete și validează operațiuni GX",
+  "cli.help.command.profile.description": "Validează și compilează profiluri GX",
+  "cli.help.command.resolver.description": "Generează schelete și validează rezolvatoare GX",
+  "cli.help.command.simulate.description": "Simulează local un pachet de flux",
+  "cli.help.command.view.description": "Generează schelete și validează vizualizări GX",
+  "cli.help.command.wizard.description": "Compune soluții și deleagă generarea pachetelor",
+  "cli.help.commands": "Comenzi:",
+  "cli.help.option.help": "Afișează ajutorul",
+  "cli.help.option.locale": "Selectează limba interfeței/ajutorului (`en` sau `nl`)",
+  "cli.help.options": "Opțiuni:",
+  "cli.help.usage": "Utilizare:"
+}

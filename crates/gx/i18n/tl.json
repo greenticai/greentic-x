@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X na tooling para mag-scaffold, mag-validate, magsimulate, at magsiyasat",
+  "cli.help.command.catalog.description": "Mag-scaffold, bumuo, mag-validate, at maglista ng mga GX catalog",
+  "cli.help.command.contract.description": "Mag-scaffold at mag-validate ng mga GX contract",
+  "cli.help.command.doctor.description": "Patakbuhin ang mga pagsusuri sa kalusugan ng repositoryo",
+  "cli.help.command.flow.description": "Mag-scaffold at mag-validate ng mga GX flow",
+  "cli.help.command.help.description": "I-print ang mensaheng ito o ang tulong ng isang subcommand",
+  "cli.help.command.op.description": "Mag-scaffold at mag-validate ng mga GX operation",
+  "cli.help.command.profile.description": "I-validate at i-compile ang mga GX profile",
+  "cli.help.command.resolver.description": "Mag-scaffold at mag-validate ng mga GX resolver",
+  "cli.help.command.simulate.description": "Magsimulate ng flow package nang lokal",
+  "cli.help.command.view.description": "Mag-scaffold at mag-validate ng mga GX view",
+  "cli.help.command.wizard.description": "Bumuo ng mga solusyon at i-delegate ang pagbuo ng bundle",
+  "cli.help.commands": "Mga utos:",
+  "cli.help.option.help": "I-print ang tulong",
+  "cli.help.option.locale": "Piliin ang locale ng UI/tulong (`en` o `nl`)",
+  "cli.help.options": "Mga opsyon:",
+  "cli.help.usage": "Paggamit:"
+}

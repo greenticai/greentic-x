@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X-verktøy for å stillasere, validere, simulere og inspisere",
+  "cli.help.command.catalog.description": "Stillaser, bygg, valider og list opp GX-kataloger",
+  "cli.help.command.contract.description": "Stillaser og valider GX-kontrakter",
+  "cli.help.command.doctor.description": "Kjør helsesjekker for repositoriet",
+  "cli.help.command.flow.description": "Stillaser og valider GX-flyter",
+  "cli.help.command.help.description": "Skriv ut denne meldingen eller hjelpen for en underkommando",
+  "cli.help.command.op.description": "Stillaser og valider GX-operasjoner",
+  "cli.help.command.profile.description": "Valider og kompiler GX-profiler",
+  "cli.help.command.resolver.description": "Stillaser og valider GX-resolvere",
+  "cli.help.command.simulate.description": "Simuler en flytpakke lokalt",
+  "cli.help.command.view.description": "Stillaser og valider GX-visninger",
+  "cli.help.command.wizard.description": "Sett sammen løsninger og deleger generering av pakker",
+  "cli.help.commands": "Kommandoer:",
+  "cli.help.option.help": "Skriv ut hjelp",
+  "cli.help.option.locale": "Velg UI-/hjelpespråk (`en` eller `nl`)",
+  "cli.help.options": "Alternativer:",
+  "cli.help.usage": "Bruk:"
+}

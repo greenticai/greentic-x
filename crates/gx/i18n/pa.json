@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X ਸਕੈਫੋਲਡ, ਵੈਲੀਡੇਟ, ਸਿਮੂਲੇਟ ਅਤੇ ਇੰਸਪੈਕਟ ਕਰਨ ਵਾਲੇ ਟੂਲ",
+  "cli.help.command.catalog.description": "GX ਕੈਟਾਲਾਗਾਂ ਨੂੰ ਸਕੈਫੋਲਡ, ਬਿਲਡ, ਵੈਲੀਡੇਟ ਅਤੇ ਸੂਚੀਬੱਧ ਕਰੋ",
+  "cli.help.command.contract.description": "GX ਕਾਂਟ੍ਰੈਕਟਾਂ ਨੂੰ ਸਕੈਫੋਲਡ ਅਤੇ ਵੈਲੀਡੇਟ ਕਰੋ",
+  "cli.help.command.doctor.description": "ਰਿਪੋਜ਼ਿਟਰੀ ਦੀ ਸਿਹਤ ਜਾਂਚ ਚਲਾਓ",
+  "cli.help.command.flow.description": "GX ਫਲੋਜ਼ ਨੂੰ ਸਕੈਫੋਲਡ ਅਤੇ ਵੈਲੀਡੇਟ ਕਰੋ",
+  "cli.help.command.help.description": "ਇਹ ਸੁਨੇਹਾ ਜਾਂ ਕਿਸੇ ਸਬਕਮਾਂਡ ਦੀ ਮਦਦ ਛਾਪੋ",
+  "cli.help.command.op.description": "GX ਓਪਰੇਸ਼ਨਾਂ ਨੂੰ ਸਕੈਫੋਲਡ ਅਤੇ ਵੈਲੀਡੇਟ ਕਰੋ",
+  "cli.help.command.profile.description": "GX ਪ੍ਰੋਫ਼ਾਈਲਾਂ ਨੂੰ ਵੈਲੀਡੇਟ ਅਤੇ ਕੰਪਾਇਲ ਕਰੋ",
+  "cli.help.command.resolver.description": "GX ਰਿਜ਼ਾਲਵਰਾਂ ਨੂੰ ਸਕੈਫੋਲਡ ਅਤੇ ਵੈਲੀਡੇਟ ਕਰੋ",
+  "cli.help.command.simulate.description": "ਇੱਕ ਫਲੋ ਪੈਕੇਜ ਨੂੰ ਲੋਕਲ ਤੌਰ 'ਤੇ ਸਿਮੂਲੇਟ ਕਰੋ",
+  "cli.help.command.view.description": "GX ਵਿਊਜ਼ ਨੂੰ ਸਕੈਫੋਲਡ ਅਤੇ ਵੈਲੀਡੇਟ ਕਰੋ",
+  "cli.help.command.wizard.description": "ਹੱਲ ਤਿਆਰ ਕਰੋ ਅਤੇ ਬੰਡਲ ਜਨਰੇਸ਼ਨ ਸੌਂਪੋ",
+  "cli.help.commands": "ਕਮਾਂਡਾਂ:",
+  "cli.help.option.help": "ਮਦਦ ਛਾਪੋ",
+  "cli.help.option.locale": "UI/ਮਦਦ ਲੋਕੇਲ ਚੁਣੋ (`en` ਜਾਂ `nl`)",
+  "cli.help.options": "ਵਿਕਲਪ:",
+  "cli.help.usage": "ਵਰਤੋਂ:"
+}

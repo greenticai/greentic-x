@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Ferramenta Greentic-X para estruturar, validar, simular e inspecionar",
+  "cli.help.command.catalog.description": "Estruturar, compilar, validar e listar catálogos GX",
+  "cli.help.command.contract.description": "Estruturar e validar contratos GX",
+  "cli.help.command.doctor.description": "Executar verificações de integridade do repositório",
+  "cli.help.command.flow.description": "Estruturar e validar fluxos GX",
+  "cli.help.command.help.description": "Imprimir esta mensagem ou a ajuda de um subcomando",
+  "cli.help.command.op.description": "Estruturar e validar operações GX",
+  "cli.help.command.profile.description": "Validar e compilar perfis GX",
+  "cli.help.command.resolver.description": "Estruturar e validar resolvedores GX",
+  "cli.help.command.simulate.description": "Simular um pacote de fluxo localmente",
+  "cli.help.command.view.description": "Estruturar e validar visualizações GX",
+  "cli.help.command.wizard.description": "Compor soluções e delegar a geração de bundles",
+  "cli.help.commands": "Comandos:",
+  "cli.help.option.help": "Imprimir ajuda",
+  "cli.help.option.locale": "Selecionar o locale da UI/ajuda (`en` ou `nl`)",
+  "cli.help.options": "Opções:",
+  "cli.help.usage": "Uso:"
+}

@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Інструментарій Greentic-X для створення шаблонів, перевірки, симуляції та інспекції",
+  "cli.help.command.catalog.description": "Створення шаблонів, збирання, перевірка та перелік каталогів GX",
+  "cli.help.command.contract.description": "Створення шаблонів і перевірка контрактів GX",
+  "cli.help.command.doctor.description": "Запустити перевірки стану репозиторію",
+  "cli.help.command.flow.description": "Створення шаблонів і перевірка потоків GX",
+  "cli.help.command.help.description": "Вивести це повідомлення або довідку для підкоманди",
+  "cli.help.command.op.description": "Створення шаблонів і перевірка операцій GX",
+  "cli.help.command.profile.description": "Перевірка та компіляція профілів GX",
+  "cli.help.command.resolver.description": "Створення шаблонів і перевірка резолверів GX",
+  "cli.help.command.simulate.description": "Симулювати пакет потоку локально",
+  "cli.help.command.view.description": "Створення шаблонів і перевірка подань GX",
+  "cli.help.command.wizard.description": "Компонувати рішення та делегувати генерацію пакета",
+  "cli.help.commands": "Команди:",
+  "cli.help.option.help": "Вивести довідку",
+  "cli.help.option.locale": "Вибрати локаль UI/довідки (`en` або `nl`)",
+  "cli.help.options": "Параметри:",
+  "cli.help.usage": "Використання:"
+}

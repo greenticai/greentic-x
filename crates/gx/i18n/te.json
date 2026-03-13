@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X స్కాఫోల్డ్, ధృవీకరణ, అనుకరణ, మరియు తనిఖీ టూలింగ్",
+  "cli.help.command.catalog.description": "GX కాటలాగ్‌లను స్కాఫోల్డ్ చేయండి, బిల్డ్ చేయండి, ధృవీకరించండి, మరియు జాబితా చేయండి",
+  "cli.help.command.contract.description": "GX కాంట్రాక్ట్‌లను స్కాఫోల్డ్ చేయండి మరియు ధృవీకరించండి",
+  "cli.help.command.doctor.description": "రిపోజిటరీ ఆరోగ్య తనిఖీలను అమలు చేయండి",
+  "cli.help.command.flow.description": "GX ఫ్లోలను స్కాఫోల్డ్ చేయండి మరియు ధృవీకరించండి",
+  "cli.help.command.help.description": "ఈ సందేశాన్ని లేదా ఉపకమాండ్ సహాయాన్ని ముద్రించండి",
+  "cli.help.command.op.description": "GX ఆపరేషన్‌లను స్కాఫోల్డ్ చేయండి మరియు ధృవీకరించండి",
+  "cli.help.command.profile.description": "GX ప్రొఫైల్‌లను ధృవీకరించండి మరియు కంపైల్ చేయండి",
+  "cli.help.command.resolver.description": "GX రిజాల్వర్‌లను స్కాఫోల్డ్ చేయండి మరియు ధృవీకరించండి",
+  "cli.help.command.simulate.description": "ఫ్లో ప్యాకేజీని లోకల్‌గా అనుకరించండి",
+  "cli.help.command.view.description": "GX వ్యూ‌లను స్కాఫోల్డ్ చేయండి మరియు ధృవీకరించండి",
+  "cli.help.command.wizard.description": "పరిష్కారాలను కూర్చండి మరియు బండిల్ సృష్టిని అప్పగించండి",
+  "cli.help.commands": "కమాండ్లు:",
+  "cli.help.option.help": "సహాయం ముద్రించండి",
+  "cli.help.option.locale": "UI/సహాయ లోకేల్‌ను ఎంచుకోండి (`en` లేదా `nl`)",
+  "cli.help.options": "ఎంపికలు:",
+  "cli.help.usage": "వినియోగం:"
+}

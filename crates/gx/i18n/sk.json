@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Nástroje Greentic-X na generovanie šablón, validáciu, simuláciu a kontrolu",
+  "cli.help.command.catalog.description": "Generovať šablóny, zostaviť, validovať a vypísať GX katalógy",
+  "cli.help.command.contract.description": "Generovať šablóny a validovať GX kontrakty",
+  "cli.help.command.doctor.description": "Spustiť kontroly stavu repozitára",
+  "cli.help.command.flow.description": "Generovať šablóny a validovať GX flowy",
+  "cli.help.command.help.description": "Vypísať túto správu alebo pomoc pre podpríkaz",
+  "cli.help.command.op.description": "Generovať šablóny a validovať GX operácie",
+  "cli.help.command.profile.description": "Validovať a kompilovať GX profily",
+  "cli.help.command.resolver.description": "Generovať šablóny a validovať GX resolvery",
+  "cli.help.command.simulate.description": "Lokálne simulovať balík flowu",
+  "cli.help.command.view.description": "Generovať šablóny a validovať GX pohľady",
+  "cli.help.command.wizard.description": "Skladať riešenia a delegovať generovanie balíkov",
+  "cli.help.commands": "Príkazy:",
+  "cli.help.option.help": "Zobraziť pomoc",
+  "cli.help.option.locale": "Vybrať lokalizáciu UI/pomoci (`en` alebo `nl`)",
+  "cli.help.options": "Možnosti:",
+  "cli.help.usage": "Použitie:"
+}

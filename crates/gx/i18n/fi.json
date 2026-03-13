@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X-työkalu rungon luomiseen, validointiin, simulointiin ja tarkasteluun",
+  "cli.help.command.catalog.description": "Luo runko, rakenna, validoi ja listaa GX-katalogit",
+  "cli.help.command.contract.description": "Luo runko ja validoi GX-sopimukset",
+  "cli.help.command.doctor.description": "Suorita repositorion kuntotarkistukset",
+  "cli.help.command.flow.description": "Luo runko ja validoi GX-virrat",
+  "cli.help.command.help.description": "Tulosta tämä viesti tai alikomennon ohje",
+  "cli.help.command.op.description": "Luo runko ja validoi GX-operaatiot",
+  "cli.help.command.profile.description": "Validoi ja käännä GX-profiilit",
+  "cli.help.command.resolver.description": "Luo runko ja validoi GX-resolverit",
+  "cli.help.command.simulate.description": "Simuloi virtapakettia paikallisesti",
+  "cli.help.command.view.description": "Luo runko ja validoi GX-näkymät",
+  "cli.help.command.wizard.description": "Koosta ratkaisuja ja delegoi bundle-paketin generointi",
+  "cli.help.commands": "Komennot:",
+  "cli.help.option.help": "Tulosta ohje",
+  "cli.help.option.locale": "Valitse käyttöliittymän/ohjeen kielialue (`en` tai `nl`)",
+  "cli.help.options": "Valinnat:",
+  "cli.help.usage": "Käyttö:"
+}

@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X uñstayaña, chiqanchayaña, yant'aña, ukhamaraki herramientas uñakipaña",
+  "cli.help.command.catalog.description": "GX catálogos uñstayaña, luraña, chiqanchayaña, ukhamaraki listarña",
+  "cli.help.command.contract.description": "GX contratos uñstayaña ukhamaraki chiqanchayaña",
+  "cli.help.command.doctor.description": "Repositorio k'umara uñakipäwinaka apnaqaña",
+  "cli.help.command.flow.description": "GX flows uñstayaña ukhamaraki chiqanchayaña",
+  "cli.help.command.help.description": "Aka yatiyäwi imprimíña jan ukax mä subcomando yanapt'apa imprimíña",
+  "cli.help.command.op.description": "GX operaciones uñstayaña ukhamaraki chiqanchayaña",
+  "cli.help.command.profile.description": "GX perfiles chiqanchayaña ukhamaraki compilaña",
+  "cli.help.command.resolver.description": "GX resolvers uñstayaña ukhamaraki chiqanchayaña",
+  "cli.help.command.simulate.description": "Mä flow package localmente yant'aña",
+  "cli.help.command.view.description": "GX views uñstayaña ukhamaraki chiqanchayaña",
+  "cli.help.command.wizard.description": "Soluciones wakicht'aña ukhamaraki bundle generation delegaña",
+  "cli.help.commands": "Comandos:",
+  "cli.help.option.help": "Yanapt'a imprimir",
+  "cli.help.option.locale": "UI/yanapt'a locale ajlliña (`en` jan ukax `nl`)",
+  "cli.help.options": "Opciones:",
+  "cli.help.usage": "Apnaqaña:"
+}

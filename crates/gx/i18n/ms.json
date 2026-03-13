@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Alat Greentic-X untuk menjana rangka, mengesahkan, mensimulasikan, dan memeriksa",
+  "cli.help.command.catalog.description": "Jana rangka, bina, sahkan, dan senaraikan katalog GX",
+  "cli.help.command.contract.description": "Jana rangka dan sahkan kontrak GX",
+  "cli.help.command.doctor.description": "Jalankan pemeriksaan kesihatan repositori",
+  "cli.help.command.flow.description": "Jana rangka dan sahkan aliran GX",
+  "cli.help.command.help.description": "Cetak mesej ini atau bantuan bagi subperintah",
+  "cli.help.command.op.description": "Jana rangka dan sahkan operasi GX",
+  "cli.help.command.profile.description": "Sahkan dan kompil profil GX",
+  "cli.help.command.resolver.description": "Jana rangka dan sahkan penyelesai GX",
+  "cli.help.command.simulate.description": "Simulasikan pakej aliran secara setempat",
+  "cli.help.command.view.description": "Jana rangka dan sahkan paparan GX",
+  "cli.help.command.wizard.description": "Gubah penyelesaian dan delegasikan penjanaan bundel",
+  "cli.help.commands": "Perintah:",
+  "cli.help.option.help": "Cetak bantuan",
+  "cli.help.option.locale": "Pilih locale UI/bantuan (`en` atau `nl`)",
+  "cli.help.options": "Pilihan:",
+  "cli.help.usage": "Penggunaan:"
+}

@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "أدوات Greentic-X للتهيئة، والتحقّق، والمحاكاة، والتفقد",
+  "cli.help.command.catalog.description": "تهيئة وبناء والتحقّق من كتالوجات GX وعرضها",
+  "cli.help.command.contract.description": "تهيئة عقود GX والتحقّق منها",
+  "cli.help.command.doctor.description": "تشغيل فحوصات سلامة المستودع",
+  "cli.help.command.flow.description": "تهيئة تدفقات GX والتحقّق منها",
+  "cli.help.command.help.description": "طباعة هذه الرسالة أو مساعدة أمر فرعي",
+  "cli.help.command.op.description": "تهيئة عمليات GX والتحقّق منها",
+  "cli.help.command.profile.description": "التحقّق من ملفات تعريف GX وتجميعها",
+  "cli.help.command.resolver.description": "تهيئة محلّلات GX والتحقّق منها",
+  "cli.help.command.simulate.description": "محاكاة حزمة تدفّق محلّياً",
+  "cli.help.command.view.description": "تهيئة عروض GX والتحقّق منها",
+  "cli.help.command.wizard.description": "تركيب الحلول وتفويض توليد الحزم",
+  "cli.help.commands": "الأوامر:",
+  "cli.help.option.help": "طباعة المساعدة",
+  "cli.help.option.locale": "اختيار لغة الواجهة/المساعدة (`en` أو `nl`)",
+  "cli.help.options": "الخيارات:",
+  "cli.help.usage": "الاستخدام:"
+}
