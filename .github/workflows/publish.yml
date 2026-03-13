@@ -8,6 +8,9 @@ on:
         required: true
         type: string
   push:
+    branches:
+      - main
+      - master
     tags:
       - v*
 
@@ -16,56 +19,67 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  verify:
+  lint:
     runs-on: ubuntu-latest
-    env:
-      CARGO_BINSTALL_VERSION: 1.17.6
-      GREENTIC_PACK_VERSION: 0.4.109
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy, rustfmt
+          components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
-      - uses: actions/cache@v4
-        id: cargo-binstall-cache
-        with:
-          path: ~/.cargo/bin/cargo-binstall
-          key: ${{ runner.os }}-cargo-binstall-${{ env.CARGO_BINSTALL_VERSION }}
-      - if: steps.cargo-binstall-cache.outputs.cache-hit != 'true'
-        uses: cargo-bins/cargo-binstall@main
-        with:
-          version: ${{ env.CARGO_BINSTALL_VERSION }}
-      - uses: actions/cache@v4
-        id: greentic-pack-cache
-        with:
-          path: ~/.cargo/bin/greentic-pack
-          key: ${{ runner.os }}-greentic-pack-${{ env.GREENTIC_PACK_VERSION }}
-      - run: bash ci/install_greentic_pack.sh
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --all-features
+
+  release-metadata:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      create_release: ${{ steps.version.outputs.create_release }}
+    steps:
+      - uses: actions/checkout@v4
       - id: version
         shell: bash
         run: |
           set -euo pipefail
           version="$(python3 ci/publishable_crates.py --format workspace-version)"
+          create_release=false
+          tag=""
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             tag="${{ github.event.inputs.release_tag }}"
-          else
+            create_release=true
+          elif [[ "${GITHUB_REF_TYPE}" = "tag" ]]; then
             tag="${GITHUB_REF_NAME}"
+            create_release=true
+          else
+            branch="${GITHUB_REF_NAME}"
+            if [ "$branch" != "main" ] && [ "$branch" != "master" ]; then
+              printf 'publish workflow only supports main/master branch pushes or version tags\n' >&2
+              exit 1
+            fi
           fi
-          if [ "$tag" != "v$version" ]; then
+          if [ "$create_release" = "true" ] && [ "$tag" != "v$version" ]; then
             printf 'tag %s does not match Cargo version v%s\n' "$tag" "$version" >&2
             exit 1
           fi
           printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
           printf 'tag=%s\n' "$tag" >> "$GITHUB_OUTPUT"
-      - run: bash ci/local_check.sh
+          printf 'create_release=%s\n' "$create_release" >> "$GITHUB_OUTPUT"
 
   publish-crates:
     runs-on: ubuntu-latest
-    needs: verify
+    needs:
+      - lint
+      - test
+      - release-metadata
     permissions:
       contents: write
     steps:
@@ -78,8 +92,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          version="${{ needs.release-metadata.outputs.version }}"
           python3 ci/publishable_crates.py --format names | while IFS= read -r crate_name; do
             [ -n "$crate_name" ] || continue
+            if cargo search "$crate_name" --limit 1 | grep -Eq "^${crate_name} = \"${version}\"$"; then
+              printf 'crate %s version %s already published; skipping\n' "$crate_name" "$version"
+              continue
+            fi
             cargo publish -p "$crate_name" --dry-run
             attempts=0
             until cargo publish -p "$crate_name"; do
@@ -93,7 +112,8 @@ jobs:
             sleep 30
           done
       - name: Create GitHub release
+        if: needs.release-metadata.outputs.create_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.verify.outputs.tag }}
+          tag_name: ${{ needs.release-metadata.outputs.tag }}
           generate_release_notes: true
