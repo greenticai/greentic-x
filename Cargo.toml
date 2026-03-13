@@ -14,11 +14,11 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.4.1"
+version = "0.4.2"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/greentic-ng/greentic-x"
-homepage = "https://github.com/greentic-ng/greentic-x"
+repository = "https://github.com/greenticai/greentic-x"
+homepage = "https://github.com/greenticai/greentic-x"
 documentation = "https://docs.rs/greentic-x-types"
 readme = "README.md"
 authors = ["Greentic"]
