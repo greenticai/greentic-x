@@ -1,1 +1,19 @@
-{}
+{
+  "cli.help.about": "Greentic-X hulpmiddel voor scaffolden, valideren, simuleren en inspecteren",
+  "cli.help.usage": "Gebruik:",
+  "cli.help.commands": "Commando's:",
+  "cli.help.options": "Opties:",
+  "cli.help.option.help": "Help tonen",
+  "cli.help.option.locale": "UI-/helptaal kiezen (`en` of `nl`)",
+  "cli.help.command.contract.description": "GX-contracten scaffolden en valideren",
+  "cli.help.command.op.description": "GX-operaties scaffolden en valideren",
+  "cli.help.command.flow.description": "GX-flows scaffolden en valideren",
+  "cli.help.command.resolver.description": "GX-resolvers scaffolden en valideren",
+  "cli.help.command.view.description": "GX-views scaffolden en valideren",
+  "cli.help.command.profile.description": "GX-profielen valideren en compileren",
+  "cli.help.command.simulate.description": "Een flowpakket lokaal simuleren",
+  "cli.help.command.doctor.description": "Repositorycontroles uitvoeren",
+  "cli.help.command.catalog.description": "GX-catalogi scaffolden, bouwen, valideren en tonen",
+  "cli.help.command.wizard.description": "Oplossingen samenstellen en bundelgeneratie delegeren",
+  "cli.help.command.help.description": "Dit bericht of de hulp van een subcommando tonen"
+}

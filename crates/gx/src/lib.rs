@@ -29,42 +29,54 @@ use std::path::{Path, PathBuf};
     about = "Greentic-X scaffold, validate, simulate, and inspect tooling"
 )]
 struct Cli {
+    #[arg(long, global = true)]
+    locale: Option<String>,
     #[command(subcommand)]
     command: Command,
 }
 
 #[derive(Subcommand)]
 enum Command {
+    /// Scaffold and validate GX contracts.
     Contract {
         #[command(subcommand)]
         command: ContractCommand,
     },
+    /// Scaffold and validate GX operations.
     Op {
         #[command(subcommand)]
         command: OpCommand,
     },
+    /// Scaffold and validate GX flows.
     Flow {
         #[command(subcommand)]
         command: FlowCommand,
     },
+    /// Scaffold and validate GX resolvers.
     Resolver {
         #[command(subcommand)]
         command: ResolverCommand,
     },
+    /// Scaffold and validate GX views.
     View {
         #[command(subcommand)]
         command: ViewCommand,
     },
+    /// Validate and compile GX profiles.
     Profile {
         #[command(subcommand)]
         command: ProfileCommand,
     },
+    /// Simulate a flow package locally.
     Simulate(SimulateArgs),
+    /// Run repository health checks.
     Doctor(DoctorArgs),
+    /// Scaffold, build, validate, and list GX catalogs.
     Catalog {
         #[command(subcommand)]
         command: CatalogCommand,
     },
+    /// Compose solutions and delegate bundle generation.
     Wizard(WizardArgs),
 }
 
@@ -632,8 +644,149 @@ where
     I: IntoIterator<Item = OsString>,
 {
     let cwd = cwd.map_err(|err| format!("failed to determine current directory: {err}"))?;
-    let cli = Cli::try_parse_from(args).map_err(|err| err.to_string())?;
+    let argv = args.into_iter().collect::<Vec<_>>();
+    if let Some(help) = maybe_render_top_level_help(&argv) {
+        return Ok(help);
+    }
+    let cli = Cli::try_parse_from(&argv).map_err(|err| err.to_string())?;
     run_command(cli.command, &cwd)
+}
+
+fn maybe_render_top_level_help(args: &[OsString]) -> Option<String> {
+    if !requests_help(args) || first_subcommand(args).is_some() {
+        return None;
+    }
+    let locale = i18n::resolve_locale(parse_locale_arg(args).as_deref(), None);
+    Some(render_top_level_help(&locale))
+}
+
+fn requests_help(args: &[OsString]) -> bool {
+    args.iter()
+        .skip(1)
+        .filter_map(|arg| arg.to_str())
+        .any(|arg| arg == "--help" || arg == "-h")
+}
+
+fn parse_locale_arg(args: &[OsString]) -> Option<String> {
+    let mut values = args.iter().skip(1);
+    while let Some(arg) = values.next() {
+        let Some(text) = arg.to_str() else {
+            continue;
+        };
+        if let Some(value) = text.strip_prefix("--locale=") {
+            return Some(value.to_owned());
+        }
+        if text == "--locale" {
+            return values
+                .next()
+                .and_then(|value| value.to_str())
+                .map(ToOwned::to_owned);
+        }
+    }
+    None
+}
+
+fn first_subcommand(args: &[OsString]) -> Option<String> {
+    let mut values = args.iter().skip(1);
+    while let Some(arg) = values.next() {
+        let Some(text) = arg.to_str() else {
+            continue;
+        };
+        if text == "--locale" {
+            let _ = values.next();
+            continue;
+        }
+        if text.starts_with("--locale=") || text == "--help" || text == "-h" {
+            continue;
+        }
+        if text.starts_with('-') {
+            continue;
+        }
+        return Some(text.to_owned());
+    }
+    None
+}
+
+fn render_top_level_help(locale: &str) -> String {
+    let commands = [
+        (
+            "contract",
+            i18n::tr(locale, "cli.help.command.contract.description"),
+        ),
+        ("op", i18n::tr(locale, "cli.help.command.op.description")),
+        (
+            "flow",
+            i18n::tr(locale, "cli.help.command.flow.description"),
+        ),
+        (
+            "resolver",
+            i18n::tr(locale, "cli.help.command.resolver.description"),
+        ),
+        (
+            "view",
+            i18n::tr(locale, "cli.help.command.view.description"),
+        ),
+        (
+            "profile",
+            i18n::tr(locale, "cli.help.command.profile.description"),
+        ),
+        (
+            "simulate",
+            i18n::tr(locale, "cli.help.command.simulate.description"),
+        ),
+        (
+            "doctor",
+            i18n::tr(locale, "cli.help.command.doctor.description"),
+        ),
+        (
+            "catalog",
+            i18n::tr(locale, "cli.help.command.catalog.description"),
+        ),
+        (
+            "wizard",
+            i18n::tr(locale, "cli.help.command.wizard.description"),
+        ),
+        (
+            "help",
+            i18n::tr(locale, "cli.help.command.help.description"),
+        ),
+    ];
+
+    let command_width = commands
+        .iter()
+        .map(|(name, _)| name.len())
+        .max()
+        .unwrap_or(4)
+        + 2;
+
+    let mut lines = vec![
+        i18n::tr(locale, "cli.help.about"),
+        String::new(),
+        format!(
+            "{} greentic-x [OPTIONS] <COMMAND>",
+            i18n::tr(locale, "cli.help.usage")
+        ),
+        String::new(),
+        i18n::tr(locale, "cli.help.commands"),
+    ];
+
+    for (name, description) in commands {
+        lines.push(format!("  {name:command_width$}{description}"));
+    }
+
+    lines.push(String::new());
+    lines.push(i18n::tr(locale, "cli.help.options"));
+    lines.push(format!(
+        "  -h, --help{}{}",
+        " ".repeat(13),
+        i18n::tr(locale, "cli.help.option.help")
+    ));
+    lines.push(format!(
+        "  --locale <LOCALE>{}{}",
+        " ".repeat(7),
+        i18n::tr(locale, "cli.help.option.locale")
+    ));
+    lines.join("\n")
 }
 
 fn run_command(command: Command, cwd: &Path) -> Result<String, String> {
@@ -1905,11 +2058,23 @@ mod tests {
     use tempfile::TempDir;
 
     fn run_ok(args: &[&str], cwd: &Path) -> Result<String, String> {
-        let argv = std::iter::once("gx".to_owned())
+        let argv = std::iter::once("greentic-x".to_owned())
             .chain(args.iter().map(|item| (*item).to_owned()))
             .map(OsString::from)
             .collect::<Vec<_>>();
         run(argv, Ok(cwd.to_path_buf()))
+    }
+
+    #[test]
+    fn top_level_help_respects_locale() -> Result<(), Box<dyn Error>> {
+        let temp = TempDir::new()?;
+        let cwd = temp.path();
+        let output = run_ok(&["--help", "--locale", "nl"], cwd)?;
+        assert!(output.contains("Gebruik:"));
+        assert!(output.contains("Commando's:"));
+        assert!(output.contains("--locale <LOCALE>"));
+        assert!(output.contains("Oplossingen samenstellen en bundelgeneratie delegeren"));
+        Ok(())
     }
 
     #[test]

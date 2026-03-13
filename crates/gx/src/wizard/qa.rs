@@ -3,6 +3,7 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use crate::WizardAnswerDocument;
+use crate::i18n::tr;
 
 use super::catalog::{
     RemoteCatalogFetcher, builtin_channel_options, find_provider_preset_by_id, load_catalogs,
@@ -20,31 +21,32 @@ pub(crate) fn collect_interactive_answers(
     document: &mut WizardAnswerDocument,
     fetcher: &dyn RemoteCatalogFetcher,
 ) -> Result<bool, String> {
+    let locale = document.locale.clone();
     loop {
         match prompt_menu(
-            "GX Wizard",
+            &tr(&locale, "wizard.menu.title"),
             &[
-                "1) Create new solution",
-                "2) Update existing solution",
-                "3) Advanced options",
+                &menu_option(&locale, 1, "wizard.menu.create"),
+                &menu_option(&locale, 2, "wizard.menu.update"),
+                &menu_option(&locale, 3, "wizard.menu.advanced"),
                 "",
-                "M) Main menu",
-                "0) Exit",
+                &main_menu_option(&locale),
+                &back_or_exit_option(&locale, true),
             ],
         )? {
             Navigation::Exit => return Ok(false),
             Navigation::MainMenu => continue,
             Navigation::Back => return Ok(false),
             Navigation::Value(value) if value == "1" => {
-                run_create_flow(cwd, document, fetcher)?;
+                run_create_flow(cwd, document, fetcher, &locale)?;
                 return Ok(true);
             }
             Navigation::Value(value) if value == "2" => {
-                run_update_flow(cwd, document, fetcher)?;
+                run_update_flow(cwd, document, fetcher, &locale)?;
                 return Ok(true);
             }
             Navigation::Value(value) if value == "3" => {
-                run_advanced_options(document)?;
+                run_advanced_options(document, &locale)?;
             }
             _ => {}
         }
@@ -66,6 +68,7 @@ fn run_create_flow(
     cwd: &Path,
     document: &mut WizardAnswerDocument,
     fetcher: &dyn RemoteCatalogFetcher,
+    locale: &str,
 ) -> Result<(), String> {
     let catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
     document.answers.insert(
@@ -74,34 +77,40 @@ fn run_create_flow(
     );
 
     match prompt_menu(
-        "Which solution template should this start from?",
+        &tr(locale, "wizard.create.template.title"),
         &[
-            "1) Choose from catalog templates",
-            "2) Start from a basic empty solution",
-            "3) Advanced manual template reference",
+            &menu_option(locale, 1, "wizard.create.template.catalog"),
+            &menu_option(locale, 2, "wizard.create.template.basic"),
+            &menu_option(locale, 3, "wizard.create.template.manual"),
             "",
-            "M) Main menu",
-            "0) Back",
+            &main_menu_option(locale),
+            &back_or_exit_option(locale, false),
         ],
     )? {
-        Navigation::MainMenu | Navigation::Exit => return Err("wizard cancelled".to_owned()),
-        Navigation::Back => return Err("wizard cancelled".to_owned()),
-        Navigation::Value(value) if value == "1" => choose_catalog_template(document, &catalogs)?,
+        Navigation::MainMenu | Navigation::Exit => return Err(cancelled(locale)),
+        Navigation::Back => return Err(cancelled(locale)),
+        Navigation::Value(value) if value == "1" => {
+            choose_catalog_template(document, &catalogs, locale)?
+        }
         Navigation::Value(value) if value == "2" => {
             document.answers.insert(
                 "template_mode".to_owned(),
                 serde_json::Value::String("basic_empty".to_owned()),
             );
         }
-        Navigation::Value(value) if value == "3" => choose_manual_template(document)?,
-        _ => return Err("invalid template selection".to_owned()),
+        Navigation::Value(value) if value == "3" => choose_manual_template(document, locale)?,
+        _ => return Err(tr(locale, "wizard.error.invalid_template_selection")),
     }
 
-    let solution_name = prompt_text("Solution name", None)?;
+    let solution_name = prompt_text(locale, "wizard.field.solution_name", None)?;
     let default_solution_id = slugify(&solution_name);
-    let solution_id = prompt_text("Solution id", Some(&default_solution_id))?;
-    let description = prompt_text("Short description", None)?;
-    let output_dir = prompt_text("Output directory", Some("./dist"))?;
+    let solution_id = prompt_text(
+        locale,
+        "wizard.field.solution_id",
+        Some(&default_solution_id),
+    )?;
+    let description = prompt_text(locale, "wizard.field.short_description", None)?;
+    let output_dir = prompt_text(locale, "wizard.field.output_dir", Some("./dist"))?;
     document.answers.insert(
         "solution_name".to_owned(),
         serde_json::Value::String(solution_name),
@@ -118,7 +127,7 @@ fn run_create_flow(
         "output_dir".to_owned(),
         serde_json::Value::String(normalize_output_dir(&output_dir)),
     );
-    choose_provider(document, &catalogs, None)?;
+    choose_provider(document, &catalogs, None, locale)?;
     Ok(())
 }
 
@@ -126,11 +135,12 @@ fn run_update_flow(
     cwd: &Path,
     document: &mut WizardAnswerDocument,
     fetcher: &dyn RemoteCatalogFetcher,
+    locale: &str,
 ) -> Result<(), String> {
     let catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
     let manifests = find_solution_manifests(cwd)?;
     let Some(path) = select_solution_manifest(&manifests)? else {
-        return Err("wizard cancelled".to_owned());
+        return Err(cancelled(locale));
     };
     document.answers.insert(
         "mode".to_owned(),
@@ -141,10 +151,20 @@ fn run_update_flow(
         serde_json::Value::String(path.display().to_string()),
     );
 
-    let raw = fs::read_to_string(&path)
-        .map_err(|err| format!("failed to read {}: {err}", path.display()))?;
-    let manifest: serde_json::Value = serde_json::from_str(&raw)
-        .map_err(|err| format!("failed to parse {}: {err}", path.display()))?;
+    let raw = fs::read_to_string(&path).map_err(|err| {
+        format!(
+            "{} {}: {err}",
+            tr(locale, "wizard.error.read_failed"),
+            path.display()
+        )
+    })?;
+    let manifest: serde_json::Value = serde_json::from_str(&raw).map_err(|err| {
+        format!(
+            "{} {}: {err}",
+            tr(locale, "wizard.error.parse_failed"),
+            path.display()
+        )
+    })?;
     let current_name = manifest
         .get("solution_name")
         .and_then(serde_json::Value::as_str)
@@ -162,10 +182,14 @@ fn run_update_flow(
         .and_then(serde_json::Value::as_str)
         .unwrap_or("dist");
 
-    let solution_name = prompt_text("Solution name", Some(current_name))?;
-    let solution_id = prompt_text("Solution id", Some(current_id))?;
-    let description = prompt_text("Short description", Some(current_description))?;
-    let output_dir = prompt_text("Output directory", Some(current_output_dir))?;
+    let solution_name = prompt_text(locale, "wizard.field.solution_name", Some(current_name))?;
+    let solution_id = prompt_text(locale, "wizard.field.solution_id", Some(current_id))?;
+    let description = prompt_text(
+        locale,
+        "wizard.field.short_description",
+        Some(current_description),
+    )?;
+    let output_dir = prompt_text(locale, "wizard.field.output_dir", Some(current_output_dir))?;
     document.answers.insert(
         "solution_name".to_owned(),
         serde_json::Value::String(solution_name),
@@ -192,39 +216,43 @@ fn run_update_flow(
         .unwrap_or("Webchat");
 
     match prompt_menu(
-        &format!("Current provider: {current_provider}\nChange provider?"),
+        &format!(
+            "{}: {current_provider}\n{}",
+            tr(locale, "wizard.update.current_provider"),
+            tr(locale, "wizard.update.change_provider")
+        ),
         &[
-            "1) Keep current provider",
-            "2) Change provider",
-            "M) Main menu",
-            "0) Back",
+            &menu_option(locale, 1, "wizard.update.keep_provider"),
+            &menu_option(locale, 2, "wizard.update.change_provider_option"),
+            &main_menu_option(locale),
+            &back_or_exit_option(locale, false),
         ],
     )? {
         Navigation::Value(value) if value == "1" => {}
         Navigation::Value(value) if value == "2" => {
-            choose_provider(document, &catalogs, Some(current_provider))?
+            choose_provider(document, &catalogs, Some(current_provider), locale)?
         }
         Navigation::MainMenu | Navigation::Exit | Navigation::Back => {
-            return Err("wizard cancelled".to_owned());
+            return Err(cancelled(locale));
         }
         _ => {}
     }
     Ok(())
 }
 
-fn run_advanced_options(document: &mut WizardAnswerDocument) -> Result<(), String> {
+fn run_advanced_options(document: &mut WizardAnswerDocument, locale: &str) -> Result<(), String> {
     let current = catalog_refs(document);
     let prompt = if current.is_empty() {
-        "Catalog source (local path or oci:// ref)"
+        tr(locale, "wizard.advanced.catalog_source")
     } else {
-        "Catalog sources (comma-separated to replace current)"
+        tr(locale, "wizard.advanced.catalog_sources")
     };
     let default = if current.is_empty() {
         None
     } else {
         Some(current.join(", "))
     };
-    let value = prompt_text(prompt, default.as_deref())?;
+    let value = prompt_text_raw(&prompt, default.as_deref(), locale)?;
     let refs = value
         .split(',')
         .map(|item| item.trim())
@@ -241,9 +269,10 @@ fn run_advanced_options(document: &mut WizardAnswerDocument) -> Result<(), Strin
 fn choose_catalog_template(
     document: &mut WizardAnswerDocument,
     catalogs: &crate::WizardCatalogSet,
+    locale: &str,
 ) -> Result<(), String> {
     if catalogs.templates.is_empty() {
-        return Err("no catalog templates available".to_owned());
+        return Err(tr(locale, "wizard.error.no_catalog_templates"));
     }
     let mut options = catalogs
         .templates
@@ -254,17 +283,17 @@ fn choose_catalog_template(
     options.push("M) Main menu".to_owned());
     options.push("0) Back".to_owned());
     let selection = prompt_menu(
-        "Choose catalog template",
+        &tr(locale, "wizard.create.template.choose"),
         &options.iter().map(String::as_str).collect::<Vec<_>>(),
     )?;
     let Navigation::Value(value) = selection else {
-        return Err("wizard cancelled".to_owned());
+        return Err(cancelled(locale));
     };
     let index = value
         .parse::<usize>()
-        .map_err(|_| "invalid template selection".to_owned())?;
+        .map_err(|_| tr(locale, "wizard.error.invalid_template_selection"))?;
     let Some(entry) = catalogs.templates.get(index.saturating_sub(1)) else {
-        return Err("invalid template selection".to_owned());
+        return Err(tr(locale, "wizard.error.invalid_template_selection"));
     };
     document.answers.insert(
         "template_mode".to_owned(),
@@ -281,9 +310,13 @@ fn choose_catalog_template(
     Ok(())
 }
 
-fn choose_manual_template(document: &mut WizardAnswerDocument) -> Result<(), String> {
-    let template_ref = prompt_text("Template reference", None)?;
-    let domain_ref = prompt_text("Domain template reference", Some(&template_ref))?;
+fn choose_manual_template(document: &mut WizardAnswerDocument, locale: &str) -> Result<(), String> {
+    let template_ref = prompt_text(locale, "wizard.field.template_reference", None)?;
+    let domain_ref = prompt_text(
+        locale,
+        "wizard.field.domain_template_reference",
+        Some(&template_ref),
+    )?;
     document.answers.insert(
         "template_mode".to_owned(),
         serde_json::Value::String("manual".to_owned()),
@@ -303,20 +336,21 @@ fn choose_provider(
     document: &mut WizardAnswerDocument,
     catalogs: &crate::WizardCatalogSet,
     current_provider: Option<&str>,
+    locale: &str,
 ) -> Result<(), String> {
-    let prompt = "How should users access this solution?";
+    let prompt = tr(locale, "wizard.provider.title");
     let selection = prompt_menu(
-        prompt,
+        &prompt,
         &[
-            "1) Webchat",
-            "2) Teams",
-            "3) WebEx",
-            "4) Slack",
-            "5) All of the above",
-            "6) Other catalog preset",
-            "7) Advanced manual provider override",
-            "M) Main menu",
-            "0) Back",
+            &menu_option(locale, 1, "wizard.provider.webchat"),
+            &menu_option(locale, 2, "wizard.provider.teams"),
+            &menu_option(locale, 3, "wizard.provider.webex"),
+            &menu_option(locale, 4, "wizard.provider.slack"),
+            &menu_option(locale, 5, "wizard.provider.all"),
+            &menu_option(locale, 6, "wizard.provider.catalog"),
+            &menu_option(locale, 7, "wizard.provider.manual"),
+            &main_menu_option(locale),
+            &back_or_exit_option(locale, false),
         ],
     )?;
     match selection {
@@ -331,16 +365,16 @@ fn choose_provider(
             );
             document.answers.insert(
                 "provider_preset_display_name".to_owned(),
-                serde_json::Value::String("All of the above".to_owned()),
+                serde_json::Value::String(tr(locale, "wizard.provider.all_label")),
             );
         }
         Navigation::Value(value) if value == "6" => {
-            choose_catalog_provider(document, catalogs)?;
+            choose_catalog_provider(document, catalogs, locale)?;
         }
         Navigation::Value(value) if value == "7" => {
             let default = current_provider
                 .unwrap_or("ghcr.io/greenticai/packs/messaging/messaging-webchat:latest");
-            let provider_ref = prompt_text("Provider OCI ref", Some(default))?;
+            let provider_ref = prompt_text(locale, "wizard.field.provider_oci_ref", Some(default))?;
             document.answers.insert(
                 "provider_selection".to_owned(),
                 serde_json::Value::String("manual".to_owned()),
@@ -351,10 +385,10 @@ fn choose_provider(
             );
             document.answers.insert(
                 "provider_preset_display_name".to_owned(),
-                serde_json::Value::String("Manual override".to_owned()),
+                serde_json::Value::String(tr(locale, "wizard.provider.manual_label")),
             );
         }
-        _ => return Err("wizard cancelled".to_owned()),
+        _ => return Err(cancelled(locale)),
     }
     Ok(())
 }
@@ -362,9 +396,10 @@ fn choose_provider(
 fn choose_catalog_provider(
     document: &mut WizardAnswerDocument,
     catalogs: &crate::WizardCatalogSet,
+    locale: &str,
 ) -> Result<(), String> {
     if catalogs.provider_presets.is_empty() {
-        return Err("no catalog provider presets available".to_owned());
+        return Err(tr(locale, "wizard.error.no_catalog_provider_presets"));
     }
     let mut options = catalogs
         .provider_presets
@@ -375,19 +410,19 @@ fn choose_catalog_provider(
     options.push("M) Main menu".to_owned());
     options.push("0) Back".to_owned());
     let choice = prompt_menu(
-        "Choose provider preset",
+        &tr(locale, "wizard.provider.choose"),
         &options.iter().map(String::as_str).collect::<Vec<_>>(),
     )?;
     let Navigation::Value(value) = choice else {
-        return Err("wizard cancelled".to_owned());
+        return Err(cancelled(locale));
     };
     let index = value
         .parse::<usize>()
-        .map_err(|_| "invalid provider preset selection".to_owned())?;
+        .map_err(|_| tr(locale, "wizard.error.invalid_provider_preset_selection"))?;
     let entry = catalogs
         .provider_presets
         .get(index.saturating_sub(1))
-        .ok_or_else(|| "invalid provider preset selection".to_owned())?;
+        .ok_or_else(|| tr(locale, "wizard.error.invalid_provider_preset_selection"))?;
     document.answers.insert(
         "provider_selection".to_owned(),
         serde_json::Value::String("catalog".to_owned()),
@@ -454,7 +489,12 @@ fn prompt_menu(title: &str, options: &[&str]) -> Result<Navigation, String> {
     }
 }
 
-fn prompt_text(title: &str, default: Option<&str>) -> Result<String, String> {
+fn prompt_text(locale: &str, key: &str, default: Option<&str>) -> Result<String, String> {
+    let title = tr(locale, key);
+    prompt_text_raw(&title, default, locale)
+}
+
+fn prompt_text_raw(title: &str, default: Option<&str>, locale: &str) -> Result<String, String> {
     let mut stdout = io::stdout();
     loop {
         if let Some(default) = default {
@@ -472,10 +512,10 @@ fn prompt_text(title: &str, default: Option<&str>) -> Result<String, String> {
             .map_err(|err| format!("read prompt failed: {err}"))?;
         let trimmed = line.trim();
         if trimmed.eq_ignore_ascii_case("m") {
-            return Err("wizard cancelled".to_owned());
+            return Err(cancelled(locale));
         }
         if trimmed == "0" {
-            return Err("wizard cancelled".to_owned());
+            return Err(cancelled(locale));
         }
         if trimmed.is_empty() {
             if let Some(default) = default {
@@ -485,6 +525,27 @@ fn prompt_text(title: &str, default: Option<&str>) -> Result<String, String> {
         }
         return Ok(trimmed.to_owned());
     }
+}
+
+fn menu_option(locale: &str, index: usize, key: &str) -> String {
+    format!("{index}) {}", tr(locale, key))
+}
+
+fn main_menu_option(locale: &str) -> String {
+    format!("M) {}", tr(locale, "wizard.nav.main_menu"))
+}
+
+fn back_or_exit_option(locale: &str, exit: bool) -> String {
+    let key = if exit {
+        "wizard.nav.exit"
+    } else {
+        "wizard.nav.back"
+    };
+    format!("0) {}", tr(locale, key))
+}
+
+fn cancelled(locale: &str) -> String {
+    tr(locale, "wizard.error.cancelled")
 }
 
 fn catalog_refs(document: &WizardAnswerDocument) -> Vec<String> {
