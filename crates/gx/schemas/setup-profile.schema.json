@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/schemas/gx/setup-profile.schema.json",
+  "title": "gx setup profile",
+  "type": "object",
+  "required": [
+    "entry_id",
+    "kind",
+    "version",
+    "display_name"
+  ],
+  "properties": {
+    "entry_id": { "type": "string" },
+    "kind": { "const": "setup-profile" },
+    "version": { "type": "string" },
+    "display_name": { "type": "string" },
+    "description": { "type": "string" },
+    "settings": { "type": "object" }
+  },
+  "additionalProperties": true
+}

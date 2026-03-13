@@ -7,12 +7,11 @@ use serde_json::{Value, json};
 
 use crate::{RootCatalogEntry, RootCatalogIndex};
 
-const CATALOG_INDEX_SCHEMA: &str = include_str!("../../../schemas/catalog-index.schema.json");
-const ASSISTANT_TEMPLATE_SCHEMA: &str =
-    include_str!("../../../schemas/assistant-template.schema.json");
-const PROVIDER_PRESET_SCHEMA: &str = include_str!("../../../schemas/provider-preset.schema.json");
-const OVERLAY_SCHEMA: &str = include_str!("../../../schemas/overlay.schema.json");
-const SETUP_PROFILE_SCHEMA: &str = include_str!("../../../schemas/setup-profile.schema.json");
+const CATALOG_INDEX_SCHEMA: &str = include_str!("../schemas/catalog-index.schema.json");
+const ASSISTANT_TEMPLATE_SCHEMA: &str = include_str!("../schemas/assistant-template.schema.json");
+const PROVIDER_PRESET_SCHEMA: &str = include_str!("../schemas/provider-preset.schema.json");
+const OVERLAY_SCHEMA: &str = include_str!("../schemas/overlay.schema.json");
+const SETUP_PROFILE_SCHEMA: &str = include_str!("../schemas/setup-profile.schema.json");
 
 pub(crate) fn init_catalog_repo(
     path: &Path,
