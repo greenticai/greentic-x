@@ -95,7 +95,8 @@ jobs:
           version="${{ needs.release-metadata.outputs.version }}"
           python3 ci/publishable_crates.py --format names | while IFS= read -r crate_name; do
             [ -n "$crate_name" ] || continue
-            if cargo search "$crate_name" --limit 1 | grep -Eq "^${crate_name} = \"${version}\"$"; then
+            published_version="$(cargo search "$crate_name" --limit 1 | sed -nE "s/^${crate_name} = \"([^\"]+)\".*/\\1/p" | head -n 1)"
+            if [ "$published_version" = "$version" ]; then
               printf 'crate %s version %s already published; skipping\n' "$crate_name" "$version"
               continue
             fi
@@ -103,6 +104,11 @@ jobs:
             attempts=0
             until cargo publish -p "$crate_name"; do
               attempts=$((attempts + 1))
+              published_version="$(cargo search "$crate_name" --limit 1 | sed -nE "s/^${crate_name} = \"([^\"]+)\".*/\\1/p" | head -n 1)"
+              if [ "$published_version" = "$version" ]; then
+                printf 'crate %s version %s became available during publish retries; skipping remaining attempts\n' "$crate_name" "$version"
+                break
+              fi
               if [ "$attempts" -ge 3 ]; then
                 printf 'cargo publish failed for %s after %s attempts\n' "$crate_name" "$attempts" >&2
                 exit 1
