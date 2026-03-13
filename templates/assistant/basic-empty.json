@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0.0",
+  "template_kind": "assistant",
+  "template_name": "Basic Empty Assistant",
+  "description": "Minimal assistant template placeholder for GX solution composition."
+}

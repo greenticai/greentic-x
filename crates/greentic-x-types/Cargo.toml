@@ -8,7 +8,7 @@ homepage.workspace = true
 documentation = "https://docs.rs/greentic-x-types"
 readme.workspace = true
 description = "Bootstrap shared type vocabulary crate for the Greentic-X workspace."
-publish = false
+authors.workspace = true
 
 [dependencies]
 serde.workspace = true

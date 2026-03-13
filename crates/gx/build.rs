@@ -37,8 +37,8 @@ fn load_catalogs(i18n_dir: &Path) -> CatalogsByLocale {
 }
 
 fn visit_catalog_dir(dir: &Path, catalogs: &mut CatalogsByLocale) {
-    let entries = fs::read_dir(dir)
-        .unwrap_or_else(|error| panic!("read {}: {error}", dir.display()));
+    let entries =
+        fs::read_dir(dir).unwrap_or_else(|error| panic!("read {}: {error}", dir.display()));
 
     for entry in entries {
         let entry = entry.unwrap_or_else(|error| panic!("read {} entry: {error}", dir.display()));
@@ -65,9 +65,6 @@ fn visit_catalog_dir(dir: &Path, catalogs: &mut CatalogsByLocale) {
         let parsed: Catalog = serde_json::from_str(&raw)
             .unwrap_or_else(|error| panic!("parse {}: {error}", path.display()));
 
-        catalogs
-            .entry(stem.to_owned())
-            .or_default()
-            .extend(parsed);
+        catalogs.entry(stem.to_owned()).or_default().extend(parsed);
     }
 }

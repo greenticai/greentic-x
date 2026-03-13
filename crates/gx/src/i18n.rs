@@ -1,14 +1,20 @@
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
+#[allow(dead_code)]
 type Catalog = BTreeMap<String, String>;
+#[allow(dead_code)]
 type CatalogsByLocale = BTreeMap<String, Catalog>;
 
-include!(concat!(env!("OUT_DIR"), "/embedded_i18n.rs"));
+#[allow(dead_code)]
+mod embedded {
+    include!(concat!(env!("OUT_DIR"), "/embedded_i18n.rs"));
+}
 
+#[allow(dead_code)]
 fn catalogs() -> &'static CatalogsByLocale {
     static CATALOGS: OnceLock<CatalogsByLocale> = OnceLock::new();
-    CATALOGS.get_or_init(load_embedded_catalogs)
+    CATALOGS.get_or_init(embedded::load_embedded_catalogs)
 }
 
 pub fn normalize_locale(raw: &str) -> String {
@@ -48,6 +54,7 @@ pub fn resolve_locale(cli_locale: Option<&str>, doc_locale: Option<&str>) -> Str
     locale_from_env().unwrap_or_else(|| "en".to_owned())
 }
 
+#[allow(dead_code)]
 pub fn tr(locale: &str, key: &str) -> String {
     let normalized = normalize_locale(locale);
     catalogs()

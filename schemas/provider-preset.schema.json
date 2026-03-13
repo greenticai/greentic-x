@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/schemas/gx/provider-preset.schema.json",
+  "title": "gx provider preset catalog entry",
+  "type": "object",
+  "required": [
+    "entry_id",
+    "kind",
+    "version",
+    "display_name",
+    "provider_refs"
+  ],
+  "properties": {
+    "entry_id": { "type": "string" },
+    "kind": { "const": "provider-preset" },
+    "version": { "type": "string" },
+    "display_name": { "type": "string" },
+    "description": { "type": "string" },
+    "provider_refs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": true
+}

@@ -84,6 +84,10 @@ step "Packaging checks"
 while IFS='	' read -r crate_name manifest_path; do
   [ -n "$crate_name" ] || continue
   printf '\n-- %s\n' "$crate_name"
+  if [ "$crate_name" != "greentic-x-types" ]; then
+    printf 'Skipping local cargo package verification for %s; publish workflow validates ordered crates.io dry-runs after upstream dependencies are available.\n' "$crate_name"
+    continue
+  fi
   cargo package -p "$crate_name" --allow-dirty --no-verify
   cargo package -p "$crate_name" --allow-dirty
 
@@ -91,6 +95,4 @@ while IFS='	' read -r crate_name manifest_path; do
   cargo package -p "$crate_name" --allow-dirty --list > "$package_list_file"
   verify_packaged_files "$crate_name" "$package_list_file"
   rm -f "$package_list_file"
-
-  cargo publish -p "$crate_name" --dry-run --allow-dirty
 done < "$crate_details_file"

@@ -8,11 +8,11 @@ homepage.workspace = true
 documentation = "https://docs.rs/greentic-x-contracts"
 readme.workspace = true
 description = "Bootstrap contract model crate for the Greentic-X workspace."
-publish = false
+authors.workspace = true
 
 [dependencies]
-greentic-x-events = { path = "../greentic-x-events" }
-greentic-x-types = { path = "../greentic-x-types" }
+greentic-x-events = { version = "0.4.1", path = "../greentic-x-events" }
+greentic-x-types = { version = "0.4.1", path = "../greentic-x-types" }
 serde.workspace = true
 serde_json.workspace = true
 

@@ -1,0 +1,12 @@
+{
+  "entry_id": "overlay.default",
+  "kind": "overlay",
+  "version": "1.0.0",
+  "display_name": "Default overlay",
+  "description": "Default locale and branding overlay.",
+  "default_locale": "en",
+  "tenant_id": "default",
+  "branding": {
+    "display_name": "Greentic"
+  }
+}

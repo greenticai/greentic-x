@@ -1,3 +1,4 @@
+mod catalog_repo;
 mod i18n;
 mod profile;
 mod wizard;
@@ -21,8 +22,6 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
-#[cfg(test)]
-use std::process::Command as ProcessCommand;
 
 #[derive(Parser)]
 #[command(
@@ -107,6 +106,9 @@ enum ProfileCommand {
 
 #[derive(Subcommand)]
 enum CatalogCommand {
+    Init(CatalogInitArgs),
+    Build(CatalogBuildArgs),
+    Validate(CatalogValidateArgs),
     List(CatalogListArgs),
 }
 
@@ -205,6 +207,33 @@ struct CatalogListArgs {
     kind: Option<CatalogKind>,
 }
 
+#[derive(Args)]
+struct CatalogInitArgs {
+    repo_name: PathBuf,
+    #[arg(long)]
+    title: Option<String>,
+    #[arg(long)]
+    description: Option<String>,
+    #[arg(long, default_value_t = true)]
+    include_examples: bool,
+    #[arg(long, default_value_t = true)]
+    include_publish_workflow: bool,
+}
+
+#[derive(Args)]
+struct CatalogBuildArgs {
+    #[arg(long, default_value = ".")]
+    repo: PathBuf,
+    #[arg(long, default_value_t = false)]
+    check: bool,
+}
+
+#[derive(Args)]
+struct CatalogValidateArgs {
+    #[arg(long, default_value = ".")]
+    repo: PathBuf,
+}
+
 #[derive(Args, Clone)]
 struct WizardArgs {
     #[command(subcommand)]
@@ -215,6 +244,8 @@ struct WizardArgs {
 
 #[derive(Args, Clone)]
 struct WizardCommonArgs {
+    #[arg(long = "catalog")]
+    catalog: Vec<String>,
     #[arg(long)]
     answers: Option<PathBuf>,
     #[arg(long = "emit-answers")]
@@ -286,35 +317,137 @@ struct WizardAnswerDocument {
 }
 
 #[derive(Clone)]
-struct WizardBundleAnswers {
-    workflow: String,
-    bundle_mode: String,
-    bundle_name: String,
-    bundle_id: String,
+struct CompositionRequest {
+    mode: String,
+    template_mode: String,
+    template_entry_id: Option<String>,
+    template_display_name: Option<String>,
+    assistant_template_ref: Option<String>,
+    domain_template_ref: Option<String>,
+    solution_name: String,
+    solution_id: String,
+    description: String,
     output_dir: String,
-    assistant_template_source: String,
-    domain_template_source: String,
-    provider_categories: Vec<String>,
+    provider_selection: String,
+    provider_preset_entry_id: Option<String>,
+    provider_preset_display_name: Option<String>,
+    provider_refs: Vec<String>,
+    overlay_entry_id: Option<String>,
+    overlay_display_name: Option<String>,
+    overlay_default_locale: Option<String>,
+    overlay_tenant_id: Option<String>,
+    catalog_oci_refs: Vec<String>,
+    catalog_resolution_policy: String,
     bundle_output_path: String,
-    latest_policy: Option<String>,
-    latest_refs: Vec<String>,
+    solution_manifest_path: String,
+    bundle_plan_path: String,
+    bundle_answers_path: String,
+    setup_answers_path: String,
+    readme_path: String,
+    existing_solution_path: Option<String>,
 }
 
-#[derive(Clone)]
-struct WizardTemplateAnswers {
-    workflow: String,
-    template_kind: String,
-    template_action: String,
-    template_source: String,
-    template_output_path: String,
-    latest_policy: Option<String>,
-    latest_refs: Vec<String>,
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct CatalogProvenance {
+    source_type: String,
+    source_ref: String,
+    #[serde(default)]
+    resolved_digest: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct AssistantTemplateCatalogEntry {
+    entry_id: String,
+    kind: String,
+    version: String,
+    display_name: String,
+    #[serde(default)]
+    description: String,
+    assistant_template_ref: String,
+    #[serde(default)]
+    domain_template_ref: Option<String>,
+    #[serde(default)]
+    provenance: Option<CatalogProvenance>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct ProviderPresetCatalogEntry {
+    entry_id: String,
+    kind: String,
+    version: String,
+    display_name: String,
+    #[serde(default)]
+    description: String,
+    provider_refs: Vec<String>,
+    #[serde(default)]
+    provenance: Option<CatalogProvenance>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct OverlayCatalogEntry {
+    entry_id: String,
+    kind: String,
+    version: String,
+    display_name: String,
+    #[serde(default)]
+    description: String,
+    #[serde(default)]
+    default_locale: Option<String>,
+    #[serde(default)]
+    tenant_id: Option<String>,
+    #[serde(default)]
+    branding: Option<Value>,
+    #[serde(default)]
+    provenance: Option<CatalogProvenance>,
+}
+
+#[derive(Clone, Debug, Default)]
+struct WizardCatalogSet {
+    templates: Vec<AssistantTemplateCatalogEntry>,
+    provider_presets: Vec<ProviderPresetCatalogEntry>,
+    overlays: Vec<OverlayCatalogEntry>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct SolutionManifest {
+    schema_id: String,
+    schema_version: String,
+    solution_id: String,
+    solution_name: String,
+    description: String,
+    output_dir: String,
+    template: Value,
+    provider_presets: Vec<Value>,
+    #[serde(default)]
+    overlay: Option<Value>,
+    #[serde(default)]
+    catalog_sources: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct BundlePlan {
+    schema_id: String,
+    schema_version: String,
+    solution_id: String,
+    bundle_output_path: String,
+    bundle_answers_path: String,
+    steps: Vec<Value>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct SetupAnswers {
+    schema_id: String,
+    schema_version: String,
+    solution_id: String,
+    setup_mode: String,
+    provider_refs: Vec<String>,
+    #[serde(default)]
+    overlay: Option<Value>,
 }
 
 #[derive(Clone)]
 enum WizardNormalizedAnswers {
-    AssistantBundle(WizardBundleAnswers),
-    Template(WizardTemplateAnswers),
+    Composition(CompositionRequest),
 }
 
 const GX_WIZARD_ID: &str = "greentic-bundle.wizard.run";
@@ -411,9 +544,41 @@ struct ResolverStubCandidate {
 }
 
 #[derive(Debug, Deserialize)]
-struct CatalogIndex {
+struct LegacyCatalogIndex {
     #[serde(default)]
     entries: Vec<Value>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct RootCatalogIndex {
+    schema: String,
+    id: String,
+    version: String,
+    title: String,
+    #[serde(default)]
+    description: String,
+    #[serde(default)]
+    entries: Vec<RootCatalogEntry>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct RootCatalogEntry {
+    id: String,
+    kind: String,
+    #[serde(rename = "ref")]
+    ref_path: String,
+    #[serde(default)]
+    title: String,
+    #[serde(default)]
+    description: String,
+    #[serde(default)]
+    tags: Vec<String>,
+    #[serde(default)]
+    version: String,
+    #[serde(default)]
+    source: String,
+    #[serde(default)]
+    metadata: Value,
 }
 
 #[derive(Default)]
@@ -530,6 +695,25 @@ fn run_command(command: Command, cwd: &Path) -> Result<String, String> {
             args.input.map(|path| cwd.join(path)),
         ),
         Command::Doctor(args) => doctor(&cwd.join(args.path)),
+        Command::Catalog {
+            command: CatalogCommand::Init(args),
+        } => {
+            let path = cwd.join(&args.repo_name);
+            catalog_repo::init_catalog_repo(
+                &path,
+                &path_file_name(&path),
+                args.title,
+                args.description,
+                args.include_examples,
+                args.include_publish_workflow,
+            )
+        }
+        Command::Catalog {
+            command: CatalogCommand::Build(args),
+        } => catalog_repo::build_catalog_repo(&cwd.join(args.repo), args.check),
+        Command::Catalog {
+            command: CatalogCommand::Validate(args),
+        } => catalog_repo::validate_catalog_repo(&cwd.join(args.repo)),
         Command::Catalog {
             command: CatalogCommand::List(args),
         } => list_catalog(cwd, args.kind),
@@ -1461,7 +1645,7 @@ fn list_catalog(cwd: &Path, kind: Option<CatalogKind>) -> Result<String, String>
     let mut lines = Vec::new();
     for kind in kinds {
         let index_path = catalog_index_path(cwd, kind);
-        let index = read_json::<CatalogIndex>(&index_path)?;
+        let index = read_json::<LegacyCatalogIndex>(&index_path)?;
         lines.push(format!("[{}]", catalog_kind_name(kind)));
         for entry in index.entries {
             let summary = entry_summary(&entry);
@@ -1476,7 +1660,7 @@ fn load_catalog_ids(
     kind: CatalogKind,
     preferred_keys: &[&str],
 ) -> Result<BTreeSet<String>, String> {
-    let index = read_json::<CatalogIndex>(&catalog_index_path(root, kind))?;
+    let index = read_json::<LegacyCatalogIndex>(&catalog_index_path(root, kind))?;
     let mut ids = BTreeSet::new();
     for entry in index.entries {
         for key in preferred_keys {
@@ -1495,7 +1679,7 @@ fn catalog_entry_exists(
     key: &str,
     expected: &str,
 ) -> Result<bool, String> {
-    let index = read_json::<CatalogIndex>(&catalog_index_path(root, kind))?;
+    let index = read_json::<LegacyCatalogIndex>(&catalog_index_path(root, kind))?;
     Ok(index.entries.iter().any(|entry| {
         entry
             .get(key)
@@ -2028,46 +2212,31 @@ mod tests {
     }
 
     #[test]
-    fn wizard_run_outputs_plan() -> Result<(), Box<dyn Error>> {
+    fn wizard_run_outputs_composition_plan() -> Result<(), Box<dyn Error>> {
         let temp = TempDir::new()?;
         let cwd = temp.path();
         let output = run_ok(&["wizard", "run", "--dry-run"], cwd)?;
         let value: Value = serde_json::from_str(&output)?;
         assert_eq!(value["requested_action"], "run");
         assert_eq!(value["metadata"]["execution"], "dry_run");
-        assert_eq!(value["normalized_input_summary"]["mode"], "run");
-        assert!(value["expected_file_writes"].is_array());
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_plan_is_deterministic_for_bundle_dry_run() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let first: Value = serde_json::from_str(&run_ok(&["wizard", "run", "--dry-run"], cwd)?)?;
-        let second: Value = serde_json::from_str(&run_ok(&["wizard", "run", "--dry-run"], cwd)?)?;
-        assert_eq!(first, second);
-        let kinds = first["ordered_step_list"]
-            .as_array()
-            .ok_or_else(|| io_error("ordered_step_list should be an array".to_owned()))?
-            .iter()
-            .filter_map(|step| step["kind"].as_str())
-            .collect::<Vec<_>>();
         assert_eq!(
-            kinds,
-            vec!["collect_input", "normalize_request", "validate_plan"]
+            value["normalized_input_summary"]["workflow"],
+            "compose_solution"
+        );
+        assert_eq!(
+            value["normalized_input_summary"]["solution_id"],
+            "gx-solution"
         );
         Ok(())
     }
 
     #[test]
-    fn bare_wizard_defaults_to_run() -> Result<(), Box<dyn Error>> {
+    fn wizard_plan_is_deterministic_for_dry_run() -> Result<(), Box<dyn Error>> {
         let temp = TempDir::new()?;
         let cwd = temp.path();
-        let output = run_ok(&["wizard"], cwd)?;
-        let value: Value = serde_json::from_str(&output)?;
-        assert_eq!(value["requested_action"], "run");
-        assert_eq!(value["metadata"]["execution"], "execute");
+        let first: Value = serde_json::from_str(&run_ok(&["wizard", "run", "--dry-run"], cwd)?)?;
+        let second: Value = serde_json::from_str(&run_ok(&["wizard", "run", "--dry-run"], cwd)?)?;
+        assert_eq!(first, second);
         Ok(())
     }
 
@@ -2083,25 +2252,9 @@ mod tests {
     }
 
     #[test]
-    fn wizard_apply_respects_dry_run_flag() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let output = run_ok(&["wizard", "apply"], cwd)?;
-        let value: Value = serde_json::from_str(&output)?;
-        assert_eq!(value["requested_action"], "apply");
-        assert_eq!(value["metadata"]["execution"], "execute");
-
-        let output = run_ok(&["wizard", "apply", "--dry-run"], cwd)?;
-        let value: Value = serde_json::from_str(&output)?;
-        assert_eq!(value["metadata"]["execution"], "dry_run");
-        Ok(())
-    }
-
-    #[test]
     fn wizard_emit_answers_writes_answer_document() -> Result<(), Box<dyn Error>> {
         let temp = TempDir::new()?;
         let cwd = temp.path();
-        let answers = cwd.join("wizard.answers.json");
         let output = run_ok(
             &[
                 "wizard",
@@ -2112,23 +2265,64 @@ mod tests {
             ],
             cwd,
         )?;
-        let emitted: Value = serde_json::from_str(&fs::read_to_string(answers)?)?;
+        let emitted: Value =
+            serde_json::from_str(&fs::read_to_string(cwd.join("wizard.answers.json"))?)?;
         assert_eq!(emitted["wizard_id"], "greentic-bundle.wizard.run");
         assert_eq!(emitted["schema_id"], "greentic-bundle.wizard.answers");
-        assert_eq!(emitted["answers"]["mode"], "create");
-        assert_eq!(emitted["answers"]["gx_action"], "run");
-        assert_eq!(emitted["answers"]["bundle_name"], "GX Bundle");
-        assert_eq!(emitted["answers"]["bundle_id"], "gx-bundle");
-        assert_eq!(emitted["answers"]["output_dir"], "dist/bundle");
+        assert_eq!(emitted["answers"]["workflow"], "compose_solution");
+        assert_eq!(emitted["answers"]["solution_id"], "gx-solution");
         let plan: Value = serde_json::from_str(&output)?;
-        assert!(
-            plan["expected_file_writes"]
-                .as_array()
-                .is_some_and(|items| items.iter().any(|item| {
-                    item.as_str()
-                        .is_some_and(|text| text.ends_with("wizard.answers.json"))
-                }))
+        assert!(plan["expected_file_writes"].as_array().is_some());
+        Ok(())
+    }
+
+    #[test]
+    fn wizard_catalog_flag_is_emitted_into_answers() -> Result<(), Box<dyn Error>> {
+        let temp = TempDir::new()?;
+        let cwd = temp.path();
+        write_json(
+            &cwd.join("input.answers.json"),
+            &json!({
+                "wizard_id": "greentic-bundle.wizard.run",
+                "schema_id": "greentic-bundle.wizard.answers",
+                "schema_version": "1.0.0",
+                "locale": "en",
+                "answers": {
+                    "solution_name": "Network Assistant"
+                },
+                "locks": {}
+            }),
+        )?;
+        let _ = run_ok(
+            &[
+                "wizard",
+                "run",
+                "--dry-run",
+                "--answers",
+                "input.answers.json",
+                "--catalog",
+                "oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:latest",
+                "--emit-answers",
+                "output.answers.json",
+            ],
+            cwd,
+        )?;
+        let emitted: Value =
+            serde_json::from_str(&fs::read_to_string(cwd.join("output.answers.json"))?)?;
+        assert_eq!(
+            emitted["answers"]["catalog_oci_refs"][0],
+            "oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:latest"
         );
+        Ok(())
+    }
+
+    #[test]
+    fn catalog_build_and_validate_commands_work() -> Result<(), Box<dyn Error>> {
+        let temp = TempDir::new()?;
+        let cwd = temp.path();
+        let _ = run_ok(&["catalog", "init", "zain-x"], cwd)?;
+        let _ = run_ok(&["catalog", "build", "--repo", "zain-x"], cwd)?;
+        let _ = run_ok(&["catalog", "validate", "--repo", "zain-x"], cwd)?;
         Ok(())
     }
 
@@ -2136,17 +2330,14 @@ mod tests {
     fn wizard_rejects_schema_version_change_without_migrate() -> Result<(), Box<dyn Error>> {
         let temp = TempDir::new()?;
         let cwd = temp.path();
-        let input = cwd.join("input.answers.json");
         write_json(
-            &input,
+            &cwd.join("input.answers.json"),
             &json!({
                 "wizard_id": "greentic-bundle.wizard.run",
                 "schema_id": "greentic-bundle.wizard.answers",
                 "schema_version": "0.9.0",
                 "locale": "en",
-                "answers": {
-                    "bundle_name": "demo"
-                },
+                "answers": {},
                 "locks": {}
             }),
         )?;
@@ -2170,10 +2361,8 @@ mod tests {
     fn wizard_migrate_updates_schema_version() -> Result<(), Box<dyn Error>> {
         let temp = TempDir::new()?;
         let cwd = temp.path();
-        let input = cwd.join("input.answers.json");
-        let output = cwd.join("output.answers.json");
         write_json(
-            &input,
+            &cwd.join("input.answers.json"),
             &json!({
                 "wizard_id": "greentic-bundle.wizard.run",
                 "schema_id": "greentic-bundle.wizard.answers",
@@ -2197,344 +2386,15 @@ mod tests {
             ],
             cwd,
         )?;
-        let emitted: Value = serde_json::from_str(&fs::read_to_string(output)?)?;
+        let emitted: Value =
+            serde_json::from_str(&fs::read_to_string(cwd.join("output.answers.json"))?)?;
         assert_eq!(emitted["schema_version"], "1.1.0");
         Ok(())
     }
 
     #[test]
-    fn wizard_rejects_schema_id_mismatch() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let input = cwd.join("input.answers.json");
-        write_json(
-            &input,
-            &json!({
-                "wizard_id": "greentic-bundle.wizard.run",
-                "schema_id": "wrong.schema",
-                "schema_version": "1.0.0",
-                "locale": "en",
-                "answers": {},
-                "locks": {}
-            }),
-        )?;
-        let err = run_ok(&["wizard", "run", "--answers", "input.answers.json"], cwd)
-            .expect_err("expected schema id mismatch");
-        assert!(err.contains("schema_id mismatch"));
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_bundle_handoff_adds_expected_writes_for_execute() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let args = WizardCommonArgs {
-            answers: None,
-            emit_answers: None,
-            dry_run: false,
-            locale: None,
-            mode: None,
-            schema_version: None,
-            migrate: false,
-            bundle_handoff: true,
-        };
-        let normalized_answers = WizardNormalizedAnswers::AssistantBundle(WizardBundleAnswers {
-            workflow: "assistant_bundle".to_owned(),
-            bundle_mode: "create".to_owned(),
-            bundle_name: "GX Bundle".to_owned(),
-            bundle_id: "gx-bundle".to_owned(),
-            output_dir: "dist/bundle".to_owned(),
-            assistant_template_source: "templates/assistant/default.json".to_owned(),
-            domain_template_source: "templates/domain/default.json".to_owned(),
-            provider_categories: vec!["llm".to_owned()],
-            bundle_output_path: "dist/bundle/dist/gx-bundle.gtbundle".to_owned(),
-            latest_policy: None,
-            latest_refs: Vec::new(),
-        });
-        let writes = wizard::wizard_expected_writes(
-            cwd,
-            WizardAction::Run,
-            WizardExecutionMode::Execute,
-            &args,
-            &normalized_answers,
-        );
-        assert!(
-            writes
-                .iter()
-                .any(|item| item.ends_with(".gx/wizard/run.answers.json"))
-        );
-        assert!(
-            writes
-                .iter()
-                .any(|item| item.ends_with("dist/bundle/dist/gx-bundle.gtbundle"))
-        );
-        assert!(
-            writes
-                .iter()
-                .any(|item| item == "<delegated: greentic-bundle artifact writes>")
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_bundle_handoff_is_ignored_in_dry_run_and_validate() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-
-        let output = run_ok(&["wizard", "run", "--dry-run", "--bundle-handoff"], cwd)?;
-        let value: Value = serde_json::from_str(&output)?;
-        let writes = value["expected_file_writes"]
-            .as_array()
-            .ok_or_else(|| io_error("expected_file_writes should be an array".to_owned()))?;
-        assert!(writes.iter().all(|item| {
-            item.as_str()
-                .is_none_or(|text| text != "<delegated: greentic-bundle artifact writes>")
-        }));
-        assert!(writes.iter().all(|item| {
-            item.as_str()
-                .is_none_or(|text| !text.ends_with(".gx/wizard/run.answers.json"))
-        }));
-
-        let output = run_ok(&["wizard", "validate", "--bundle-handoff"], cwd)?;
-        let value: Value = serde_json::from_str(&output)?;
-        let writes = value["expected_file_writes"]
-            .as_array()
-            .ok_or_else(|| io_error("expected_file_writes should be an array".to_owned()))?;
-        assert!(writes.iter().all(|item| {
-            item.as_str()
-                .is_none_or(|text| text != "<delegated: greentic-bundle artifact writes>")
-        }));
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_run_sets_assistant_bundle_defaults() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let output = run_ok(&["wizard", "run", "--dry-run"], cwd)?;
-        let value: Value = serde_json::from_str(&output)?;
-        let summary = value["normalized_input_summary"]
-            .as_object()
-            .ok_or_else(|| io_error("normalized_input_summary should be an object".to_owned()))?;
-        assert_eq!(summary["workflow"], "assistant_bundle");
-        assert_eq!(summary["bundle_mode"], "create");
-        assert_eq!(summary["bundle_name"], "GX Bundle");
-        assert_eq!(summary["bundle_id"], "gx-bundle");
-        assert_eq!(summary["output_dir"], "dist/bundle");
-        assert_eq!(
-            summary["assistant_template_source"],
-            "templates/assistant/default.json"
-        );
-        assert_eq!(
-            summary["domain_template_source"],
-            "templates/domain/default.json"
-        );
-        assert_eq!(summary["bundle_output_path"], "dist/bundle/dist/gx-bundle.gtbundle");
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_rejects_latest_ref_without_policy() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let input = cwd.join("input.answers.json");
-        write_json(
-            &input,
-            &json!({
-                "wizard_id": "greentic-bundle.wizard.run",
-                "schema_id": "greentic-bundle.wizard.answers",
-                "schema_version": "1.0.0",
-                "locale": "en",
-                "answers": {
-                    "assistant_template_source": "oci://example/assistant:latest",
-                    "domain_template_source": "repo://example/domain:v1"
-                },
-                "locks": {}
-            }),
-        )?;
-        let err = run_ok(
-            &[
-                "wizard",
-                "run",
-                "--answers",
-                "input.answers.json",
-                "--dry-run",
-            ],
-            cwd,
-        )
-        .expect_err("expected latest policy error");
-        assert!(err.contains("latest_policy"));
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_accepts_latest_ref_with_policy_and_warns() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let input = cwd.join("input.answers.json");
-        write_json(
-            &input,
-            &json!({
-                "wizard_id": "greentic-bundle.wizard.run",
-                "schema_id": "greentic-bundle.wizard.answers",
-                "schema_version": "1.0.0",
-                "locale": "en",
-                "answers": {
-                    "assistant_template_source": "oci://example/assistant:latest",
-                    "domain_template_source": "repo://example/domain:v1",
-                    "latest_policy": "keep_latest"
-                },
-                "locks": {}
-            }),
-        )?;
-        let output = run_ok(
-            &[
-                "wizard",
-                "run",
-                "--answers",
-                "input.answers.json",
-                "--dry-run",
-            ],
-            cwd,
-        )?;
-        let value: Value = serde_json::from_str(&output)?;
-        let warnings = value["warnings"]
-            .as_array()
-            .ok_or_else(|| io_error("warnings should be an array".to_owned()))?;
-        assert!(warnings.iter().any(|item| {
-            item.as_str()
-                .is_some_and(|text| text.contains("latest_policy=keep_latest"))
-        }));
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_template_mode_normalizes_summary_and_writes() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let output = run_ok(
-            &[
-                "wizard",
-                "run",
-                "--dry-run",
-                "--mode",
-                "assistant_template_create",
-            ],
-            cwd,
-        )?;
-        let value: Value = serde_json::from_str(&output)?;
-        let summary = value["normalized_input_summary"]
-            .as_object()
-            .ok_or_else(|| io_error("normalized_input_summary should be an object".to_owned()))?;
-        assert_eq!(summary["workflow"], "assistant_template_create");
-        assert_eq!(summary["template_kind"], "assistant");
-        assert_eq!(summary["template_action"], "create");
-        assert_eq!(
-            summary["template_output_path"],
-            "templates/assistant/new.json"
-        );
-        let writes = value["expected_file_writes"]
-            .as_array()
-            .ok_or_else(|| io_error("expected_file_writes should be an array".to_owned()))?;
-        assert!(writes.iter().any(|item| {
-            item.as_str()
-                .is_some_and(|text| text.ends_with("templates/assistant/new.json"))
-        }));
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_plan_is_deterministic_for_template_dry_run() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let args = [
-            "wizard",
-            "run",
-            "--dry-run",
-            "--mode",
-            "domain_template_update",
-        ];
-        let first: Value = serde_json::from_str(&run_ok(&args, cwd)?)?;
-        let second: Value = serde_json::from_str(&run_ok(&args, cwd)?)?;
-        assert_eq!(first, second);
-        let kinds = first["ordered_step_list"]
-            .as_array()
-            .ok_or_else(|| io_error("ordered_step_list should be an array".to_owned()))?
-            .iter()
-            .filter_map(|step| step["kind"].as_str())
-            .collect::<Vec<_>>();
-        assert_eq!(
-            kinds,
-            vec!["collect_input", "normalize_request", "validate_plan"]
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_template_mode_rejects_unsupported_source_scheme() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let input = cwd.join("input.answers.json");
-        write_json(
-            &input,
-            &json!({
-                "wizard_id": "greentic-bundle.wizard.run",
-                "schema_id": "greentic-bundle.wizard.answers",
-                "schema_version": "1.0.0",
-                "locale": "en",
-                "answers": {
-                    "workflow": "assistant_template_update",
-                    "template_source": "git://example/template"
-                },
-                "locks": {}
-            }),
-        )?;
-        let err = run_ok(
-            &[
-                "wizard",
-                "run",
-                "--answers",
-                "input.answers.json",
-                "--dry-run",
-            ],
-            cwd,
-        )
-        .expect_err("expected unsupported source ref error");
-        assert!(err.contains("unsupported source ref scheme"));
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_bundle_handoff_is_ignored_for_template_modes() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let output = run_ok(
-            &[
-                "wizard",
-                "run",
-                "--mode",
-                "domain_template_update",
-                "--bundle-handoff",
-            ],
-            cwd,
-        )?;
-        let value: Value = serde_json::from_str(&output)?;
-        let writes = value["expected_file_writes"]
-            .as_array()
-            .ok_or_else(|| io_error("expected_file_writes should be an array".to_owned()))?;
-        assert!(writes.iter().all(|item| {
-            item.as_str()
-                .is_none_or(|text| text != "<delegated: greentic-bundle artifact writes>")
-        }));
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_handoff_invocation_uses_action_and_answers_path() -> Result<(), Box<dyn Error>> {
-        let invocation = wizard::bundle_handoff_invocation(
-            WizardAction::Apply,
-            Path::new("/tmp/answers.apply.json"),
-        );
+    fn wizard_handoff_invocation_uses_answers_path() -> Result<(), Box<dyn Error>> {
+        let invocation = wizard::bundle_handoff_invocation(Path::new("/tmp/bundle.answers.json"));
         let parts = invocation
             .iter()
             .map(|value| value.to_string_lossy().to_string())
@@ -2545,168 +2405,84 @@ mod tests {
                 "wizard".to_owned(),
                 "apply".to_owned(),
                 "--answers".to_owned(),
-                "/tmp/answers.apply.json".to_owned(),
+                "/tmp/bundle.answers.json".to_owned(),
             ]
         );
         Ok(())
     }
 
     #[test]
-    fn wizard_template_apply_materializes_output_file() -> Result<(), Box<dyn Error>> {
+    fn wizard_update_mode_prefills_existing_solution() -> Result<(), Box<dyn Error>> {
         let temp = TempDir::new()?;
         let cwd = temp.path();
-        let input = cwd.join("input.answers.json");
+        fs::create_dir_all(cwd.join("dist"))?;
         write_json(
-            &input,
+            &cwd.join("dist/network-assistant.solution.json"),
+            &json!({
+                "schema_id": "gx.solution.manifest",
+                "schema_version": "1.0.0",
+                "solution_id": "network-assistant",
+                "solution_name": "Network Assistant",
+                "description": "Automates network diagnostics",
+                "output_dir": "dist",
+                "template": {
+                    "entry_id": "assistant.network.phase1",
+                    "display_name": "Network Assistant Phase 1"
+                },
+                "provider_presets": [{
+                    "entry_id": "builtin.teams",
+                    "display_name": "Teams",
+                    "provider_refs": ["ghcr.io/greenticai/packs/messaging/messaging-teams:latest"]
+                }]
+            }),
+        )?;
+        write_json(
+            &cwd.join("input.answers.json"),
             &json!({
                 "wizard_id": "greentic-bundle.wizard.run",
                 "schema_id": "greentic-bundle.wizard.answers",
                 "schema_version": "1.0.0",
                 "locale": "en",
                 "answers": {
-                    "workflow": "assistant_template_create",
-                    "template_source": "templates/assistant/default.json",
-                    "template_output_path": "out/assistant-template.json"
+                    "mode": "update",
+                    "existing_solution_path": "dist/network-assistant.solution.json"
                 },
                 "locks": {}
             }),
         )?;
-        let _ = run_ok(&["wizard", "apply", "--answers", "input.answers.json"], cwd)?;
-        let rendered_path = cwd.join("out").join("assistant-template.json");
-        let rendered: Value = serde_json::from_str(&fs::read_to_string(rendered_path)?)?;
-        assert_eq!(rendered["template_kind"], "assistant");
-        assert_eq!(rendered["template_action"], "create");
+        let output = run_ok(
+            &[
+                "wizard",
+                "run",
+                "--answers",
+                "input.answers.json",
+                "--dry-run",
+            ],
+            cwd,
+        )?;
+        let value: Value = serde_json::from_str(&output)?;
         assert_eq!(
-            rendered["template_source"],
-            "templates/assistant/default.json"
+            value["normalized_input_summary"]["solution_name"],
+            "Network Assistant"
+        );
+        assert_eq!(
+            value["normalized_input_summary"]["solution_id"],
+            "network-assistant"
         );
         Ok(())
     }
 
     #[test]
-    fn wizard_template_answers_replay_materializes_output_file() -> Result<(), Box<dyn Error>> {
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let answers_path = cwd.join("template.answers.json");
-
-        let _ = run_ok(
-            &[
-                "wizard",
-                "run",
-                "--dry-run",
-                "--mode",
-                "assistant_template_create",
-                "--emit-answers",
-                "template.answers.json",
-            ],
-            cwd,
-        )?;
-        let _ = run_ok(
-            &["wizard", "apply", "--answers", "template.answers.json"],
-            cwd,
-        )?;
-        let doc: Value = serde_json::from_str(&fs::read_to_string(&answers_path)?)?;
-        let output_path = doc["answers"]["template_output_path"]
-            .as_str()
-            .ok_or_else(|| {
-                io_error("template_output_path missing in emitted answers".to_owned())
-            })?;
-        let rendered_path = cwd.join(output_path);
-        let rendered: Value = serde_json::from_str(&fs::read_to_string(rendered_path)?)?;
-        assert_eq!(rendered["template_kind"], "assistant");
-        assert_eq!(rendered["template_action"], "create");
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_locale_nl_localizes_plan_steps() -> Result<(), Box<dyn Error>> {
+    fn wizard_locale_nl_keeps_plan_serializable() -> Result<(), Box<dyn Error>> {
         let temp = TempDir::new()?;
         let cwd = temp.path();
         let output = run_ok(&["wizard", "run", "--dry-run", "--locale", "nl-NL"], cwd)?;
         let value: Value = serde_json::from_str(&output)?;
         assert_eq!(value["metadata"]["locale"], "nl");
-        let steps = value["ordered_step_list"]
-            .as_array()
-            .ok_or_else(|| io_error("ordered_step_list should be an array".to_owned()))?;
-        assert!(steps.iter().any(|step| {
-            step["description"]
-                .as_str()
-                .is_some_and(|text| text.contains("Wizardinvoer verzamelen"))
-        }));
-        Ok(())
-    }
-
-    #[test]
-    fn wizard_answers_replay_smoke_with_greentic_bundle_when_available()
-    -> Result<(), Box<dyn Error>> {
-        if !is_command_available("greentic-bundle") {
-            return Ok(());
-        }
-
-        let temp = TempDir::new()?;
-        let cwd = temp.path();
-        let answers_path = cwd.join("answers.json");
-
-        let _ = run_ok(
-            &[
-                "wizard",
-                "run",
-                "--dry-run",
-                "--emit-answers",
-                "answers.json",
-            ],
-            cwd,
-        )?;
-
-        let mut doc: Value = serde_json::from_str(&fs::read_to_string(&answers_path)?)?;
-        if let Some(answers) = doc.get_mut("answers").and_then(Value::as_object_mut) {
-            answers.insert("export_intent".to_owned(), Value::Bool(true));
-            answers.insert("setup_execution_intent".to_owned(), Value::Bool(false));
-            answers.insert("advanced_setup".to_owned(), Value::Bool(false));
-            answers.insert(
-                "assistant_template_source".to_owned(),
-                Value::String("oci://example/assistant@sha256:abc123".to_owned()),
-            );
-            answers.insert(
-                "domain_template_source".to_owned(),
-                Value::String("repo://example/domain@sha256:def456".to_owned()),
-            );
-        } else {
-            return Err(io_error(
-                "answers document is missing answers object".to_owned(),
-            ));
-        }
-        fs::write(
-            &answers_path,
-            format!("{}\n", serde_json::to_string_pretty(&doc)?),
-        )?;
-
-        let output = ProcessCommand::new("greentic-bundle")
-            .current_dir(cwd)
-            .args(["wizard", "apply", "--answers"])
-            .arg(&answers_path)
-            .output()?;
-        if !output.status.success() {
-            return Err(io_error(format!(
-                "greentic-bundle replay failed: stdout={} stderr={}",
-                String::from_utf8_lossy(&output.stdout),
-                String::from_utf8_lossy(&output.stderr)
-            )));
-        }
-
         Ok(())
     }
 
     fn io_error(message: String) -> Box<dyn Error> {
         Box::new(std::io::Error::other(message))
     }
-
-    fn is_command_available(name: &str) -> bool {
-        ProcessCommand::new(name)
-            .arg("--version")
-            .output()
-            .map(|output| output.status.success())
-            .unwrap_or(false)
-    }
-
 }

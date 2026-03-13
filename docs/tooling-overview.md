@@ -18,6 +18,9 @@ The current commands are:
 - `gx profile compile`
 - `gx simulate`
 - `gx doctor`
+- `gx catalog init`
+- `gx catalog build`
+- `gx catalog validate`
 - `gx catalog list`
 - `gx wizard run`
 - `gx wizard validate`
@@ -30,52 +33,29 @@ The current commands are:
 - simulate a flow package with stubbed resolver/op responses
 - run repo-level structural doctor checks
 - inspect the checked-in core catalog
-- run the initial wizard run/validate/apply command surface
+- scaffold and validate downstream solution catalog repos
+- build canonical `catalog.json` indexes for those repos
+- run the catalog-driven wizard run/validate/apply command surface
 
 Bare `gx wizard` defaults to the `run` action.
-Wizard replay currently supports `--answers`, `--emit-answers`, `--schema-version`, and `--migrate`.
-Wizard execution supports `--dry-run`, `--locale`, and `--bundle-handoff` for delegated `greentic-bundle` replay/apply handoff.
+Wizard replay currently supports `--answers`, `--emit-answers`, `--schema-version`, `--migrate`, and repeated `--catalog` flags.
+Wizard execution supports `--dry-run`, `--locale`, and delegated bundling through `greentic-bundle`.
 Wizard locale currently supports embedded `en` (default) and `nl` catalogs with fallback to `en`.
 Locale resolution order is `--locale` CLI flag, then answer-document locale (when replaying `--answers`), then environment (`GX_LOCALE`, `GREENTIC_LOCALE`, `LC_ALL`, `LC_MESSAGES`, `LANG`).
-Interactive execute flows now collect answers via `greentic-qa-lib` (`WizardDriver`) when no `--answers` file is provided and stdin/stdout are TTY.
-Wizard mode selection supports `--mode` with:
-- `assistant_bundle`
-- `assistant_template_create`
-- `assistant_template_update`
-- `domain_template_create`
-- `domain_template_update`
+Interactive execute flows present a persistent composition menu with create, update, and advanced catalog-source options when no `--answers` file is provided and stdin/stdout are TTY.
 Wizard plan output includes normalized input summary and expected file writes.
-Wizard dry-run planning is covered by deterministic regression tests (repeated identical input yields identical plan JSON for bundle and template workflows).
-Template workflows now materialize a JSON template artifact at `template_output_path` during execute-mode `run/apply`.
+Wizard dry-run planning is covered by deterministic regression tests.
 Wizard emits answer-document metadata compatible with `greentic-bundle` replay:
 - `wizard_id=greentic-bundle.wizard.run`
 - `schema_id=greentic-bundle.wizard.answers`
 - `schema_version=1.0.0` (default)
-`gx` includes a gated replay smoke test that, when `greentic-bundle` is available in `PATH`, replays emitted answers via `greentic-bundle wizard apply --answers ...` and verifies a `.gtbundle` artifact is produced.
-`gx` also includes template replay coverage where emitted template-mode answers are fed back into `gx wizard apply --answers ...` and the expected template artifact is materialized.
-Wizard normalization currently targets the `assistant_bundle` workflow and defaults these answer keys when missing:
-- `workflow=assistant_bundle`
-- `mode=create`
-- `bundle_name=GX Bundle`
-- `bundle_id=gx-bundle`
-- `output_dir=dist/bundle`
-- `assistant_template_source=local://templates/assistant/default`
-- `domain_template_source=local://templates/domain/default`
-- `deployment_profile=default`
-- `deployment_target=local`
-- `provider_categories=[\"llm\"]`
-- `bundle_output_path=dist/app.gtbundle`
-
-When a remote template source contains `:latest`, answers must include `latest_policy` (`keep_latest` or `pin`).
-In interactive TTY runs, if `:latest` refs are detected and `latest_policy` is missing, the wizard prompts to choose `keep_latest` or `pin`.
-For execute-mode `run/apply` flows, `gx` resolves `oci://`, `repo://`, and `store://` refs through `greentic-distributor-client` `v0.4` and records lock metadata in `locks.resolved_source_refs`.
-If `latest_policy=pin`, `:latest` refs are rewritten to digest-pinned refs in emitted/handoff answers.
-Supported source ref schemes for template/bundle sources are:
-- `local://`
-- `file://`
-- `oci://`
-- `repo://`
-- `store://`
+`gx` writes composition artifacts under `dist/<solution-id>.*`, then delegates final bundle generation through:
+- `greentic-bundle wizard apply --answers dist/<solution-id>.bundle.answers.json`
+Wizard catalog loading merges the built-in GX base catalog with any explicit `--catalog` sources.
+Supported explicit catalog source types are:
+- local `catalog.json` paths
+- `oci://...` catalog refs fetched through `greentic-distributor-client`
+Remote catalog and provider refs default to `update_then_pin` resolution so generated artifacts can preserve pinned references.
 
 The implementation is intentionally CLI-first. There is no separate visual
 designer yet. The CLI is the current downstream entrypoint for GX authoring.
@@ -95,7 +75,11 @@ cargo run -p gx -- flow validate flows/example-flow
 
 cargo run -p gx -- simulate flows/example-flow
 cargo run -p gx -- doctor .
+cargo run -p gx -- catalog init zain-x
+cargo run -p gx -- catalog build --repo zain-x
+cargo run -p gx -- catalog validate --repo zain-x
 cargo run -p gx -- catalog list --kind ops
+cargo run -p gx -- wizard --catalog oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:latest
 ```
 
 ## Relationship To `greentic-pack`

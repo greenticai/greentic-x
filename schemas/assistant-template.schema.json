@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/schemas/gx/assistant-template.schema.json",
+  "title": "gx assistant template catalog entry",
+  "type": "object",
+  "required": [
+    "entry_id",
+    "kind",
+    "version",
+    "display_name",
+    "assistant_template_ref"
+  ],
+  "properties": {
+    "entry_id": { "type": "string" },
+    "kind": { "const": "assistant-template" },
+    "version": { "type": "string" },
+    "display_name": { "type": "string" },
+    "description": { "type": "string" },
+    "assistant_template_ref": { "type": "string" },
+    "domain_template_ref": { "type": "string" }
+  },
+  "additionalProperties": true
+}

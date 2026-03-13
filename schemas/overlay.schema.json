@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/schemas/gx/overlay.schema.json",
+  "title": "gx overlay catalog entry",
+  "type": "object",
+  "required": [
+    "entry_id",
+    "kind",
+    "version",
+    "display_name"
+  ],
+  "properties": {
+    "entry_id": { "type": "string" },
+    "kind": { "const": "overlay" },
+    "version": { "type": "string" },
+    "display_name": { "type": "string" },
+    "description": { "type": "string" },
+    "default_locale": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "branding": { "type": "object" }
+  },
+  "additionalProperties": true
+}

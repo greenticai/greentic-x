@@ -1,14 +1,16 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use crate::i18n::tr;
-use crate::{
-    WizardAction, WizardAnswerDocument, WizardBundleAnswers, WizardCommonArgs, WizardExecutionMode,
-    WizardNormalizedAnswers, WizardTemplateAnswers,
-};
 use serde_json::Value;
 
-use super::{default_handoff_answers_path, resolve_wizard_path};
+use crate::{
+    CompositionRequest, WizardAction, WizardAnswerDocument, WizardCommonArgs, WizardExecutionMode,
+    WizardNormalizedAnswers,
+};
+
+use super::compose::generated_output_paths;
+use super::handoff::default_handoff_answers_path;
+use super::resolve_wizard_path;
 
 pub(crate) fn wizard_action_name(action: WizardAction) -> &'static str {
     match action {
@@ -21,28 +23,29 @@ pub(crate) fn wizard_action_name(action: WizardAction) -> &'static str {
 pub(crate) fn wizard_plan_steps(
     action: WizardAction,
     execution: WizardExecutionMode,
-    locale: &str,
+    _locale: &str,
 ) -> Vec<crate::WizardPlanStep> {
     let mut steps = vec![
         crate::WizardPlanStep {
             kind: "collect_input".to_owned(),
-            description: tr(locale, "wizard.step.collect_input"),
+            description: "Collect wizard inputs and answer state".to_owned(),
         },
         crate::WizardPlanStep {
-            kind: "normalize_request".to_owned(),
-            description: tr(locale, "wizard.step.normalize_request"),
+            kind: "load_catalogs".to_owned(),
+            description: "Load local and OCI catalogs".to_owned(),
         },
         crate::WizardPlanStep {
-            kind: "validate_plan".to_owned(),
-            description: tr(locale, "wizard.step.validate_plan"),
+            kind: "build_artifacts".to_owned(),
+            description: "Build solution, bundle-plan, setup, and bundle handoff artifacts"
+                .to_owned(),
         },
     ];
     if matches!(action, WizardAction::Run | WizardAction::Apply)
         && matches!(execution, WizardExecutionMode::Execute)
     {
         steps.push(crate::WizardPlanStep {
-            kind: "execute_plan".to_owned(),
-            description: tr(locale, "wizard.step.execute_plan"),
+            kind: "delegate_bundle".to_owned(),
+            description: "Delegate bundle generation to greentic-bundle".to_owned(),
         });
     }
     steps
@@ -54,12 +57,9 @@ pub(crate) fn should_delegate_bundle_handoff(
     args: &WizardCommonArgs,
     normalized_answers: &WizardNormalizedAnswers,
 ) -> bool {
-    args.bundle_handoff
-        && matches!(
-            normalized_answers,
-            WizardNormalizedAnswers::AssistantBundle(_)
-        )
-        && matches!(action, WizardAction::Run | WizardAction::Apply)
+    matches!(normalized_answers, WizardNormalizedAnswers::Composition(_))
+        && (matches!(action, WizardAction::Apply)
+            || (matches!(action, WizardAction::Run) && args.bundle_handoff))
         && matches!(execution, WizardExecutionMode::Execute)
 }
 
@@ -70,8 +70,6 @@ pub(crate) fn wizard_normalized_summary(
 ) -> BTreeMap<String, Value> {
     let mut answers_keys = document.answers.keys().cloned().collect::<Vec<_>>();
     answers_keys.sort();
-    let mut lock_keys = document.locks.keys().cloned().collect::<Vec<_>>();
-    lock_keys.sort();
     let mut summary = BTreeMap::from([
         (
             "mode".to_owned(),
@@ -86,17 +84,10 @@ pub(crate) fn wizard_normalized_summary(
             "answers_keys".to_owned(),
             Value::Array(answers_keys.into_iter().map(Value::String).collect()),
         ),
-        (
-            "lock_keys".to_owned(),
-            Value::Array(lock_keys.into_iter().map(Value::String).collect()),
-        ),
     ]);
     match normalized_answers {
-        WizardNormalizedAnswers::AssistantBundle(bundle_answers) => {
-            add_bundle_summary(&mut summary, bundle_answers);
-        }
-        WizardNormalizedAnswers::Template(template_answers) => {
-            add_template_summary(&mut summary, template_answers);
+        WizardNormalizedAnswers::Composition(request) => {
+            add_composition_summary(&mut summary, request);
         }
     }
     summary
@@ -111,33 +102,26 @@ pub(crate) fn wizard_expected_writes(
 ) -> Vec<String> {
     let mut writes = Vec::new();
     if let Some(path) = args.emit_answers.as_ref() {
-        let resolved = resolve_wizard_path(cwd, path);
-        writes.push(resolved.display().to_string());
+        writes.push(resolve_wizard_path(cwd, path).display().to_string());
     }
     match normalized_answers {
-        WizardNormalizedAnswers::AssistantBundle(bundle_answers) => {
-            if should_delegate_bundle_handoff(action, execution, args, normalized_answers) {
+        WizardNormalizedAnswers::Composition(request) => {
+            for path in generated_output_paths(request) {
                 writes.push(
-                    resolve_wizard_path(cwd, Path::new(&bundle_answers.bundle_output_path))
+                    resolve_wizard_path(cwd, Path::new(&path))
                         .display()
                         .to_string(),
                 );
-                if args.emit_answers.is_none() {
-                    writes.push(
-                        default_handoff_answers_path(cwd, action)
-                            .display()
-                            .to_string(),
-                    );
-                }
-                writes.push("<delegated: greentic-bundle artifact writes>".to_owned());
             }
-        }
-        WizardNormalizedAnswers::Template(template_answers) => {
-            writes.push(
-                resolve_wizard_path(cwd, Path::new(&template_answers.template_output_path))
-                    .display()
-                    .to_string(),
-            );
+            if should_delegate_bundle_handoff(action, execution, args, normalized_answers)
+                && args.emit_answers.is_none()
+            {
+                writes.push(
+                    default_handoff_answers_path(cwd, action)
+                        .display()
+                        .to_string(),
+                );
+            }
         }
     }
     writes.sort();
@@ -147,120 +131,65 @@ pub(crate) fn wizard_expected_writes(
 
 pub(crate) fn wizard_warnings(
     normalized_answers: &WizardNormalizedAnswers,
-    locale: &str,
+    _locale: &str,
 ) -> Vec<String> {
-    let mut warnings = Vec::new();
-    let (latest_refs, latest_policy) = match normalized_answers {
-        WizardNormalizedAnswers::AssistantBundle(bundle_answers) => {
-            (&bundle_answers.latest_refs, &bundle_answers.latest_policy)
+    match normalized_answers {
+        WizardNormalizedAnswers::Composition(request) => {
+            let mut warnings = Vec::new();
+            if !request.catalog_oci_refs.is_empty() {
+                warnings.push(format!(
+                    "remote catalog sources configured: {}",
+                    request.catalog_oci_refs.join(", ")
+                ));
+            }
+            warnings
         }
-        WizardNormalizedAnswers::Template(template_answers) => (
-            &template_answers.latest_refs,
-            &template_answers.latest_policy,
-        ),
-    };
-    if !latest_refs.is_empty()
-        && let Some(policy) = latest_policy.as_ref()
-    {
-        let refs = latest_refs.join(", ");
-        warnings.push(format!(
-            "{} ({refs}); latest_policy={policy}",
-            tr(locale, "wizard.warn.latest_refs")
-        ));
     }
-    warnings
 }
 
-fn add_bundle_summary(summary: &mut BTreeMap<String, Value>, bundle_answers: &WizardBundleAnswers) {
+fn add_composition_summary(summary: &mut BTreeMap<String, Value>, request: &CompositionRequest) {
     summary.insert(
         "workflow".to_owned(),
-        Value::String(bundle_answers.workflow.clone()),
+        Value::String("compose_solution".to_owned()),
     );
     summary.insert(
-        "bundle_mode".to_owned(),
-        Value::String(bundle_answers.bundle_mode.clone()),
+        "compose_mode".to_owned(),
+        Value::String(request.mode.clone()),
     );
     summary.insert(
-        "bundle_name".to_owned(),
-        Value::String(bundle_answers.bundle_name.clone()),
+        "template_mode".to_owned(),
+        Value::String(request.template_mode.clone()),
     );
     summary.insert(
-        "bundle_id".to_owned(),
-        Value::String(bundle_answers.bundle_id.clone()),
+        "solution_name".to_owned(),
+        Value::String(request.solution_name.clone()),
+    );
+    summary.insert(
+        "solution_id".to_owned(),
+        Value::String(request.solution_id.clone()),
     );
     summary.insert(
         "output_dir".to_owned(),
-        Value::String(bundle_answers.output_dir.clone()),
+        Value::String(request.output_dir.clone()),
     );
     summary.insert(
-        "assistant_template_source".to_owned(),
-        Value::String(bundle_answers.assistant_template_source.clone()),
+        "provider_selection".to_owned(),
+        Value::String(request.provider_selection.clone()),
     );
     summary.insert(
-        "domain_template_source".to_owned(),
-        Value::String(bundle_answers.domain_template_source.clone()),
-    );
-    summary.insert(
-        "provider_categories".to_owned(),
-        Value::Array(
-            bundle_answers
-                .provider_categories
-                .iter()
-                .cloned()
-                .map(Value::String)
-                .collect(),
-        ),
+        "provider_refs_count".to_owned(),
+        Value::from(request.provider_refs.len() as u64),
     );
     summary.insert(
         "bundle_output_path".to_owned(),
-        Value::String(bundle_answers.bundle_output_path.clone()),
+        Value::String(request.bundle_output_path.clone()),
     );
     summary.insert(
-        "latest_policy".to_owned(),
-        bundle_answers
-            .latest_policy
-            .as_ref()
-            .map_or(Value::Null, |value| Value::String(value.clone())),
+        "catalog_oci_sources_count".to_owned(),
+        Value::from(request.catalog_oci_refs.len() as u64),
     );
     summary.insert(
-        "latest_refs_count".to_owned(),
-        Value::from(bundle_answers.latest_refs.len() as u64),
-    );
-}
-
-fn add_template_summary(
-    summary: &mut BTreeMap<String, Value>,
-    template_answers: &WizardTemplateAnswers,
-) {
-    summary.insert(
-        "workflow".to_owned(),
-        Value::String(template_answers.workflow.clone()),
-    );
-    summary.insert(
-        "template_kind".to_owned(),
-        Value::String(template_answers.template_kind.clone()),
-    );
-    summary.insert(
-        "template_action".to_owned(),
-        Value::String(template_answers.template_action.clone()),
-    );
-    summary.insert(
-        "template_source".to_owned(),
-        Value::String(template_answers.template_source.clone()),
-    );
-    summary.insert(
-        "template_output_path".to_owned(),
-        Value::String(template_answers.template_output_path.clone()),
-    );
-    summary.insert(
-        "latest_policy".to_owned(),
-        template_answers
-            .latest_policy
-            .as_ref()
-            .map_or(Value::Null, |value| Value::String(value.clone())),
-    );
-    summary.insert(
-        "latest_refs_count".to_owned(),
-        Value::from(template_answers.latest_refs.len() as u64),
+        "catalog_resolution_policy".to_owned(),
+        Value::String(request.catalog_resolution_policy.clone()),
     );
 }

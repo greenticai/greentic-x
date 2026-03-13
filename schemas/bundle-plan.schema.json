@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/schemas/gx/bundle-plan.schema.json",
+  "title": "gx bundle plan",
+  "type": "object",
+  "required": [
+    "schema_id",
+    "schema_version",
+    "solution_id",
+    "bundle_output_path",
+    "bundle_answers_path"
+  ],
+  "properties": {
+    "schema_id": { "const": "gx.bundle.plan" },
+    "schema_version": { "type": "string" },
+    "solution_id": { "type": "string" },
+    "bundle_output_path": { "type": "string" },
+    "bundle_answers_path": { "type": "string" },
+    "steps": { "type": "array", "items": { "type": "object" } }
+  },
+  "additionalProperties": true
+}

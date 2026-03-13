@@ -5,15 +5,15 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-documentation.workspace = true
+documentation = "https://docs.rs/greentic-x-flow"
 readme.workspace = true
 authors.workspace = true
-publish = false
+description = "Bootstrap flow execution crate for the Greentic-X workspace."
 
 [dependencies]
-greentic-x-ops = { path = "../greentic-x-ops" }
-greentic-x-runtime = { path = "../greentic-x-runtime" }
-greentic-x-types = { path = "../greentic-x-types" }
+greentic-x-ops = { version = "0.4.1", path = "../greentic-x-ops" }
+greentic-x-runtime = { version = "0.4.1", path = "../greentic-x-runtime" }
+greentic-x-types = { version = "0.4.1", path = "../greentic-x-types" }
 serde.workspace = true
 serde_json.workspace = true
 

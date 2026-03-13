@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/schemas/gx/solution-manifest.schema.json",
+  "title": "gx solution manifest",
+  "type": "object",
+  "required": [
+    "schema_id",
+    "schema_version",
+    "solution_id",
+    "solution_name",
+    "output_dir",
+    "template",
+    "provider_presets"
+  ],
+  "properties": {
+    "schema_id": { "const": "gx.solution.manifest" },
+    "schema_version": { "type": "string" },
+    "solution_id": { "type": "string" },
+    "solution_name": { "type": "string" },
+    "description": { "type": "string" },
+    "output_dir": { "type": "string" },
+    "template": { "type": "object" },
+    "provider_presets": { "type": "array", "items": { "type": "object" } },
+    "overlay": { "type": ["object", "null"] },
+    "catalog_sources": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

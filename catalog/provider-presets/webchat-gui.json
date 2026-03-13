@@ -1,0 +1,10 @@
+{
+  "entry_id": "provider.webchat.gui",
+  "kind": "provider-preset",
+  "version": "1.0.0",
+  "display_name": "Webchat",
+  "description": "Webchat messaging provider preset.",
+  "provider_refs": [
+    "ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+  ]
+}

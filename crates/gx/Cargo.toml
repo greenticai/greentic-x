@@ -13,7 +13,7 @@ build = "build.rs"
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
-greentic-distributor-client = { version = "0.4", default-features = false, features = ["dist-client"] }
+greentic-distributor-client = { version = "0.4", default-features = false, features = ["dist-client", "pack-fetch"] }
 greentic-qa-lib = "0.4"
 greentic-x-contracts = { path = "../greentic-x-contracts" }
 greentic-x-flow = { path = "../greentic-x-flow" }

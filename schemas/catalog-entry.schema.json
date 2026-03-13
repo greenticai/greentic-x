@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/schemas/gx/catalog-entry.schema.json",
+  "title": "gx generic catalog entry",
+  "type": "object",
+  "required": [
+    "entry_id",
+    "kind",
+    "version",
+    "display_name"
+  ],
+  "properties": {
+    "entry_id": { "type": "string" },
+    "kind": { "type": "string" },
+    "version": { "type": "string" },
+    "display_name": { "type": "string" },
+    "description": { "type": "string" }
+  },
+  "additionalProperties": true
+}
