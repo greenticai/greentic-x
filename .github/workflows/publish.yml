@@ -102,7 +102,18 @@ jobs:
             fi
             cargo publish -p "$crate_name" --dry-run
             attempts=0
-            until cargo publish -p "$crate_name"; do
+            while true; do
+              publish_log="$(mktemp)"
+              if cargo publish -p "$crate_name" 2>&1 | tee "$publish_log"; then
+                rm -f "$publish_log"
+                break
+              fi
+              if grep -q "already exists on crates.io index" "$publish_log"; then
+                printf 'crate %s version %s already published; skipping\n' "$crate_name" "$version"
+                rm -f "$publish_log"
+                break
+              fi
+              rm -f "$publish_log"
               attempts=$((attempts + 1))
               published_version="$(cargo search "$crate_name" --limit 1 | sed -nE "s/^${crate_name} = \"([^\"]+)\".*/\\1/p" | head -n 1)"
               if [ "$published_version" = "$version" ]; then
