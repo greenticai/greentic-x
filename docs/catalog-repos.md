@@ -46,15 +46,15 @@ gx catalog validate --repo zain-x
 
 ## Wizard Consumption
 
-`gx wizard` always loads the built-in GX catalog, then merges any explicit
+`greentic-x wizard` always loads the built-in GX catalog, then merges any explicit
 catalog sources passed with `--catalog`.
 
 Examples:
 
 ```bash
-gx wizard --catalog catalog.json
-gx wizard --catalog oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:latest
-gx wizard \
+greentic-x wizard --catalog catalog.json
+greentic-x wizard --catalog oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:latest
+greentic-x \
   --catalog oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:latest \
   --catalog oci://ghcr.io/greenticai/catalogs/meeza-x/catalog.json:latest
 ```

@@ -1,24 +1,32 @@
 [package]
-name = "gx"
+name = "greentic-x"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-documentation.workspace = true
+documentation = "https://docs.rs/greentic-x"
 readme.workspace = true
 authors.workspace = true
-publish = false
+description = "Greentic-X CLI for catalog-driven composition, scaffolding, validation, and simulation."
 build = "build.rs"
+
+[lib]
+name = "gx"
+path = "src/lib.rs"
+
+[[bin]]
+name = "greentic-x"
+path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 greentic-distributor-client = { version = "0.4", default-features = false, features = ["dist-client", "pack-fetch"] }
 greentic-qa-lib = "0.4"
-greentic-x-contracts = { path = "../greentic-x-contracts" }
-greentic-x-flow = { path = "../greentic-x-flow" }
-greentic-x-ops = { path = "../greentic-x-ops" }
-greentic-x-types = { path = "../greentic-x-types" }
+greentic-x-contracts = { version = "0.4.1", path = "../greentic-x-contracts" }
+greentic-x-flow = { version = "0.4.1", path = "../greentic-x-flow" }
+greentic-x-ops = { version = "0.4.1", path = "../greentic-x-ops" }
+greentic-x-types = { version = "0.4.1", path = "../greentic-x-types" }
 jsonschema.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -29,6 +37,10 @@ tempfile = "3"
 
 [build-dependencies]
 serde_json.workspace = true
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-v{ version }-{ target }{ archive-suffix }"
+bin-dir = "greentic-x{ binary-ext }"
 
 [lints]
 workspace = true

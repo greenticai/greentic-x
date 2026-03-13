@@ -66,7 +66,7 @@ fi
 
 if [ -d "crates/gx" ]; then
   step "gx doctor"
-  cargo run -p gx -- doctor .
+  cargo run -p greentic-x -- doctor .
 fi
 
 if command -v greentic-pack >/dev/null 2>&1 && [ -d "packs" ]; then

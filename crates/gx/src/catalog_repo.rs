@@ -45,6 +45,7 @@ pub(crate) fn init_catalog_repo(
         "adapters",
         "analysis",
         "playbooks",
+        "packs",
     ] {
         fs::create_dir_all(path.join(dir))
             .map_err(|err| format!("failed to create {}: {err}", path.join(dir).display()))?;
@@ -112,7 +113,7 @@ pub(crate) fn init_catalog_repo(
             .map_err(|err| format!("failed to create {}: {err}", workflow_dir.display()))?;
         fs::write(
             workflow_dir.join("publish-catalog.yml"),
-            "name: publish-catalog\non:\n  workflow_dispatch:\njobs:\n  publish:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: gx catalog build\n",
+            publish_catalog_workflow(),
         )
         .map_err(|err| format!("failed to write publish workflow: {err}"))?;
     }
@@ -617,6 +618,79 @@ fn scaffold_cargo_toml(repo_name: &str, title: Option<&str>) -> String {
     )
 }
 
+fn publish_catalog_workflow() -> String {
+    r#"name: publish-catalog
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install tooling
+        run: |
+          cargo binstall --no-confirm "greentic-x@0.4"
+          cargo binstall --no-confirm "greentic-pack@0.4"
+      - name: Build and validate catalog
+        run: |
+          greentic-x catalog build --repo .
+          greentic-x catalog validate --repo .
+      - uses: oras-project/setup-oras@v1
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push catalog index to GHCR
+        run: |
+          repo_name="${GITHUB_REPOSITORY##*/}"
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          oras push \
+            "ghcr.io/${owner}/catalogs/${repo_name}/catalog.json:latest" \
+            --artifact-type application/vnd.greentic.catalog.v1+json \
+            catalog.json:application/json
+      - name: Build and push packs to GHCR
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo_name="${GITHUB_REPOSITORY##*/}"
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          if [ ! -d packs ]; then
+            echo "No packs directory present; skipping pack publication."
+            exit 0
+          fi
+          found=0
+          for pack_dir in packs/*; do
+            [ -d "$pack_dir" ] || continue
+            [ -f "$pack_dir/pack.yaml" ] || continue
+            found=1
+            pack_name="$(basename "$pack_dir")"
+            greentic-pack build --in "$pack_dir"
+            artifact="$pack_dir/dist/${pack_name}.gtpack"
+            oras push \
+              "ghcr.io/${owner}/packs/${repo_name}/${pack_name}:latest" \
+              --artifact-type application/vnd.greentic.pack.v1+archive \
+              "$artifact:application/octet-stream"
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "No pack.yaml entries found under packs/; skipping pack publication."
+          fi
+"#
+    .to_owned()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -633,6 +707,10 @@ mod tests {
         let cargo_toml = fs::read_to_string(repo.join("Cargo.toml"))?;
         assert!(cargo_toml.contains("greentic-x-contracts = \"0.4\""));
         assert!(cargo_toml.contains("greentic-x-flow = \"0.4\""));
+        let workflow = fs::read_to_string(repo.join(".github/workflows/publish-catalog.yml"))?;
+        assert!(workflow.contains("cargo binstall --no-confirm \"greentic-x@0.4\""));
+        assert!(workflow.contains("ghcr.io/${owner}/catalogs/${repo_name}/catalog.json:latest"));
+        assert!(workflow.contains("ghcr.io/${owner}/packs/${repo_name}/${pack_name}:latest"));
         validate_catalog_repo(&repo)?;
         Ok(())
     }

@@ -25,7 +25,7 @@ use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
 #[command(
-    name = "gx",
+    name = "greentic-x",
     about = "Greentic-X scaffold, validate, simulate, and inspect tooling"
 )]
 struct Cli {

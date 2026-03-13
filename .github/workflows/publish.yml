@@ -65,6 +65,8 @@ jobs:
               printf 'publish workflow only supports main/master branch pushes or version tags\n' >&2
               exit 1
             fi
+            tag="v$version"
+            create_release=true
           fi
           if [ "$create_release" = "true" ] && [ "$tag" != "v$version" ]; then
             printf 'tag %s does not match Cargo version v%s\n' "$tag" "$version" >&2
@@ -128,9 +130,98 @@ jobs:
             done
             sleep 30
           done
-      - name: Create GitHub release
-        if: needs.release-metadata.outputs.create_release == 'true'
+
+  build-binstall:
+    needs:
+      - lint
+      - test
+      - release-metadata
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: windows-11-arm
+            target: aarch64-pc-windows-msvc
+          - os: macos-13
+            target: x86_64-apple-darwin
+          - os: macos-15
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Build greentic-x release binary
+        shell: bash
+        run: cargo build -p greentic-x --release --target "${{ matrix.target }}"
+      - name: Package greentic-x binary (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.release-metadata.outputs.version }}"
+          target="${{ matrix.target }}"
+          out_dir="$RUNNER_TEMP/binstall"
+          mkdir -p "$out_dir"
+          binary="target/${target}/release/greentic-x"
+          asset_name="greentic-x-v${version}-${target}.tar.gz"
+          cp "$binary" "$out_dir/greentic-x"
+          tar -C "$out_dir" -czf "$out_dir/$asset_name" greentic-x
+          printf 'asset_path=%s\n' "$out_dir/$asset_name" >> "$GITHUB_OUTPUT"
+        id: package_unix
+      - name: Package greentic-x binary (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = "${{ needs.release-metadata.outputs.version }}"
+          $target = "${{ matrix.target }}"
+          $outDir = Join-Path $env:RUNNER_TEMP "binstall"
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+          $binary = "target/$target/release/greentic-x.exe"
+          $assetName = "greentic-x-v$version-$target.zip"
+          Copy-Item $binary (Join-Path $outDir "greentic-x.exe")
+          Compress-Archive -Path (Join-Path $outDir "greentic-x.exe") -DestinationPath (Join-Path $outDir $assetName) -Force
+          "asset_path=$(Join-Path $outDir $assetName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        id: package_windows
+      - uses: actions/upload-artifact@v4
+        if: runner.os != 'Windows'
+        with:
+          name: greentic-x-${{ matrix.target }}
+          path: ${{ steps.package_unix.outputs.asset_path }}
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: greentic-x-${{ matrix.target }}
+          path: ${{ steps.package_windows.outputs.asset_path }}
+
+  github-release:
+    needs:
+      - release-metadata
+      - publish-crates
+      - build-binstall
+    if: needs.release-metadata.outputs.create_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: greentic-x-*
+          merge-multiple: true
+      - name: Create or update GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.release-metadata.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           generate_release_notes: true
+          append_body: true
+          files: dist/*

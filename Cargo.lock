@@ -1163,6 +1163,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "greentic-x"
+version = "0.4.1"
+dependencies = [
+ "clap",
+ "greentic-distributor-client",
+ "greentic-qa-lib",
+ "greentic-x-contracts",
+ "greentic-x-flow",
+ "greentic-x-ops",
+ "greentic-x-types",
+ "jsonschema",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "greentic-x-contracts"
 version = "0.4.1"
 dependencies = [
@@ -1219,24 +1237,6 @@ version = "0.4.1"
 dependencies = [
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "gx"
-version = "0.4.1"
-dependencies = [
- "clap",
- "greentic-distributor-client",
- "greentic-qa-lib",
- "greentic-x-contracts",
- "greentic-x-flow",
- "greentic-x-ops",
- "greentic-x-types",
- "jsonschema",
- "serde",
- "serde_json",
- "tempfile",
- "tokio",
 ]
 
 [[package]]

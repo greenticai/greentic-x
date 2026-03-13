@@ -72,7 +72,7 @@ bash ci/local_check.sh
 
 The script runs formatting, clippy, tests, build, docs, and crates.io dry-run packaging checks for publishable workspace crates.
 It also validates the checked-in GX specs and catalog when `specs/` and `catalog/` are present.
-It also runs `cargo run -p gx -- doctor .` so the repo-level GX tooling checks stay green.
+It also runs `cargo run -p greentic-x -- doctor .` so the repo-level GX tooling checks stay green.
 
 When `greentic-pack` is available locally, it also builds and inspects the
 source packs under `packs/`. GitHub Actions now installs `greentic-pack` via

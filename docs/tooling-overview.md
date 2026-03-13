@@ -1,30 +1,30 @@
 # Tooling Overview
 
-Greentic-X now ships a small CLI, `gx`, for downstream authoring and validation.
+Greentic-X now ships a small CLI, `greentic-x`, for downstream authoring and validation.
 
 The current commands are:
 
-- `gx contract new`
-- `gx contract validate`
-- `gx op new`
-- `gx op validate`
-- `gx flow new`
-- `gx flow validate`
-- `gx resolver new`
-- `gx resolver validate`
-- `gx view new`
-- `gx view validate`
-- `gx profile validate`
-- `gx profile compile`
-- `gx simulate`
-- `gx doctor`
-- `gx catalog init`
-- `gx catalog build`
-- `gx catalog validate`
-- `gx catalog list`
-- `gx wizard run`
-- `gx wizard validate`
-- `gx wizard apply`
+- `greentic-x contract new`
+- `greentic-x contract validate`
+- `greentic-x op new`
+- `greentic-x op validate`
+- `greentic-x flow new`
+- `greentic-x flow validate`
+- `greentic-x resolver new`
+- `greentic-x resolver validate`
+- `greentic-x view new`
+- `greentic-x view validate`
+- `greentic-x profile validate`
+- `greentic-x profile compile`
+- `greentic-x simulate`
+- `greentic-x doctor`
+- `greentic-x catalog init`
+- `greentic-x catalog build`
+- `greentic-x catalog validate`
+- `greentic-x catalog list`
+- `greentic-x wizard run`
+- `greentic-x wizard validate`
+- `greentic-x wizard apply`
 
 ## What The CLI Covers Today
 
@@ -37,7 +37,7 @@ The current commands are:
 - build canonical `catalog.json` indexes for those repos
 - run the catalog-driven wizard run/validate/apply command surface
 
-Bare `gx wizard` defaults to the `run` action.
+Bare `greentic-x wizard` defaults to the `run` action.
 Wizard replay currently supports `--answers`, `--emit-answers`, `--schema-version`, `--migrate`, and repeated `--catalog` flags.
 Wizard execution supports `--dry-run`, `--locale`, and delegated bundling through `greentic-bundle`.
 Wizard locale currently supports embedded `en` (default) and `nl` catalogs with fallback to `en`.
@@ -49,7 +49,7 @@ Wizard emits answer-document metadata compatible with `greentic-bundle` replay:
 - `wizard_id=greentic-bundle.wizard.run`
 - `schema_id=greentic-bundle.wizard.answers`
 - `schema_version=1.0.0` (default)
-`gx` writes composition artifacts under `dist/<solution-id>.*`, then delegates final bundle generation through:
+`greentic-x` writes composition artifacts under `dist/<solution-id>.*`, then delegates final bundle generation through:
 - `greentic-bundle wizard apply --answers dist/<solution-id>.bundle.answers.json`
 Wizard catalog loading merges the built-in GX base catalog with any explicit `--catalog` sources.
 Supported explicit catalog source types are:
@@ -63,23 +63,23 @@ designer yet. The CLI is the current downstream entrypoint for GX authoring.
 ## Typical Usage
 
 ```bash
-cargo run -p gx -- contract new contracts/example-contract --contract-id gx.example --resource-type example
-cargo run -p gx -- op new ops/example-op --operation-id analyse.example --contract-id gx.example
-cargo run -p gx -- flow new flows/example-flow --flow-id example.flow
-cargo run -p gx -- profile validate examples/top-contributors-generic/profile.json
-cargo run -p gx -- profile compile examples/top-contributors-generic/profile.json --out examples/top-contributors-generic/flow.json
+cargo run -p greentic-x -- contract new contracts/example-contract --contract-id gx.example --resource-type example
+cargo run -p greentic-x -- op new ops/example-op --operation-id analyse.example --contract-id gx.example
+cargo run -p greentic-x -- flow new flows/example-flow --flow-id example.flow
+cargo run -p greentic-x -- profile validate examples/top-contributors-generic/profile.json
+cargo run -p greentic-x -- profile compile examples/top-contributors-generic/profile.json --out examples/top-contributors-generic/flow.json
 
-cargo run -p gx -- contract validate contracts/example-contract
-cargo run -p gx -- op validate ops/example-op
-cargo run -p gx -- flow validate flows/example-flow
+cargo run -p greentic-x -- contract validate contracts/example-contract
+cargo run -p greentic-x -- op validate ops/example-op
+cargo run -p greentic-x -- flow validate flows/example-flow
 
-cargo run -p gx -- simulate flows/example-flow
-cargo run -p gx -- doctor .
-cargo run -p gx -- catalog init zain-x
-cargo run -p gx -- catalog build --repo zain-x
-cargo run -p gx -- catalog validate --repo zain-x
-cargo run -p gx -- catalog list --kind ops
-cargo run -p gx -- wizard --catalog oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:latest
+cargo run -p greentic-x -- simulate flows/example-flow
+cargo run -p greentic-x -- doctor .
+cargo run -p greentic-x -- catalog init zain-x
+cargo run -p greentic-x -- catalog build --repo zain-x
+cargo run -p greentic-x -- catalog validate --repo zain-x
+cargo run -p greentic-x -- catalog list --kind ops
+cargo run -p greentic-x -- wizard --catalog oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:latest
 ```
 
 ## Relationship To `greentic-pack`
