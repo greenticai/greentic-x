@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Catalogue source (local path or oci:// ref)",
-  "wizard.advanced.catalog_sources": "Catalogue sources (comma-separated to replace current)",
+  "wizard.advanced.catalog_source": "Catalogue source (local path, oci://, repo://, or store:// ref)",
+  "wizard.advanced.catalog_sources": "Catalogue sources (comma-separated to replace current; local path, oci://, repo://, or store://)",
   "wizard.create.template.basic": "Start from a basic empty solution",
   "wizard.create.template.catalog": "Choose from catalogue templates",
   "wizard.create.template.choose": "Choose catalogue template",

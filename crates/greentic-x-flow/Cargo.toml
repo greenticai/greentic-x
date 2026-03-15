@@ -11,9 +11,9 @@ authors.workspace = true
 description = "Bootstrap flow execution crate for the Greentic-X workspace."
 
 [dependencies]
-greentic-x-ops = { version = "0.4.1", path = "../greentic-x-ops" }
-greentic-x-runtime = { version = "0.4.1", path = "../greentic-x-runtime" }
-greentic-x-types = { version = "0.4.1", path = "../greentic-x-types" }
+greentic-x-ops.workspace = true
+greentic-x-runtime.workspace = true
+greentic-x-types.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 

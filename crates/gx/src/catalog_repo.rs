@@ -283,10 +283,12 @@ fn discover_catalog_entries(
         let metadata = match kind {
             "assistant_template" => json!({
                 "assistant_template_ref": relative,
-                "domain_template_ref": value.get("domain_template_ref").and_then(Value::as_str)
+                "domain_template_ref": value.get("domain_template_ref").and_then(Value::as_str),
+                "bundle_ref": value.get("bundle_ref").and_then(Value::as_str)
             }),
             "provider_preset" => json!({
-                "provider_refs": value.get("provider_refs").cloned().unwrap_or_else(|| Value::Array(Vec::new()))
+                "provider_refs": value.get("provider_refs").cloned().unwrap_or_else(|| Value::Array(Vec::new())),
+                "bundle_ref": value.get("bundle_ref").and_then(Value::as_str)
             }),
             "overlay" => json!({
                 "default_locale": value.get("default_locale").cloned().unwrap_or(Value::Null),
@@ -686,6 +688,36 @@ jobs:
           if [ "$found" -eq 0 ]; then
             echo "No pack.yaml entries found under packs/; skipping pack publication."
           fi
+      - name: Build catalog bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo_name="${GITHUB_REPOSITORY##*/}"
+          mkdir -p target
+          tar -czf "target/${repo_name}-bundle.tar.gz" \
+            catalog.json \
+            assistant_templates \
+            bundles \
+            views \
+            overlays \
+            setup_profiles \
+            contracts \
+            resolvers \
+            adapters \
+            analysis \
+            playbooks \
+            README.md \
+            Cargo.toml
+      - name: Push catalog bundle to GHCR
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo_name="${GITHUB_REPOSITORY##*/}"
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          oras push \
+            "ghcr.io/${owner}/${repo_name}-bundle:latest" \
+            --artifact-type application/vnd.greentic.catalog-bundle.v1+tar.gz \
+            "target/${repo_name}-bundle.tar.gz:application/vnd.oci.image.layer.v1.tar+gzip"
 "#
     .to_owned()
 }
@@ -710,6 +742,7 @@ mod tests {
         assert!(workflow.contains("cargo binstall --no-confirm \"greentic-x@0.4\""));
         assert!(workflow.contains("ghcr.io/${owner}/catalogs/${repo_name}/catalog.json:latest"));
         assert!(workflow.contains("ghcr.io/${owner}/packs/${repo_name}/${pack_name}:latest"));
+        assert!(workflow.contains("ghcr.io/${owner}/${repo_name}-bundle:latest"));
         validate_catalog_repo(&repo)?;
         Ok(())
     }

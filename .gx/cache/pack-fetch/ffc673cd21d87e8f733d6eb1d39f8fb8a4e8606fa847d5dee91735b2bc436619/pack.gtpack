@@ -1,0 +1,878 @@
+{
+  "description": "Generated GX catalog index.",
+  "entries": [
+    {
+      "description": "",
+      "id": "adapters.zx.query.apic.interfaces.manifest",
+      "kind": "adapter",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "adapters/zx.query.apic.interfaces/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "adapters.zx.query.apic.interfaces.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "adapters.zx.query.apic.utilisation.manifest",
+      "kind": "adapter",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "adapters/zx.query.apic.utilisation/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "adapters.zx.query.apic.utilisation.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "adapters.zx.query.arbor.bgp_routes.manifest",
+      "kind": "adapter",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "adapters/zx.query.arbor.bgp_routes/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "adapters.zx.query.arbor.bgp_routes.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "adapters.zx.query.arbor.bgp_sessions.manifest",
+      "kind": "adapter",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "adapters/zx.query.arbor.bgp_sessions/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "adapters.zx.query.arbor.bgp_sessions.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "adapters.zx.query.arbor.flows.manifest",
+      "kind": "adapter",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "adapters/zx.query.arbor.flows/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "adapters.zx.query.arbor.flows.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "adapters.zx.query.epnm.interfaces.manifest",
+      "kind": "adapter",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "adapters/zx.query.epnm.interfaces/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "adapters.zx.query.epnm.interfaces.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "adapters.zx.query.epnm.utilisation.manifest",
+      "kind": "adapter",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "adapters/zx.query.epnm.utilisation/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "adapters.zx.query.epnm.utilisation.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "adapters.zx.query.intersight.telemetry.manifest",
+      "kind": "adapter",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "adapters/zx.query.intersight.telemetry/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "adapters.zx.query.intersight.telemetry.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "adapters.zx.query.iwo.recommendations.manifest",
+      "kind": "adapter",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "adapters/zx.query.iwo.recommendations/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "adapters.zx.query.iwo.recommendations.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "adapters.zx.query.splunk.events.manifest",
+      "kind": "adapter",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "adapters/zx.query.splunk.events/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "adapters.zx.query.splunk.events.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "analysis.zx.analyse.free_ports.manifest",
+      "kind": "analysis_op",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "analysis/zx.analyse.free_ports/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "analysis.zx.analyse.free_ports.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "analysis.zx.analyse.noisy_neighbour.manifest",
+      "kind": "analysis_op",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "analysis/zx.analyse.noisy_neighbour/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "analysis.zx.analyse.noisy_neighbour.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "analysis.zx.analyse.overutilised_ports.manifest",
+      "kind": "analysis_op",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "analysis/zx.analyse.overutilised_ports/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "analysis.zx.analyse.overutilised_ports.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "analysis.zx.analyse.route_health.manifest",
+      "kind": "analysis_op",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "analysis/zx.analyse.route_health/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "analysis.zx.analyse.route_health.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "analysis.zx.analyse.slo_breach.manifest",
+      "kind": "analysis_op",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "analysis/zx.analyse.slo_breach/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "analysis.zx.analyse.slo_breach.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "analysis.zx.analyse.top_peers.manifest",
+      "kind": "analysis_op",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "analysis/zx.analyse.top_peers/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "analysis.zx.analyse.top_peers.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "analysis.zx.analyse.top_source_asns.manifest",
+      "kind": "analysis_op",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "analysis/zx.analyse.top_source_asns/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "analysis.zx.analyse.top_source_asns.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "analysis.zx.correlate.change_window.manifest",
+      "kind": "analysis_op",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "analysis/zx.correlate.change_window/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "analysis.zx.correlate.change_window.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "analysis.zx.synthesise.rca.manifest",
+      "kind": "analysis_op",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "analysis/zx.synthesise.rca/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "analysis.zx.synthesise.rca.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "Change-oriented assistant template for correlating events, validating rollout impact, and surfacing candidate causes.",
+      "id": "zx.assistant-template.change-assistant.phase1",
+      "kind": "assistant_template",
+      "metadata": {
+        "assistant_template_ref": "assistant_templates/change-assistant.phase1.json",
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest",
+        "domain_template_ref": null
+      },
+      "ref": "assistant_templates/change-assistant.phase1.json",
+      "source": "",
+      "tags": [],
+      "title": "Change Assistant Phase 1",
+      "version": "1.0.0"
+    },
+    {
+      "description": "Incident-focused assistant template for RCA, noisy-neighbour diagnosis, health sweep, and SLO triage.",
+      "id": "zx.assistant-template.incident-assistant.phase1",
+      "kind": "assistant_template",
+      "metadata": {
+        "assistant_template_ref": "assistant_templates/incident-assistant.phase1.json",
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest",
+        "domain_template_ref": null
+      },
+      "ref": "assistant_templates/incident-assistant.phase1.json",
+      "source": "",
+      "tags": [],
+      "title": "Incident Assistant Phase 1",
+      "version": "1.0.0"
+    },
+    {
+      "description": "Bounded read-only network assistant template for prefix, routing, ASN, and port-capacity investigations.",
+      "id": "zx.assistant-template.network-assistant.phase1",
+      "kind": "assistant_template",
+      "metadata": {
+        "assistant_template_ref": "assistant_templates/network-assistant.phase1.json",
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest",
+        "domain_template_ref": null
+      },
+      "ref": "assistant_templates/network-assistant.phase1.json",
+      "source": "",
+      "tags": [],
+      "title": "Network Assistant Phase 1",
+      "version": "1.0.0"
+    },
+    {
+      "description": "Canonical descriptor for the advanced RCA and change-correlation rollout bundle.",
+      "id": "zx.bundle.network_assistant.advanced",
+      "kind": "bundle",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "bundles/zx.bundle.network_assistant.advanced.json",
+      "source": "",
+      "tags": [],
+      "title": "Network Assistant Advanced Bundle",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical descriptor for the shared Zain-X foundation bundle.",
+      "id": "zx.bundle.network_assistant.foundation",
+      "kind": "bundle",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "bundles/zx.bundle.network_assistant.foundation.json",
+      "source": "",
+      "tags": [],
+      "title": "Network Assistant Foundation Bundle",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical descriptor for the bounded read-only network assistant rollout bundle.",
+      "id": "zx.bundle.network_assistant.phase1",
+      "kind": "bundle",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "bundles/zx.bundle.network_assistant.phase1.json",
+      "source": "",
+      "tags": [],
+      "title": "Network Assistant Phase 1 Bundle",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical Zain cluster scope contract.",
+      "id": "zx.cluster.scope.v1",
+      "kind": "contract",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "contracts/zx.cluster.scope.v1/contract.json",
+      "source": "",
+      "tags": [],
+      "title": "zx.cluster.scope.v1",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical Zain BGP session resource contract.",
+      "id": "zx.network.bgp.session.v1",
+      "kind": "contract",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "contracts/zx.network.bgp.session.v1/contract.json",
+      "source": "",
+      "tags": [],
+      "title": "zx.network.bgp.session.v1",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical Zain network change event contract.",
+      "id": "zx.network.change.event.v1",
+      "kind": "contract",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "contracts/zx.network.change.event.v1/contract.json",
+      "source": "",
+      "tags": [],
+      "title": "zx.network.change.event.v1",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical Zain network device resource contract.",
+      "id": "zx.network.device.v1",
+      "kind": "contract",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "contracts/zx.network.device.v1/contract.json",
+      "source": "",
+      "tags": [],
+      "title": "zx.network.device.v1",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical Zain network interface resource contract.",
+      "id": "zx.network.interface.v1",
+      "kind": "contract",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "contracts/zx.network.interface.v1/contract.json",
+      "source": "",
+      "tags": [],
+      "title": "zx.network.interface.v1",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical Zain peer resource contract.",
+      "id": "zx.network.peer.v1",
+      "kind": "contract",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "contracts/zx.network.peer.v1/contract.json",
+      "source": "",
+      "tags": [],
+      "title": "zx.network.peer.v1",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical Zain network prefix resource contract.",
+      "id": "zx.network.prefix.v1",
+      "kind": "contract",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "contracts/zx.network.prefix.v1/contract.json",
+      "source": "",
+      "tags": [],
+      "title": "zx.network.prefix.v1",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical Zain service binding contract.",
+      "id": "zx.service.binding.v1",
+      "kind": "contract",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "contracts/zx.service.binding.v1/contract.json",
+      "source": "",
+      "tags": [],
+      "title": "zx.service.binding.v1",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical Zain site scope contract.",
+      "id": "zx.site.scope.v1",
+      "kind": "contract",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "contracts/zx.site.scope.v1/contract.json",
+      "source": "",
+      "tags": [],
+      "title": "zx.site.scope.v1",
+      "version": "v1"
+    },
+    {
+      "description": "Canonical Zain SLO binding contract.",
+      "id": "zx.slo.binding.v1",
+      "kind": "contract",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "contracts/zx.slo.binding.v1/contract.json",
+      "source": "",
+      "tags": [],
+      "title": "zx.slo.binding.v1",
+      "version": "v1"
+    },
+    {
+      "description": "",
+      "id": "zx.overlay.default",
+      "kind": "overlay",
+      "metadata": {
+        "branding": {
+          "brand_id": "zain-default",
+          "branding_ref": "branding/zain-default.json",
+          "locale_refs": [
+            "locales/en/common.json"
+          ]
+        },
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest",
+        "default_locale": "en-ZA",
+        "tenant_id": "zain-default"
+      },
+      "ref": "overlays/default.json",
+      "source": "",
+      "tags": [],
+      "title": "Default Zain Overlay",
+      "version": "1.0.0"
+    },
+    {
+      "description": "Default Zain tenant overlay for product naming, wording, and visual identity.",
+      "id": "zx.overlay.zain-default",
+      "kind": "overlay",
+      "metadata": {
+        "branding": {
+          "brand_id": "zain-default",
+          "branding_ref": "branding/zain-default.json",
+          "locale_refs": [
+            "locales/en/common.json"
+          ]
+        },
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest",
+        "default_locale": "en-ZA",
+        "tenant_id": "zain-default"
+      },
+      "ref": "overlays/zain-default.json",
+      "source": "",
+      "tags": [],
+      "title": "Zain Default Overlay",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "playbooks.zx.playbook.bgp_advertisers.manifest",
+      "kind": "playbook",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "playbooks/zx.playbook.bgp_advertisers/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "playbooks.zx.playbook.bgp_advertisers.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "playbooks.zx.playbook.change_correlation.manifest",
+      "kind": "playbook",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "playbooks/zx.playbook.change_correlation/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "playbooks.zx.playbook.change_correlation.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "playbooks.zx.playbook.free_ports.manifest",
+      "kind": "playbook",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "playbooks/zx.playbook.free_ports/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "playbooks.zx.playbook.free_ports.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "playbooks.zx.playbook.noisy_neighbour.manifest",
+      "kind": "playbook",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "playbooks/zx.playbook.noisy_neighbour/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "playbooks.zx.playbook.noisy_neighbour.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "playbooks.zx.playbook.port_utilisation.manifest",
+      "kind": "playbook",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "playbooks/zx.playbook.port_utilisation/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "playbooks.zx.playbook.port_utilisation.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "playbooks.zx.playbook.prefix_traffic.manifest",
+      "kind": "playbook",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "playbooks/zx.playbook.prefix_traffic/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "playbooks.zx.playbook.prefix_traffic.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "playbooks.zx.playbook.scope_health_sweep.manifest",
+      "kind": "playbook",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "playbooks/zx.playbook.scope_health_sweep/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "playbooks.zx.playbook.scope_health_sweep.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "playbooks.zx.playbook.slo_status.manifest",
+      "kind": "playbook",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "playbooks/zx.playbook.slo_status/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "playbooks.zx.playbook.slo_status.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "playbooks.zx.playbook.top_source_asns.manifest",
+      "kind": "playbook",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "playbooks/zx.playbook.top_source_asns/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "playbooks.zx.playbook.top_source_asns.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "playbooks.zx.playbook.vm_rca.manifest",
+      "kind": "playbook",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "playbooks/zx.playbook.vm_rca/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "playbooks.zx.playbook.vm_rca.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "resolvers.zx.resolve.aci_node.manifest",
+      "kind": "resolver",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "resolvers/zx.resolve.aci_node/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "resolvers.zx.resolve.aci_node.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "resolvers.zx.resolve.cluster.manifest",
+      "kind": "resolver",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "resolvers/zx.resolve.cluster/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "resolvers.zx.resolve.cluster.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "resolvers.zx.resolve.device.manifest",
+      "kind": "resolver",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "resolvers/zx.resolve.device/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "resolvers.zx.resolve.device.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "resolvers.zx.resolve.prefix.manifest",
+      "kind": "resolver",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "resolvers/zx.resolve.prefix/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "resolvers.zx.resolve.prefix.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "resolvers.zx.resolve.service.manifest",
+      "kind": "resolver",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "resolvers/zx.resolve.service/manifest.json",
+      "source": "",
+      "tags": [],
+      "title": "resolvers.zx.resolve.service.manifest",
+      "version": "1.0.0"
+    },
+    {
+      "description": "Default setup profile for change-correlation workflows.",
+      "id": "zx.setup-profile.change-assistant.phase1",
+      "kind": "setup_profile",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "setup_profiles/change-assistant.phase1.json",
+      "source": "",
+      "tags": [],
+      "title": "Change Assistant Phase 1 Profile",
+      "version": "1.0.0"
+    },
+    {
+      "description": "Baseline wizard setup profile for Zain catalog consumption.",
+      "id": "zx.setup-profile.default",
+      "kind": "setup_profile",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "setup_profiles/default.json",
+      "source": "",
+      "tags": [],
+      "title": "Default Zain Setup Profile",
+      "version": "1.0.0"
+    },
+    {
+      "description": "Default setup profile for incident-oriented RCA and service health workflows.",
+      "id": "zx.setup-profile.incident-assistant.phase1",
+      "kind": "setup_profile",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "setup_profiles/incident-assistant.phase1.json",
+      "source": "",
+      "tags": [],
+      "title": "Incident Assistant Phase 1 Profile",
+      "version": "1.0.0"
+    },
+    {
+      "description": "Default setup profile for bounded network assistant workflows.",
+      "id": "zx.setup-profile.network-assistant.phase1",
+      "kind": "setup_profile",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "setup_profiles/network-assistant.phase1.json",
+      "source": "",
+      "tags": [],
+      "title": "Network Assistant Phase 1 Profile",
+      "version": "1.0.0"
+    },
+    {
+      "description": "",
+      "id": "zx.view.change_correlation_card",
+      "kind": "view",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "views/zx.view.change_correlation_card/view.json",
+      "source": "",
+      "tags": [],
+      "title": "Change Correlation Card",
+      "version": "v1"
+    },
+    {
+      "description": "",
+      "id": "zx.view.port_capacity_card",
+      "kind": "view",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "views/zx.view.port_capacity_card/view.json",
+      "source": "",
+      "tags": [],
+      "title": "Port Capacity Card",
+      "version": "v1"
+    },
+    {
+      "description": "",
+      "id": "zx.view.ranked_table",
+      "kind": "view",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "views/zx.view.ranked_table/view.json",
+      "source": "",
+      "tags": [],
+      "title": "Ranked Table",
+      "version": "v1"
+    },
+    {
+      "description": "",
+      "id": "zx.view.rca_card",
+      "kind": "view",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "views/zx.view.rca_card/view.json",
+      "source": "",
+      "tags": [],
+      "title": "RCA Card",
+      "version": "v1"
+    },
+    {
+      "description": "",
+      "id": "zx.view.route_health_card",
+      "kind": "view",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "views/zx.view.route_health_card/view.json",
+      "source": "",
+      "tags": [],
+      "title": "Route Health Card",
+      "version": "v1"
+    },
+    {
+      "description": "",
+      "id": "zx.view.slo_status_card",
+      "kind": "view",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "views/zx.view.slo_status_card/view.json",
+      "source": "",
+      "tags": [],
+      "title": "SLO Status Card",
+      "version": "v1"
+    },
+    {
+      "description": "",
+      "id": "zx.view.summary_card",
+      "kind": "view",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "views/zx.view.summary_card/view.json",
+      "source": "",
+      "tags": [],
+      "title": "Summary Card",
+      "version": "v1"
+    },
+    {
+      "description": "",
+      "id": "zx.view.timeline_card",
+      "kind": "view",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "views/zx.view.timeline_card/view.json",
+      "source": "",
+      "tags": [],
+      "title": "Timeline Card",
+      "version": "v1"
+    },
+    {
+      "description": "",
+      "id": "zx.view.timeseries_card",
+      "kind": "view",
+      "metadata": {
+        "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+      },
+      "ref": "views/zx.view.timeseries_card/view.json",
+      "source": "",
+      "tags": [],
+      "title": "Timeseries Card",
+      "version": "v1"
+    }
+  ],
+  "id": "zain-x.catalog",
+  "schema": "gx.catalog.index.v1",
+  "title": "zain-x",
+  "version": "1.0.0"
+}

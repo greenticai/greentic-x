@@ -1,8 +1,20 @@
 use std::fs;
+use std::io::{self, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 
-use greentic_distributor_client::oci_packs::DefaultRegistryClient;
-use greentic_distributor_client::{OciPackFetcher, PackFetchOptions};
+use async_trait::async_trait;
+use greentic_distributor_client::oci_packs::{
+    DefaultRegistryClient, PulledImage, PulledLayer, RegistryClient,
+};
+use greentic_distributor_client::store_auth::default_store_auth_path;
+use greentic_distributor_client::{
+    OciPackFetcher, PackFetchOptions, StoreCredentials, load_login_default, save_login_default,
+};
+use oci_distribution::Reference;
+use oci_distribution::client::{Client, ClientConfig, ClientProtocol, ImageData};
+use oci_distribution::errors::OciDistributionError;
+use oci_distribution::secrets::RegistryAuth;
+use rpassword::read_password;
 use serde::Deserialize;
 use serde_json::Value;
 use tokio::runtime::Runtime;
@@ -24,28 +36,31 @@ pub(crate) struct FetchResult {
     pub(crate) resolved_digest: Option<String>,
 }
 
+#[derive(Clone, Debug)]
+pub(crate) struct ResolvedPackArtifact {
+    pub(crate) path: PathBuf,
+    pub(crate) resolved_digest: String,
+    pub(crate) media_type: String,
+}
+
 pub(crate) trait RemoteCatalogFetcher {
     fn fetch_json(&self, cache_root: &Path, reference: &str) -> Result<FetchResult, String>;
     fn resolve_pack_ref(&self, cache_root: &Path, reference: &str) -> Result<String, String>;
+    fn fetch_pack_artifact(
+        &self,
+        cache_root: &Path,
+        reference: &str,
+    ) -> Result<ResolvedPackArtifact, String>;
 }
 
 pub(crate) struct DistributorCatalogFetcher;
 
 impl RemoteCatalogFetcher for DistributorCatalogFetcher {
     fn fetch_json(&self, cache_root: &Path, reference: &str) -> Result<FetchResult, String> {
-        let reference = normalize_oci_fetch_ref(reference);
-        let options = pack_fetch_options(cache_root);
-        let runtime =
-            Runtime::new().map_err(|err| format!("failed to start pack fetch runtime: {err}"))?;
-        let resolved = runtime
-            .block_on(
-                OciPackFetcher::<DefaultRegistryClient>::new(options)
-                    .fetch_pack_to_cache(&reference),
-            )
-            .map_err(|err| format!("failed to fetch OCI catalog {reference}: {err}"))?;
+        let resolved = fetch_pack_artifact(cache_root, reference)?;
         let bytes = fs::read(&resolved.path).map_err(|err| {
             format!(
-                "failed to read fetched OCI catalog {}: {err}",
+                "failed to read fetched catalog artifact {}: {err}",
                 resolved.path.display()
             )
         })?;
@@ -56,17 +71,16 @@ impl RemoteCatalogFetcher for DistributorCatalogFetcher {
     }
 
     fn resolve_pack_ref(&self, cache_root: &Path, reference: &str) -> Result<String, String> {
-        let reference = normalize_oci_fetch_ref(reference);
-        let options = pack_fetch_options(cache_root);
-        let runtime =
-            Runtime::new().map_err(|err| format!("failed to start pack fetch runtime: {err}"))?;
-        let resolved = runtime
-            .block_on(
-                OciPackFetcher::<DefaultRegistryClient>::new(options)
-                    .fetch_pack_to_cache(&reference),
-            )
-            .map_err(|err| format!("failed to resolve pack ref {reference}: {err}"))?;
+        let resolved = fetch_pack_artifact(cache_root, reference)?;
         Ok(resolved.resolved_digest)
+    }
+
+    fn fetch_pack_artifact(
+        &self,
+        cache_root: &Path,
+        reference: &str,
+    ) -> Result<ResolvedPackArtifact, String> {
+        fetch_pack_artifact(cache_root, reference)
     }
 }
 
@@ -105,14 +119,14 @@ fn load_explicit_catalog(
     catalog_ref: &str,
     fetcher: &dyn RemoteCatalogFetcher,
 ) -> Result<(RootCatalogIndex, CatalogProvenance), String> {
-    if catalog_ref.starts_with("oci://") {
+    if is_remote_catalog_ref(catalog_ref) {
         let fetched = fetcher.fetch_json(cwd, catalog_ref)?;
         let document: RootCatalogIndex = serde_json::from_slice(&fetched.bytes)
             .map_err(|err| format!("failed to decode remote catalog {catalog_ref}: {err}"))?;
         return Ok((
             document,
             CatalogProvenance {
-                source_type: "oci".to_owned(),
+                source_type: catalog_source_type(catalog_ref).to_owned(),
                 source_ref: catalog_ref.to_owned(),
                 resolved_digest: fetched.resolved_digest,
             },
@@ -139,6 +153,22 @@ fn load_explicit_catalog(
     ))
 }
 
+fn is_remote_catalog_ref(reference: &str) -> bool {
+    reference.starts_with("oci://")
+        || reference.starts_with("repo://")
+        || reference.starts_with("store://")
+}
+
+fn catalog_source_type(reference: &str) -> &str {
+    if reference.starts_with("store://") {
+        "store"
+    } else if reference.starts_with("repo://") {
+        "repo"
+    } else {
+        "oci"
+    }
+}
+
 fn root_templates(
     document: &RootCatalogIndex,
     provenance: &CatalogProvenance,
@@ -162,6 +192,11 @@ fn root_templates(
             domain_template_ref: entry
                 .metadata
                 .get("domain_template_ref")
+                .and_then(Value::as_str)
+                .map(ToOwned::to_owned),
+            bundle_ref: entry
+                .metadata
+                .get("bundle_ref")
                 .and_then(Value::as_str)
                 .map(ToOwned::to_owned),
             provenance: Some(provenance.clone()),
@@ -195,6 +230,11 @@ fn root_provider_presets(
                         .collect::<Vec<_>>()
                 })
                 .unwrap_or_else(|| vec![entry.ref_path.clone()]),
+            bundle_ref: entry
+                .metadata
+                .get("bundle_ref")
+                .and_then(Value::as_str)
+                .map(ToOwned::to_owned),
             provenance: Some(provenance.clone()),
         })
         .collect()
@@ -303,11 +343,20 @@ pub(crate) fn builtin_provider_ref(label: &str) -> Option<&'static str> {
     }
 }
 
-pub(crate) fn normalize_oci_fetch_ref(reference: &str) -> String {
-    reference
-        .strip_prefix("oci://")
-        .unwrap_or(reference)
-        .to_owned()
+pub(crate) fn normalize_pack_fetch_ref(reference: &str) -> Result<String, String> {
+    if let Some(body) = reference.strip_prefix("oci://") {
+        return Ok(body.to_owned());
+    }
+    if let Some(body) = reference.strip_prefix("repo://") {
+        return map_registry_ref(body, "GREENTIC_REPO_REGISTRY_BASE", "repo");
+    }
+    if let Some(body) = reference.strip_prefix("store://") {
+        if let Some(mapped) = map_greentic_biz_store_ref(body)? {
+            return Ok(mapped);
+        }
+        return map_registry_ref(body, "GREENTIC_STORE_REGISTRY_BASE", "store");
+    }
+    Ok(reference.to_owned())
 }
 
 pub(crate) fn pin_reference(reference: &str, digest: &str) -> String {
@@ -338,6 +387,219 @@ fn pack_fetch_options(cache_root: &Path) -> PackFetchOptions {
         offline: false,
         cache_dir: cache_root.join(".gx").join("cache").join("pack-fetch"),
         ..PackFetchOptions::default()
+    }
+}
+
+fn fetch_pack_artifact(cache_root: &Path, reference: &str) -> Result<ResolvedPackArtifact, String> {
+    let store_tenant = store_tenant_for_reference(reference)?;
+    let reference = normalize_pack_fetch_ref(reference)?;
+    let options = pack_fetch_options(cache_root);
+    let runtime =
+        Runtime::new().map_err(|err| format!("failed to start pack fetch runtime: {err}"))?;
+    let resolved = if let Some(tenant) = store_tenant {
+        let credentials = runtime
+            .block_on(ensure_store_credentials(&tenant))
+            .map_err(|err| {
+                format!("failed to load store credentials for tenant `{tenant}`: {err}")
+            })?;
+        runtime
+            .block_on(
+                OciPackFetcher::with_client(
+                    AuthenticatedRegistryClient::with_basic_auth(credentials),
+                    options,
+                )
+                .fetch_pack_to_cache(&reference),
+            )
+            .map_err(|err| format!("failed to fetch pack artifact {reference}: {err}"))?
+    } else {
+        runtime
+            .block_on(
+                OciPackFetcher::<DefaultRegistryClient>::new(options)
+                    .fetch_pack_to_cache(&reference),
+            )
+            .map_err(|err| format!("failed to fetch pack artifact {reference}: {err}"))?
+    };
+    Ok(ResolvedPackArtifact {
+        path: resolved.path,
+        resolved_digest: resolved.resolved_digest,
+        media_type: resolved.media_type,
+    })
+}
+
+async fn ensure_store_credentials(tenant: &str) -> Result<StoreCredentials, String> {
+    ensure_store_auth_dir()?;
+    match load_login_default(tenant).await {
+        Ok(credentials) => Ok(credentials),
+        Err(err) => {
+            if !io::stdin().is_terminal() || !io::stdout().is_terminal() {
+                return Err(err.to_string());
+            }
+            let token = prompt_store_token(tenant)?;
+            save_login_default(tenant, &token)
+                .await
+                .map_err(|save_err| save_err.to_string())?;
+            load_login_default(tenant)
+                .await
+                .map_err(|load_err| load_err.to_string())
+        }
+    }
+}
+
+fn ensure_store_auth_dir() -> Result<(), String> {
+    let path = default_store_auth_path();
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|err| {
+            format!(
+                "failed to create store auth directory {}: {err}",
+                parent.display()
+            )
+        })?;
+    }
+    Ok(())
+}
+
+fn prompt_store_token(tenant: &str) -> Result<String, String> {
+    let mut stdout = io::stdout();
+    writeln!(stdout, "Store login required for tenant `{tenant}`.")
+        .map_err(|err| format!("write prompt failed: {err}"))?;
+    write!(stdout, "Token: ").map_err(|err| format!("write prompt failed: {err}"))?;
+    stdout
+        .flush()
+        .map_err(|err| format!("flush prompt failed: {err}"))?;
+    let token = read_password().map_err(|err| format!("read prompt failed: {err}"))?;
+    let token = token.trim().to_owned();
+    if token.is_empty() {
+        return Err("token cannot be empty".to_owned());
+    }
+    Ok(token)
+}
+
+fn map_registry_ref(target: &str, env_var: &str, kind: &str) -> Result<String, String> {
+    if looks_like_oci_reference(target) {
+        return Ok(target.to_owned());
+    }
+    let base = std::env::var(env_var).map_err(|_| {
+        format!("{kind} reference {kind}://{target} requires {env_var} or a direct OCI target")
+    })?;
+    Ok(format!(
+        "{}/{}",
+        base.trim_end_matches('/'),
+        target.trim_start_matches('/')
+    ))
+}
+
+fn looks_like_oci_reference(value: &str) -> bool {
+    let Some(first_segment) = value.split('/').next() else {
+        return false;
+    };
+    first_segment.contains('.')
+        || first_segment.contains(':')
+        || first_segment == "localhost"
+        || value.contains('@')
+}
+
+fn store_tenant_for_reference(reference: &str) -> Result<Option<String>, String> {
+    let Some(target) = reference.strip_prefix("store://") else {
+        return Ok(None);
+    };
+    let Some(remainder) = target.strip_prefix("greentic-biz/") else {
+        return Ok(None);
+    };
+    let (tenant, package_path) = remainder.split_once('/').ok_or_else(|| {
+        "store://greentic-biz refs must include `<tenant>/<package-path>`".to_owned()
+    })?;
+    if tenant.trim().is_empty() || package_path.trim().is_empty() {
+        return Err(
+            "store://greentic-biz refs must include non-empty `<tenant>/<package-path>`".to_owned(),
+        );
+    }
+    Ok(Some(tenant.trim().to_owned()))
+}
+
+fn map_greentic_biz_store_ref(target: &str) -> Result<Option<String>, String> {
+    let Some(remainder) = target.strip_prefix("greentic-biz/") else {
+        return Ok(None);
+    };
+    let (_tenant, package_path) = remainder.split_once('/').ok_or_else(|| {
+        "store://greentic-biz refs must include `<tenant>/<package-path>`".to_owned()
+    })?;
+    let package_path = package_path.trim_matches('/');
+    if package_path.is_empty() {
+        return Err(
+            "store://greentic-biz refs must include non-empty `<tenant>/<package-path>`".to_owned(),
+        );
+    }
+    Ok(Some(format!("ghcr.io/greentic-biz/{package_path}")))
+}
+
+#[derive(Clone)]
+struct AuthenticatedRegistryClient {
+    inner: Client,
+    credentials: StoreCredentials,
+}
+
+impl AuthenticatedRegistryClient {
+    fn with_basic_auth(credentials: StoreCredentials) -> Self {
+        let config = ClientConfig {
+            protocol: ClientProtocol::Https,
+            ..Default::default()
+        };
+        Self {
+            inner: Client::new(config),
+            credentials,
+        }
+    }
+}
+
+#[async_trait]
+impl RegistryClient for AuthenticatedRegistryClient {
+    fn default_client() -> Self
+    where
+        Self: Sized,
+    {
+        Self::with_basic_auth(StoreCredentials {
+            tenant: String::new(),
+            username: String::new(),
+            token: String::new(),
+        })
+    }
+
+    async fn pull(
+        &self,
+        reference: &Reference,
+        accepted_manifest_types: &[&str],
+    ) -> Result<PulledImage, OciDistributionError> {
+        let image = self
+            .inner
+            .pull(
+                reference,
+                &RegistryAuth::Basic(
+                    self.credentials.username.clone(),
+                    self.credentials.token.clone(),
+                ),
+                accepted_manifest_types.to_vec(),
+            )
+            .await?;
+        Ok(convert_image(image))
+    }
+}
+
+fn convert_image(image: ImageData) -> PulledImage {
+    let layers = image
+        .layers
+        .into_iter()
+        .map(|layer| {
+            let digest = format!("sha256:{}", layer.sha256_digest());
+            PulledLayer {
+                media_type: layer.media_type,
+                data: layer.data,
+                digest: Some(digest),
+            }
+        })
+        .collect();
+    PulledImage {
+        digest: image.digest,
+        layers,
     }
 }
 
@@ -391,6 +653,7 @@ fn preset(entry_id: &str, display_name: &str, provider_ref: &str) -> ProviderPre
         display_name: display_name.to_owned(),
         description: format!("{display_name} built-in channel preset."),
         provider_refs: vec![provider_ref.to_owned()],
+        bundle_ref: None,
         provenance: Some(CatalogProvenance {
             source_type: "local".to_owned(),
             source_ref: format!("builtin:{entry_id}"),
@@ -534,6 +797,18 @@ mod tests {
         fn resolve_pack_ref(&self, _cache_root: &Path, reference: &str) -> Result<String, String> {
             Ok(format!("sha256:resolved-{}", reference.replace('/', "-")))
         }
+
+        fn fetch_pack_artifact(
+            &self,
+            _cache_root: &Path,
+            reference: &str,
+        ) -> Result<ResolvedPackArtifact, String> {
+            Ok(ResolvedPackArtifact {
+                path: PathBuf::from(reference),
+                resolved_digest: format!("sha256:resolved-{}", reference.replace('/', "-")),
+                media_type: "application/octet-stream".to_owned(),
+            })
+        }
     }
 
     #[test]
@@ -638,6 +913,33 @@ mod tests {
                 .provider_presets
                 .iter()
                 .any(|item| item.entry_id == "local-provider")
+        );
+    }
+
+    #[test]
+    fn normalize_pack_fetch_ref_maps_greentic_biz_store_refs() {
+        assert_eq!(
+            normalize_pack_fetch_ref(
+                "store://greentic-biz/tenant-a/catalogs/zain-x/catalog.json:latest"
+            )
+            .expect("store refs should map to greentic-biz ghcr paths"),
+            "ghcr.io/greentic-biz/catalogs/zain-x/catalog.json:latest"
+        );
+    }
+
+    #[test]
+    fn store_tenant_for_reference_reads_greentic_biz_tenant() {
+        assert_eq!(
+            store_tenant_for_reference(
+                "store://greentic-biz/tenant-a/catalogs/zain-x/catalog.json:latest"
+            )
+            .expect("greentic-biz store ref should parse tenant"),
+            Some("tenant-a".to_owned())
+        );
+        assert_eq!(
+            store_tenant_for_reference("oci://ghcr.io/demo/catalog.json:latest")
+                .expect("non-store refs should return no tenant"),
+            None
         );
     }
 }

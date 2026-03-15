@@ -11,10 +11,10 @@ description = "Bootstrap runtime core crate for the Greentic-X workspace."
 authors.workspace = true
 
 [dependencies]
-greentic-x-contracts = { version = "0.4.1", path = "../greentic-x-contracts" }
-greentic-x-events = { version = "0.4.1", path = "../greentic-x-events" }
-greentic-x-ops = { version = "0.4.1", path = "../greentic-x-ops" }
-greentic-x-types = { version = "0.4.1", path = "../greentic-x-types" }
+greentic-x-contracts.workspace = true
+greentic-x-events.workspace = true
+greentic-x-ops.workspace = true
+greentic-x-types.workspace = true
 jsonschema.workspace = true
 serde_json.workspace = true
 

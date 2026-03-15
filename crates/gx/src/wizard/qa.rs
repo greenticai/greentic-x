@@ -70,7 +70,7 @@ fn run_create_flow(
     fetcher: &dyn RemoteCatalogFetcher,
     locale: &str,
 ) -> Result<(), String> {
-    let catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
+    let mut catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
     document.answers.insert(
         "mode".to_owned(),
         serde_json::Value::String("create".to_owned()),
@@ -82,6 +82,7 @@ fn run_create_flow(
             &menu_option(locale, 1, "wizard.create.template.catalog"),
             &menu_option(locale, 2, "wizard.create.template.basic"),
             &menu_option(locale, 3, "wizard.create.template.manual"),
+            "4) Use a catalog URL or path",
             "",
             &main_menu_option(locale),
             &back_or_exit_option(locale, false),
@@ -99,6 +100,12 @@ fn run_create_flow(
             );
         }
         Navigation::Value(value) if value == "3" => choose_manual_template(document, locale)?,
+        Navigation::Value(value) if value == "4" => {
+            prompt_catalog_sources(document, locale)?;
+            catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
+            let explicit_catalogs = explicit_catalog_templates_only(catalogs.clone());
+            choose_catalog_template(document, &explicit_catalogs, locale)?;
+        }
         _ => return Err(tr(locale, "wizard.error.invalid_template_selection")),
     }
 
@@ -241,6 +248,10 @@ fn run_update_flow(
 }
 
 fn run_advanced_options(document: &mut WizardAnswerDocument, locale: &str) -> Result<(), String> {
+    prompt_catalog_sources(document, locale)
+}
+
+fn prompt_catalog_sources(document: &mut WizardAnswerDocument, locale: &str) -> Result<(), String> {
     let current = catalog_refs(document);
     let prompt = if current.is_empty() {
         tr(locale, "wizard.advanced.catalog_source")
@@ -264,6 +275,24 @@ fn run_advanced_options(document: &mut WizardAnswerDocument, locale: &str) -> Re
         serde_json::Value::Array(refs.into_iter().map(serde_json::Value::String).collect()),
     );
     Ok(())
+}
+
+fn explicit_catalog_templates_only(
+    mut catalogs: crate::WizardCatalogSet,
+) -> crate::WizardCatalogSet {
+    catalogs
+        .templates
+        .retain(|entry| !is_builtin_local_template(entry));
+    catalogs
+}
+
+fn is_builtin_local_template(entry: &crate::AssistantTemplateCatalogEntry) -> bool {
+    entry.provenance.as_ref().is_some_and(|provenance| {
+        let normalized = provenance.source_ref.replace('\\', "/");
+        provenance.source_type == "local"
+            && (normalized.contains("/catalog/templates/")
+                || normalized.starts_with("catalog/templates/"))
+    })
 }
 
 fn choose_catalog_template(
@@ -645,11 +674,58 @@ fn slugify(raw: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{AssistantTemplateCatalogEntry, CatalogProvenance, WizardCatalogSet};
 
     #[test]
     fn navigation_supports_main_menu_and_exit() {
         assert!(matches!(parse_navigation("M", true), Navigation::MainMenu));
         assert!(matches!(parse_navigation("m", true), Navigation::MainMenu));
         assert!(matches!(parse_navigation("0", true), Navigation::Exit));
+    }
+
+    #[test]
+    fn explicit_catalog_templates_only_removes_builtin_local_templates() {
+        let builtin = AssistantTemplateCatalogEntry {
+            entry_id: "assistant.network.phase1".to_owned(),
+            kind: "assistant-template".to_owned(),
+            version: "1.0.0".to_owned(),
+            display_name: "Network Assistant Phase 1".to_owned(),
+            description: String::new(),
+            assistant_template_ref: "oci://broken".to_owned(),
+            domain_template_ref: None,
+            bundle_ref: None,
+            provenance: Some(CatalogProvenance {
+                source_type: "local".to_owned(),
+                source_ref: "catalog/templates/assistant.network.phase1.json".to_owned(),
+                resolved_digest: None,
+            }),
+        };
+        let remote = AssistantTemplateCatalogEntry {
+            entry_id: "zx.network.phase1".to_owned(),
+            kind: "assistant-template".to_owned(),
+            version: "1.0.0".to_owned(),
+            display_name: "Network Assistant Phase 1".to_owned(),
+            description: String::new(),
+            assistant_template_ref: "assistant_templates/network-assistant.phase1.json".to_owned(),
+            domain_template_ref: None,
+            bundle_ref: Some(
+                "store://greentic-biz/tenant/catalogs/zain-x-bundle:latest".to_owned(),
+            ),
+            provenance: Some(CatalogProvenance {
+                source_type: "store".to_owned(),
+                source_ref: "store://greentic-biz/tenant/catalogs/zain-x/catalog.json:latest"
+                    .to_owned(),
+                resolved_digest: Some("sha256:abc".to_owned()),
+            }),
+        };
+        let catalogs = WizardCatalogSet {
+            templates: vec![builtin, remote.clone()],
+            ..WizardCatalogSet::default()
+        };
+
+        let filtered = explicit_catalog_templates_only(catalogs);
+
+        assert_eq!(filtered.templates.len(), 1);
+        assert_eq!(filtered.templates[0].entry_id, remote.entry_id);
     }
 }

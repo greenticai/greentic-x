@@ -50,7 +50,7 @@ Greentic core should stay narrow and foundational. This repository is where the 
 - Pack scaffolding: wizard-backed source packs exist for contracts, ops, and runtime capability references.
 - Specs and catalog: initial GX standards layer now exists under `specs/` and `catalog/`.
 - Tooling: `gx` now scaffolds contract/op/flow/resolver/view packages, validates contracts/ops/flows/resolvers/views, simulates flows, runs doctor checks, and lists catalog entries.
-- Catalog tooling: `gx` now also scaffolds solution catalog repos, builds canonical `catalog.json` indexes, validates them, and lets `gx wizard` merge local or OCI-backed solution catalogs through repeated `--catalog` flags.
+- Catalog tooling: `gx` now also scaffolds solution catalog repos, builds canonical `catalog.json` indexes, validates them, publishes both catalog indexes and tar bundles, and lets `gx wizard` merge local or OCI-backed solution catalogs through repeated `--catalog` flags.
 - Profile/examples: `gx.observability.playbook.v1` now compiles into normal GX flows, and four generic reference example packages are checked in under `examples/`.
 - Remaining work: policy/migration execution, richer pack contents, designer UX, and publish decisions.
 

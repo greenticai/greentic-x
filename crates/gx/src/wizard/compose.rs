@@ -8,6 +8,7 @@ use crate::{
     WizardCatalogSet,
 };
 
+use super::bundle::materialize_bundle_member;
 use super::catalog::{
     RemoteCatalogFetcher, builtin_provider_ref, find_overlay_by_id, find_provider_preset_by_id,
     find_template_by_id, pin_reference, value_from_overlay, value_from_provider,
@@ -72,8 +73,16 @@ pub(crate) fn generate_artifacts(
         .filter_map(Value::as_str)
         .map(ToOwned::to_owned)
         .collect::<Vec<_>>();
-    let bundle_answers =
-        build_bundle_answers(request, locale, &template, &provider_refs, overlay.as_ref());
+    let template_sources =
+        materialize_template_sources(cwd, &template, execution_resolves_remote, fetcher)?;
+    let bundle_answers = build_bundle_answers(
+        request,
+        locale,
+        &template,
+        template_sources.as_ref(),
+        &provider_refs,
+        overlay.as_ref(),
+    );
     let setup_answers = SetupAnswers {
         schema_id: "gx.setup.answers".to_owned(),
         schema_version: SCHEMA_VERSION.to_owned(),
@@ -277,6 +286,66 @@ fn resolve_overlay(request: &CompositionRequest, catalogs: &WizardCatalogSet) ->
         })
 }
 
+#[derive(Clone, Debug)]
+struct MaterializedTemplateSources {
+    assistant_template_source: String,
+    domain_template_source: String,
+}
+
+fn materialize_template_sources(
+    cwd: &Path,
+    template: &Value,
+    execution_resolves_remote: bool,
+    fetcher: &dyn RemoteCatalogFetcher,
+) -> Result<Option<MaterializedTemplateSources>, String> {
+    if !execution_resolves_remote {
+        return Ok(None);
+    }
+    let Some(bundle_ref) = template.get("bundle_ref").and_then(Value::as_str) else {
+        return Ok(None);
+    };
+    let bundle_fetch_ref = inherited_bundle_fetch_ref(template, bundle_ref);
+    let assistant_ref = template
+        .get("assistant_template_ref")
+        .and_then(Value::as_str)
+        .unwrap_or("templates/assistant/basic-empty.json");
+    let domain_ref = template
+        .get("domain_template_ref")
+        .and_then(Value::as_str)
+        .unwrap_or(assistant_ref);
+    let assistant_template_source =
+        materialize_bundle_member(cwd, &bundle_fetch_ref, assistant_ref, fetcher)?;
+    let domain_template_source =
+        materialize_bundle_member(cwd, &bundle_fetch_ref, domain_ref, fetcher)?;
+    Ok(Some(MaterializedTemplateSources {
+        assistant_template_source: assistant_template_source.display().to_string(),
+        domain_template_source: domain_template_source.display().to_string(),
+    }))
+}
+
+fn inherited_bundle_fetch_ref(template: &Value, bundle_ref: &str) -> String {
+    let Some(path) = bundle_ref.strip_prefix("oci://ghcr.io/greentic-biz/") else {
+        return bundle_ref.to_owned();
+    };
+    let Some(provenance_ref) = template
+        .get("provenance")
+        .and_then(|value| value.get("source_ref"))
+        .and_then(Value::as_str)
+    else {
+        return bundle_ref.to_owned();
+    };
+    let Some(tenant_and_path) = provenance_ref.strip_prefix("store://greentic-biz/") else {
+        return bundle_ref.to_owned();
+    };
+    let Some((tenant, _catalog_path)) = tenant_and_path.split_once('/') else {
+        return bundle_ref.to_owned();
+    };
+    if tenant.trim().is_empty() {
+        return bundle_ref.to_owned();
+    }
+    format!("store://greentic-biz/{tenant}/{path}")
+}
+
 fn maybe_pin_template_refs(
     cwd: &Path,
     template: &mut Value,
@@ -309,16 +378,21 @@ fn build_bundle_answers(
     request: &CompositionRequest,
     locale: &str,
     template: &Value,
+    template_sources: Option<&MaterializedTemplateSources>,
     provider_refs: &[String],
     overlay: Option<&Value>,
 ) -> WizardAnswerDocument {
-    let assistant_template_source = template
-        .get("assistant_template_ref")
-        .and_then(Value::as_str)
+    let assistant_template_source = template_sources
+        .map(|item| item.assistant_template_source.as_str())
+        .or_else(|| {
+            template
+                .get("assistant_template_ref")
+                .and_then(Value::as_str)
+        })
         .unwrap_or("templates/assistant/basic-empty.json");
-    let domain_template_source = template
-        .get("domain_template_ref")
-        .and_then(Value::as_str)
+    let domain_template_source = template_sources
+        .map(|item| item.domain_template_source.as_str())
+        .or_else(|| template.get("domain_template_ref").and_then(Value::as_str))
         .unwrap_or(assistant_template_source);
     let mut answers = serde_json::Map::from_iter([
         ("mode".to_owned(), Value::String(request.mode.clone())),
@@ -433,8 +507,10 @@ fn title_case(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::wizard::catalog::ResolvedPackArtifact;
     use crate::{CatalogProvenance, WizardCatalogSet};
     use std::cell::RefCell;
+    use std::path::PathBuf;
     use tempfile::TempDir;
 
     struct StubFetcher {
@@ -453,6 +529,18 @@ mod tests {
         fn resolve_pack_ref(&self, _cache_root: &Path, reference: &str) -> Result<String, String> {
             self.digests.borrow_mut().push(reference.to_owned());
             Ok("sha256:abc123".to_owned())
+        }
+
+        fn fetch_pack_artifact(
+            &self,
+            _cache_root: &Path,
+            reference: &str,
+        ) -> Result<ResolvedPackArtifact, String> {
+            Ok(ResolvedPackArtifact {
+                path: PathBuf::from(reference),
+                resolved_digest: "sha256:abc123".to_owned(),
+                media_type: "application/octet-stream".to_owned(),
+            })
         }
     }
 
@@ -543,6 +631,7 @@ mod tests {
                 domain_template_ref: Some(
                     "oci://ghcr.io/greenticai/templates/network-domain:latest".to_owned(),
                 ),
+                bundle_ref: None,
                 provenance: Some(CatalogProvenance {
                     source_type: "local".to_owned(),
                     source_ref: "catalog/templates/assistant.network.phase1.json".to_owned(),
@@ -569,6 +658,28 @@ mod tests {
         assert_eq!(
             generated.bundle_answers.answers["assistant_template_source"],
             "oci://ghcr.io/greenticai/templates/network-assistant:latest"
+        );
+    }
+
+    #[test]
+    fn bundle_fetch_ref_inherits_store_tenant_from_catalog_provenance() {
+        let template = json!({
+            "entry_id": "zx.network.phase1",
+            "assistant_template_ref": "assistant_templates/network-assistant.phase1.json",
+            "domain_template_ref": "assistant_templates/network-assistant.phase1.json",
+            "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest",
+            "provenance": {
+                "source_type": "store",
+                "source_ref": "store://greentic-biz/3point/catalogs/zain-x/catalog.json:latest"
+            }
+        });
+
+        assert_eq!(
+            inherited_bundle_fetch_ref(
+                &template,
+                "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+            ),
+            "store://greentic-biz/3point/zain-x-bundle:latest"
         );
     }
 

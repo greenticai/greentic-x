@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use greentic_distributor_client::{DistClient, DistOptions};
+use greentic_distributor_client::{DistClient, DistOptions, ResolvePolicy};
 use tokio::runtime::Runtime;
 
 pub(crate) struct ResolvedRemoteRef {
@@ -25,11 +25,15 @@ impl RemoteRefResolver for DistributorRemoteRefResolver {
         };
         let runtime =
             Runtime::new().map_err(|err| format!("failed to start distributor runtime: {err}"))?;
+        let client = DistClient::new(options);
+        let source = client
+            .parse_source(reference)
+            .map_err(|err| format!("failed to parse remote source ref {reference}: {err}"))?;
         let resolved = runtime
-            .block_on(DistClient::new(options).resolve_ref(reference))
+            .block_on(client.resolve(source, ResolvePolicy))
             .map_err(|err| format!("failed to resolve remote source ref {reference}: {err}"))?;
         Ok(ResolvedRemoteRef {
-            resolved_digest: resolved.resolved_digest,
+            resolved_digest: resolved.digest,
         })
     }
 }

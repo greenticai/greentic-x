@@ -380,6 +380,8 @@ struct AssistantTemplateCatalogEntry {
     #[serde(default)]
     domain_template_ref: Option<String>,
     #[serde(default)]
+    bundle_ref: Option<String>,
+    #[serde(default)]
     provenance: Option<CatalogProvenance>,
 }
 
@@ -392,6 +394,8 @@ struct ProviderPresetCatalogEntry {
     #[serde(default)]
     description: String,
     provider_refs: Vec<String>,
+    #[serde(default)]
+    bundle_ref: Option<String>,
     #[serde(default)]
     provenance: Option<CatalogProvenance>,
 }

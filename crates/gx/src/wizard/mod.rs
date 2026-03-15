@@ -1,4 +1,5 @@
 mod answers;
+mod bundle;
 mod catalog;
 mod compose;
 mod handoff;

@@ -1,0 +1,8 @@
+{
+  "original_reference": "ghcr.io/greentic-biz/catalogs/zain-x/catalog.json:latest",
+  "resolved_digest": "sha256:ffc673cd21d87e8f733d6eb1d39f8fb8a4e8606fa847d5dee91735b2bc436619",
+  "media_type": "application/json",
+  "fetched_at_unix_seconds": 1773596682,
+  "size_bytes": 27829,
+  "manifest_digest": "sha256:ffc673cd21d87e8f733d6eb1d39f8fb8a4e8606fa847d5dee91735b2bc436619"
+}

@@ -10,9 +10,9 @@ description = "Runnable Greentic-X example showing simple case lifecycle operati
 publish = false
 
 [dependencies]
-greentic-x-contracts = { path = "../../crates/greentic-x-contracts" }
-greentic-x-runtime = { path = "../../crates/greentic-x-runtime" }
-greentic-x-types = { path = "../../crates/greentic-x-types" }
+greentic-x-contracts.workspace = true
+greentic-x-runtime.workspace = true
+greentic-x-types.workspace = true
 serde_json.workspace = true
 
 [lints]
