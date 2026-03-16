@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "ಕ್ಯಾಟಲಾಗ್ ಮೂಲ (ಸ್ಥಳೀಯ ಪಥ ಅಥವಾ oci:// ref)",
-  "wizard.advanced.catalog_sources": "ಕ್ಯಾಟಲಾಗ್ ಮೂಲಗಳು (ಪ್ರಸ್ತುತದ್ದನ್ನು ಬದಲಾಯಿಸಲು ಕಾಮಾ-ಬೇರ್ಪಡಿಸಿದವು)",
+  "wizard.advanced.catalog_source": "ಕ್ಯಾಟಲಾಗ್ ಮೂಲ (ಸ್ಥಳೀಯ ಪಥ, oci://, repo://, ಅಥವಾ store:// ಉಲ್ಲೇಖ)",
+  "wizard.advanced.catalog_sources": "ಕ್ಯಾಟಲಾಗ್ ಮೂಲಗಳು (ಪ್ರಸ್ತುತದ್ದನ್ನು ಬದಲಿಸಲು ಕಾಮಾ-ಪ್ರತ್ಯೇಕಿತ; ಸ್ಥಳೀಯ ಪಥ, oci://, repo://, ಅಥವಾ store://)",
   "wizard.create.template.basic": "ಮೂಲಭೂತ ಖಾಲಿ ಪರಿಹಾರದಿಂದ ಪ್ರಾರಂಭಿಸಿ",
   "wizard.create.template.catalog": "ಕ್ಯಾಟಲಾಗ್ ಟೆಂಪ್ಲೇಟ್‌ಗಳಿಂದ ಆಯ್ಕೆಮಾಡಿ",
   "wizard.create.template.choose": "ಕ್ಯಾಟಲಾಗ್ ಟೆಂಪ್ಲೇಟ್ ಆಯ್ಕೆಮಾಡಿ",

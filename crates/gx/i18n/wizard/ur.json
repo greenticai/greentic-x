@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "کیٹلاگ ماخذ (مقامی راستہ یا oci:// حوالہ)",
-  "wizard.advanced.catalog_sources": "کیٹلاگ ماخذات (موجودہ کو بدلنے کے لیے کوما سے جدا)",
+  "wizard.advanced.catalog_source": "کیٹلاگ ماخذ (مقامی پاتھ، oci://، repo://، یا store:// ref)",
+  "wizard.advanced.catalog_sources": "کیٹلاگ ماخذات (موجودہ کو تبدیل کرنے کے لیے کاما سے جدا؛ مقامی پاتھ، oci://، repo://، یا store://)",
   "wizard.create.template.basic": "ایک بنیادی خالی حل سے آغاز کریں",
   "wizard.create.template.catalog": "کیٹلاگ ٹیمپلیٹس میں سے انتخاب کریں",
   "wizard.create.template.choose": "کیٹلاگ ٹیمپلیٹ منتخب کریں",

@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Zdroj katalógu (lokálna cesta alebo odkaz oci://)",
-  "wizard.advanced.catalog_sources": "Zdroje katalógu (oddelené čiarkami na nahradenie aktuálnych)",
+  "wizard.advanced.catalog_source": "Zdroj katalógu (lokálna cesta, oci://, repo:// alebo store:// ref)",
+  "wizard.advanced.catalog_sources": "Zdroje katalógu (oddelené čiarkami na nahradenie aktuálnych; lokálna cesta, oci://, repo:// alebo store://)",
   "wizard.create.template.basic": "Začať od základného prázdneho riešenia",
   "wizard.create.template.catalog": "Vybrať zo šablón katalógu",
   "wizard.create.template.choose": "Vybrať šablónu katalógu",

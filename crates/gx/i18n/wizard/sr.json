@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Izvor kataloga (lokalna putanja ili oci:// ref)",
-  "wizard.advanced.catalog_sources": "Izvori kataloga (odvojeni zarezima za zamenu trenutnih)",
+  "wizard.advanced.catalog_source": "Izvor kataloga (lokalna putanja, oci://, repo:// ili store:// ref)",
+  "wizard.advanced.catalog_sources": "Izvori kataloga (odvojeni zarezima za zamenu trenutnih; lokalna putanja, oci://, repo:// ili store://)",
   "wizard.create.template.basic": "Počni od osnovnog praznog rešenja",
   "wizard.create.template.catalog": "Izaberi iz šablona kataloga",
   "wizard.create.template.choose": "Izaberi šablon kataloga",

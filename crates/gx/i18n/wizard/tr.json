@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Katalog kaynağı (yerel yol veya oci:// başvurusu)",
-  "wizard.advanced.catalog_sources": "Katalog kaynakları (mevcut olanı değiştirmek için virgülle ayrılmış)",
+  "wizard.advanced.catalog_source": "Katalog kaynağı (yerel yol, oci://, repo:// veya store:// başvurusu)",
+  "wizard.advanced.catalog_sources": "Katalog kaynakları (geçerli olanı değiştirmek için virgülle ayrılmış; yerel yol, oci://, repo:// veya store://)",
   "wizard.create.template.basic": "Temel boş bir çözümden başla",
   "wizard.create.template.catalog": "Katalog şablonlarından seç",
   "wizard.create.template.choose": "Katalog şablonu seç",

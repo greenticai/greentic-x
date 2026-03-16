@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Πηγή καταλόγου (τοπική διαδρομή ή αναφορά oci://)",
-  "wizard.advanced.catalog_sources": "Πηγές καταλόγου (διαχωρισμένες με κόμμα για αντικατάσταση των τρεχουσών)",
+  "wizard.advanced.catalog_source": "Πηγή καταλόγου (τοπική διαδρομή, oci://, repo:// ή αναφορά store://)",
+  "wizard.advanced.catalog_sources": "Πηγές καταλόγου (διαχωρισμένες με κόμμα για αντικατάσταση της τρέχουσας· τοπική διαδρομή, oci://, repo:// ή store://)",
   "wizard.create.template.basic": "Ξεκινήστε από μια βασική κενή λύση",
   "wizard.create.template.catalog": "Επιλέξτε από πρότυπα καταλόγου",
   "wizard.create.template.choose": "Επιλέξτε πρότυπο καταλόγου",

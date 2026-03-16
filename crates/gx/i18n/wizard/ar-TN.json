@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "مصدر الكاتالوج (مسار محلّي أو مرجع oci://)",
-  "wizard.advanced.catalog_sources": "مصادر الكاتالوج (مفصولة بفواصل لاستبدال الحالي)",
+  "wizard.advanced.catalog_source": "مصدر الكاتالوج (مسار محلّي، oci://، repo://، أو مرجع store://)",
+  "wizard.advanced.catalog_sources": "مصادر الكاتالوج (مفصولة بفواصل لاستبدال الحالي؛ مسار محلّي، oci://، repo://، أو store://)",
   "wizard.create.template.basic": "ابدأ من حلّ أساسي فارغ",
   "wizard.create.template.catalog": "اختر من قوالب الكاتالوج",
   "wizard.create.template.choose": "اختر قالب الكاتالوج",

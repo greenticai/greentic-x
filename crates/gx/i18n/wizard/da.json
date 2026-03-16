@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Katalogkilde (lokal sti eller oci://-ref)",
-  "wizard.advanced.catalog_sources": "Katalogkilder (kommasepareret for at erstatte nuværende)",
+  "wizard.advanced.catalog_source": "Katalogkilde (lokal sti, oci://, repo:// eller store://-reference)",
+  "wizard.advanced.catalog_sources": "Katalogkilder (kommasepareret for at erstatte nuværende; lokal sti, oci://, repo:// eller store://)",
   "wizard.create.template.basic": "Start fra en grundlæggende tom løsning",
   "wizard.create.template.catalog": "Vælg fra katalogskabeloner",
   "wizard.create.template.choose": "Vælg katalogskabelon",

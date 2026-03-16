@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "แหล่งที่มาของแค็ตตาล็อก (พาธในเครื่องหรืออ้างอิง oci://)",
-  "wizard.advanced.catalog_sources": "แหล่งที่มาของแค็ตตาล็อก (คั่นด้วยจุลภาคเพื่อแทนที่ค่าปัจจุบัน)",
+  "wizard.advanced.catalog_source": "แหล่งที่มาของแค็ตตาล็อก (พาธภายในเครื่อง, oci://, repo:// หรือการอ้างอิง store://)",
+  "wizard.advanced.catalog_sources": "แหล่งที่มาของแค็ตตาล็อก (คั่นด้วยจุลภาคเพื่อแทนที่ค่าปัจจุบัน; พาธภายในเครื่อง, oci://, repo:// หรือ store://)",
   "wizard.create.template.basic": "เริ่มจากโซลูชันว่างเปล่าพื้นฐาน",
   "wizard.create.template.catalog": "เลือกจากเทมเพลตในแค็ตตาล็อก",
   "wizard.create.template.choose": "เลือกเทมเพลตจากแค็ตตาล็อก",

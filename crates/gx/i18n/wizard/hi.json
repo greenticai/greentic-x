@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "कैटलॉग स्रोत (स्थानीय पथ या oci:// ref)",
-  "wizard.advanced.catalog_sources": "कैटलॉग स्रोत (वर्तमान को बदलने के लिए कॉमा से अलग किए गए)",
+  "wizard.advanced.catalog_source": "कैटलॉग स्रोत (लोकल पथ, oci://, repo://, या store:// ref)",
+  "wizard.advanced.catalog_sources": "कैटलॉग स्रोत (वर्तमान को बदलने के लिए अल्पविराम से अलग किए गए; लोकल पथ, oci://, repo://, या store://)",
   "wizard.create.template.basic": "एक बुनियादी खाली समाधान से शुरू करें",
   "wizard.create.template.catalog": "कैटलॉग टेम्पलेट्स में से चुनें",
   "wizard.create.template.choose": "कैटलॉग टेम्पलेट चुनें",

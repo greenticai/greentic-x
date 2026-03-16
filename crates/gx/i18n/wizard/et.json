@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Kataloogi allikas (kohalik tee või oci:// viide)",
-  "wizard.advanced.catalog_sources": "Kataloogi allikad (komadega eraldatud, et asendada praegused)",
+  "wizard.advanced.catalog_source": "Kataloogi allikas (kohalik tee, oci://, repo:// või store:// viide)",
+  "wizard.advanced.catalog_sources": "Kataloogi allikad (komadega eraldatud praeguse asendamiseks; kohalik tee, oci://, repo:// või store://)",
   "wizard.create.template.basic": "Alusta lihtsast tühjast lahendusest",
   "wizard.create.template.catalog": "Vali kataloogi mallide hulgast",
   "wizard.create.template.choose": "Vali kataloogi mall",

@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Katalógusforrás (helyi útvonal vagy oci:// hivatkozás)",
-  "wizard.advanced.catalog_sources": "Katalógusforrások (vesszővel elválasztva a jelenlegi cseréjéhez)",
+  "wizard.advanced.catalog_source": "Katalógusforrás (helyi útvonal, oci://, repo:// vagy store:// hivatkozás)",
+  "wizard.advanced.catalog_sources": "Katalógusforrások (vesszővel elválasztva a jelenlegi lecseréléséhez; helyi útvonal, oci://, repo:// vagy store://)",
   "wizard.create.template.basic": "Kezdés egy alap üres megoldásból",
   "wizard.create.template.catalog": "Választás katalógussablonokból",
   "wizard.create.template.choose": "Katalógussablon kiválasztása",

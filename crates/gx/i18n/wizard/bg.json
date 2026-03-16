@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Източник на каталог (локален път или oci:// ref)",
-  "wizard.advanced.catalog_sources": "Източници на каталог (разделени със запетая за замяна на текущите)",
+  "wizard.advanced.catalog_source": "Източник на каталог (локален път, oci://, repo:// или store:// реф.)",
+  "wizard.advanced.catalog_sources": "Източници на каталог (разделени със запетаи за замяна на текущите; локален път, oci://, repo:// или store://)",
   "wizard.create.template.basic": "Започни от базово празно решение",
   "wizard.create.template.catalog": "Избери от шаблоните в каталога",
   "wizard.create.template.choose": "Избери шаблон от каталога",

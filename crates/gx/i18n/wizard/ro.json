@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Sursă catalog (cale locală sau referință oci://)",
-  "wizard.advanced.catalog_sources": "Surse catalog (separate prin virgulă pentru a înlocui configurația curentă)",
+  "wizard.advanced.catalog_source": "Sursa catalogului (cale locală, oci://, repo:// sau referință store://)",
+  "wizard.advanced.catalog_sources": "Surse de catalog (separate prin virgulă pentru a înlocui valorile curente; cale locală, oci://, repo:// sau store://)",
   "wizard.create.template.basic": "Pornește de la o soluție de bază goală",
   "wizard.create.template.catalog": "Alege din șabloanele din catalog",
   "wizard.create.template.choose": "Alege șablonul din catalog",

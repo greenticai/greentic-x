@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "مصدر الفهرس (مسار محلي أو مرجع oci://)",
-  "wizard.advanced.catalog_sources": "مصادر الفهرس (مفصولة بفواصل لاستبدال الحالي)",
+  "wizard.advanced.catalog_source": "مصدر الكاتالوغ (مسار محلي، oci://، repo://، أو مرجع store://)",
+  "wizard.advanced.catalog_sources": "مصادر الكاتالوغ (مفصولة بفواصل لاستبدال الحالية؛ مسار محلي، oci://، repo://، أو store://)",
   "wizard.create.template.basic": "البدء من حل أساسي فارغ",
   "wizard.create.template.catalog": "الاختيار من قوالب الفهرس",
   "wizard.create.template.choose": "اختر قالب الفهرس",

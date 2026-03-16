@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "കാറ്റലോഗ് ഉറവിടം (ലോകൽ പാത അല്ലെങ്കിൽ oci:// ref)",
-  "wizard.advanced.catalog_sources": "കാറ്റലോഗ് ഉറവിടങ്ങൾ (നിലവിലുള്ളത് മാറ്റിസ്ഥാപിക്കാൻ കോമ ഉപയോഗിച്ച് വേർതിരിച്ചത്)",
+  "wizard.advanced.catalog_source": "കാറ്റലോഗ് ഉറവിടം (ലോക്കൽ പാത്ത്, oci://, repo://, അല്ലെങ്കിൽ store:// റഫറൻസ്)",
+  "wizard.advanced.catalog_sources": "കാറ്റലോഗ് ഉറവിടങ്ങൾ (നിലവിലുള്ളത് മാറ്റിസ്ഥാപിക്കാൻ കോമയാൽ വേർതിരിച്ചത്; ലോക്കൽ പാത്ത്, oci://, repo://, അല്ലെങ്കിൽ store://)",
   "wizard.create.template.basic": "ഒരു അടിസ്ഥാന ശൂന്യ പരിഹാരത്തിൽ നിന്ന് ആരംഭിക്കുക",
   "wizard.create.template.catalog": "കാറ്റലോഗ് ടെംപ്ലേറ്റുകളിൽ നിന്ന് തിരഞ്ഞെടുക്കുക",
   "wizard.create.template.choose": "കാറ്റലോഗ് ടെംപ്ലേറ്റ് തിരഞ്ഞെടുക്കുക",

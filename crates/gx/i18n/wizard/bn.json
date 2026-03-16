@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "ক্যাটালগ উৎস (লোকাল পাথ বা oci:// ref)",
-  "wizard.advanced.catalog_sources": "ক্যাটালগ উৎসসমূহ (বর্তমানটি প্রতিস্থাপন করতে কমা-দ্বারা পৃথক)",
+  "wizard.advanced.catalog_source": "ক্যাটালগ উৎস (স্থানীয় পথ, oci://, repo://, বা store:// ref)",
+  "wizard.advanced.catalog_sources": "ক্যাটালগ উৎসসমূহ (বর্তমানটি প্রতিস্থাপনের জন্য কমা-দিয়ে পৃথক; স্থানীয় পথ, oci://, repo://, বা store://)",
   "wizard.create.template.basic": "একটি মৌলিক খালি সলিউশন থেকে শুরু করুন",
   "wizard.create.template.catalog": "ক্যাটালগ টেমপ্লেট থেকে বেছে নিন",
   "wizard.create.template.choose": "ক্যাটালগ টেমপ্লেট বেছে নিন",

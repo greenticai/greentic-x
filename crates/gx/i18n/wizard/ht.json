@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Sous katalòg (chemen lokal oswa ref oci://)",
-  "wizard.advanced.catalog_sources": "Sous katalòg yo (separe ak vigil pou ranplase aktyèl la)",
+  "wizard.advanced.catalog_source": "Sous katalòg (chemen lokal, oci://, repo://, oswa referans store://)",
+  "wizard.advanced.catalog_sources": "Sous katalòg yo (separe pa vigil pou ranplase sa ki la kounye a; chemen lokal, oci://, repo://, oswa store://)",
   "wizard.create.template.basic": "Kòmanse ak yon solisyon debaz vid",
   "wizard.create.template.catalog": "Chwazi nan modèl katalòg yo",
   "wizard.create.template.choose": "Chwazi modèl katalòg",

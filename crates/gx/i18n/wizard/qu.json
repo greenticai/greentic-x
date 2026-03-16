@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Catálogo paq qullqa (llaqta ñan utaq oci:// ref)",
-  "wizard.advanced.catalog_sources": "Catálogo qullqakuna (coma nisqawan rakisqa, kunan kaqta rantinapaq)",
+  "wizard.advanced.catalog_source": "Catálogo paq pukyu (llaqta ñan, oci://, repo://, utaq store:// ref)",
+  "wizard.advanced.catalog_sources": "Catálogo paq pukyukuna (coma-wan rakisqa, kunan kaqta tikranapaq; llaqta ñan, oci://, repo://, utaq store://)",
   "wizard.create.template.basic": "Huk básico ch'usaq soluciónmanta qallariy",
   "wizard.create.template.catalog": "Catálogo plantillakunamanta akllay",
   "wizard.create.template.choose": "Catálogo plantilla akllay",

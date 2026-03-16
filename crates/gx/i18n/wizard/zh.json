@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "目录源（本地路径或 oci:// 引用）",
-  "wizard.advanced.catalog_sources": "目录源（用逗号分隔以替换当前内容）",
+  "wizard.advanced.catalog_source": "目录来源（本地路径、oci://、repo:// 或 store:// 引用）",
+  "wizard.advanced.catalog_sources": "目录来源（用逗号分隔以替换当前值；本地路径、oci://、repo:// 或 store://）",
   "wizard.create.template.basic": "从基础空白解决方案开始",
   "wizard.create.template.catalog": "从目录模板中选择",
   "wizard.create.template.choose": "选择目录模板",

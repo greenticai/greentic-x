@@ -33,6 +33,7 @@ pub(crate) fn collect_interactive_answers(
                 &main_menu_option(&locale),
                 &back_or_exit_option(&locale, true),
             ],
+            Navigation::Exit,
         )? {
             Navigation::Exit => return Ok(false),
             Navigation::MainMenu => continue,
@@ -53,10 +54,14 @@ pub(crate) fn collect_interactive_answers(
     }
 }
 
-pub(crate) fn parse_navigation(input: &str, allow_main_menu: bool) -> Navigation {
+pub(crate) fn parse_navigation(
+    input: &str,
+    allow_main_menu: bool,
+    zero_navigation: Navigation,
+) -> Navigation {
     let trimmed = input.trim();
     if trimmed == "0" {
-        return Navigation::Exit;
+        return zero_navigation;
     }
     if allow_main_menu && trimmed.eq_ignore_ascii_case("m") {
         return Navigation::MainMenu;
@@ -87,6 +92,7 @@ fn run_create_flow(
             &main_menu_option(locale),
             &back_or_exit_option(locale, false),
         ],
+        Navigation::Back,
     )? {
         Navigation::MainMenu | Navigation::Exit => return Err(cancelled(locale)),
         Navigation::Back => return Err(cancelled(locale)),
@@ -234,6 +240,7 @@ fn run_update_flow(
             &main_menu_option(locale),
             &back_or_exit_option(locale, false),
         ],
+        Navigation::Back,
     )? {
         Navigation::Value(value) if value == "1" => {}
         Navigation::Value(value) if value == "2" => {
@@ -314,6 +321,7 @@ fn choose_catalog_template(
     let selection = prompt_menu(
         &tr(locale, "wizard.create.template.choose"),
         &options.iter().map(String::as_str).collect::<Vec<_>>(),
+        Navigation::Back,
     )?;
     let Navigation::Value(value) = selection else {
         return Err(cancelled(locale));
@@ -381,6 +389,7 @@ fn choose_provider(
             &main_menu_option(locale),
             &back_or_exit_option(locale, false),
         ],
+        Navigation::Back,
     )?;
     match selection {
         Navigation::Value(value) if value == "1" => set_builtin_provider(document, "webchat"),
@@ -441,6 +450,7 @@ fn choose_catalog_provider(
     let choice = prompt_menu(
         &tr(locale, "wizard.provider.choose"),
         &options.iter().map(String::as_str).collect::<Vec<_>>(),
+        Navigation::Back,
     )?;
     let Navigation::Value(value) = choice else {
         return Err(cancelled(locale));
@@ -496,7 +506,11 @@ fn set_builtin_provider(document: &mut WizardAnswerDocument, key: &str) {
     );
 }
 
-fn prompt_menu(title: &str, options: &[&str]) -> Result<Navigation, String> {
+fn prompt_menu(
+    title: &str,
+    options: &[&str],
+    zero_navigation: Navigation,
+) -> Result<Navigation, String> {
     let mut stdout = io::stdout();
     writeln!(stdout, "{title}").map_err(|err| format!("write prompt failed: {err}"))?;
     for option in options {
@@ -510,7 +524,7 @@ fn prompt_menu(title: &str, options: &[&str]) -> Result<Navigation, String> {
     io::stdin()
         .read_line(&mut line)
         .map_err(|err| format!("read prompt failed: {err}"))?;
-    let nav = parse_navigation(&line, true);
+    let nav = parse_navigation(&line, true, zero_navigation);
     if matches!(nav, Navigation::Value(ref value) if value.is_empty()) {
         Ok(Navigation::Back)
     } else {
@@ -646,6 +660,7 @@ fn select_solution_manifest(manifests: &[PathBuf]) -> Result<Option<PathBuf>, St
     let choice = prompt_menu(
         "Choose existing solution",
         &options.iter().map(String::as_str).collect::<Vec<_>>(),
+        Navigation::Back,
     )?;
     let Navigation::Value(value) = choice else {
         return Ok(None);
@@ -678,9 +693,26 @@ mod tests {
 
     #[test]
     fn navigation_supports_main_menu_and_exit() {
-        assert!(matches!(parse_navigation("M", true), Navigation::MainMenu));
-        assert!(matches!(parse_navigation("m", true), Navigation::MainMenu));
-        assert!(matches!(parse_navigation("0", true), Navigation::Exit));
+        assert!(matches!(
+            parse_navigation("M", true, Navigation::Exit),
+            Navigation::MainMenu
+        ));
+        assert!(matches!(
+            parse_navigation("m", true, Navigation::Exit),
+            Navigation::MainMenu
+        ));
+        assert!(matches!(
+            parse_navigation("0", true, Navigation::Exit),
+            Navigation::Exit
+        ));
+    }
+
+    #[test]
+    fn navigation_supports_back_for_submenus() {
+        assert!(matches!(
+            parse_navigation("0", true, Navigation::Back),
+            Navigation::Back
+        ));
     }
 
     #[test]

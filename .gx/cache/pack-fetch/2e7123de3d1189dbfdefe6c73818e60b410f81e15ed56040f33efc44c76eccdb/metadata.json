@@ -2,7 +2,7 @@
   "original_reference": "ghcr.io/greenticai/packs/messaging/messaging-teams:latest",
   "resolved_digest": "sha256:2e7123de3d1189dbfdefe6c73818e60b410f81e15ed56040f33efc44c76eccdb",
   "media_type": "application/vnd.greentic.gtpack.v1+zip",
-  "fetched_at_unix_seconds": 1773596685,
+  "fetched_at_unix_seconds": 1773643428,
   "size_bytes": 1278730,
   "manifest_digest": "sha256:2e7123de3d1189dbfdefe6c73818e60b410f81e15ed56040f33efc44c76eccdb"
 }

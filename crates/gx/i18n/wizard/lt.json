@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Katalogo šaltinis (vietinis kelias arba oci:// nuoroda)",
-  "wizard.advanced.catalog_sources": "Katalogo šaltiniai (atskirti kableliais, kad pakeistų esamus)",
+  "wizard.advanced.catalog_source": "Katalogo šaltinis (vietinis kelias, oci://, repo:// arba store:// nuoroda)",
+  "wizard.advanced.catalog_sources": "Katalogo šaltiniai (atskirti kableliais, kad pakeistų dabartinius; vietinis kelias, oci://, repo:// arba store://)",
   "wizard.create.template.basic": "Pradėti nuo pagrindinio tuščio sprendimo",
   "wizard.create.template.catalog": "Pasirinkti iš katalogo šablonų",
   "wizard.create.template.choose": "Pasirinkite katalogo šabloną",

@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "카탈로그 소스(로컬 경로 또는 oci:// 참조)",
-  "wizard.advanced.catalog_sources": "카탈로그 소스(현재 항목을 대체할 쉼표로 구분된 목록)",
+  "wizard.advanced.catalog_source": "카탈로그 소스(로컬 경로, oci://, repo:// 또는 store:// 참조)",
+  "wizard.advanced.catalog_sources": "카탈로그 소스(현재 값을 대체할 쉼표로 구분된 목록; 로컬 경로, oci://, repo:// 또는 store://)",
   "wizard.create.template.basic": "기본 빈 솔루션에서 시작",
   "wizard.create.template.catalog": "카탈로그 템플릿에서 선택",
   "wizard.create.template.choose": "카탈로그 템플릿 선택",

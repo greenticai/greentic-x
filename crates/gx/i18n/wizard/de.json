@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Katalogquelle (lokaler Pfad oder oci://-Ref)",
-  "wizard.advanced.catalog_sources": "Katalogquellen (durch Kommas getrennt, um die aktuellen zu ersetzen)",
+  "wizard.advanced.catalog_source": "Katalogquelle (lokaler Pfad, oci://, repo:// oder store://-Ref)",
+  "wizard.advanced.catalog_sources": "Katalogquellen (kommagetrennt, um die aktuelle zu ersetzen; lokaler Pfad, oci://, repo:// oder store://)",
   "wizard.create.template.basic": "Mit einer einfachen leeren Lösung beginnen",
   "wizard.create.template.catalog": "Aus Katalogvorlagen auswählen",
   "wizard.create.template.choose": "Katalogvorlage auswählen",

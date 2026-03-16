@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "නාමාවලි මූලාශ්‍රය (ස්ථානීය මාර්ගය හෝ oci:// ref)",
-  "wizard.advanced.catalog_sources": "නාමාවලි මූලාශ්‍ර (වර්තමානය ප්‍රතිස්ථාපනය කිරීමට කොමාවෙන් වෙන් කළ)",
+  "wizard.advanced.catalog_source": "කැටලොග් මූලාශ්‍රය (දේශීය මාර්ගය, oci://, repo://, හෝ store:// ref)",
+  "wizard.advanced.catalog_sources": "කැටලොග් මූලාශ්‍රයන් (දැනට තිබෙන දේ ප්‍රතිස්ථාපනය කිරීමට කොමා මගින් වෙන් කළ; දේශීය මාර්ගය, oci://, repo://, හෝ store://)",
   "wizard.create.template.basic": "මූලික හිස් විසඳුමකින් ආරම්භ කරන්න",
   "wizard.create.template.catalog": "නාමාවලි අච්චු වලින් තෝරන්න",
   "wizard.create.template.choose": "නාමාවලි අච්චුව තෝරන්න",

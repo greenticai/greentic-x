@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Fonte do catálogo (caminho local ou ref oci://)",
-  "wizard.advanced.catalog_sources": "Fontes do catálogo (separadas por vírgula para substituir as atuais)",
+  "wizard.advanced.catalog_source": "Origem do catálogo (caminho local, oci://, repo:// ou referência store://)",
+  "wizard.advanced.catalog_sources": "Origens do catálogo (separadas por vírgulas para substituir a atual; caminho local, oci://, repo:// ou store://)",
   "wizard.create.template.basic": "Começar com uma solução básica vazia",
   "wizard.create.template.catalog": "Escolher a partir dos modelos do catálogo",
   "wizard.create.template.choose": "Escolher modelo do catálogo",

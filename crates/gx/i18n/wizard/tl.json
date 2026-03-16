@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Pinagmulan ng catalog (lokal na path o oci:// ref)",
-  "wizard.advanced.catalog_sources": "Mga pinagmulan ng catalog (pinaghihiwalay ng kuwit upang palitan ang kasalukuyan)",
+  "wizard.advanced.catalog_source": "Pinagmulan ng catalog (lokal na path, oci://, repo://, o store:// ref)",
+  "wizard.advanced.catalog_sources": "Mga pinagmulan ng catalog (pinaghihiwalay ng kuwit upang palitan ang kasalukuyan; lokal na path, oci://, repo://, o store://)",
   "wizard.create.template.basic": "Magsimula mula sa isang batayang walang lamang solusyon",
   "wizard.create.template.catalog": "Pumili mula sa mga template ng catalog",
   "wizard.create.template.choose": "Pumili ng template ng catalog",

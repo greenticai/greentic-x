@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "ကက်တလော့ဂ် အရင်းအမြစ် (local path သို့မဟုတ် oci:// ref)",
-  "wizard.advanced.catalog_sources": "ကက်တလော့ဂ် အရင်းအမြစ်များ (လက်ရှိကို အစားထိုးရန် comma-separated)",
+  "wizard.advanced.catalog_source": "Catalog အရင်းအမြစ် (local path, oci://, repo://, သို့မဟုတ် store:// ref)",
+  "wizard.advanced.catalog_sources": "Catalog အရင်းအမြစ်များ (လက်ရှိရှိသည့်အရာကို အစားထိုးရန် comma ဖြင့်ခွဲထားသော; local path, oci://, repo://, သို့မဟုတ် store://)",
   "wizard.create.template.basic": "အခြေခံ ဗလာ solution တစ်ခုမှ စတင်ပါ",
   "wizard.create.template.catalog": "ကက်တလော့ဂ် template များမှ ရွေးချယ်ပါ",
   "wizard.create.template.choose": "ကက်တလော့ဂ် template ကို ရွေးချယ်ပါ",

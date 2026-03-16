@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Tlanextiloyan fuente (local path oci:// ref)",
-  "wizard.advanced.catalog_sources": "Tlanextiloyan fuentes (coma-ica tlatzotzonali para ticpatlas current)",
+  "wizard.advanced.catalog_source": "Catálogo itech pehua (local path, oci://, repo://, o store:// ref)",
+  "wizard.advanced.catalog_sources": "Catálogo itech pehuah (coma ica tlaxeloltili para kipatla in axkan; local path, oci://, repo://, o store://)",
   "wizard.create.template.basic": "Xipehua ipan se básico vacío solución",
   "wizard.create.template.catalog": "Xicpejpena ipan tlanextiloyan plantillas",
   "wizard.create.template.choose": "Xicpejpena tlanextiloyan plantilla",

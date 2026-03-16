@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "カタログソース（ローカルパスまたは oci:// 参照）",
-  "wizard.advanced.catalog_sources": "カタログソース（現在の設定を置き換えるためのカンマ区切り）",
+  "wizard.advanced.catalog_source": "カタログソース（ローカルパス、oci://、repo://、または store:// の参照）",
+  "wizard.advanced.catalog_sources": "カタログソース（現在の設定を置き換えるためのカンマ区切り。ローカルパス、oci://、repo://、または store://）",
   "wizard.create.template.basic": "基本の空のソリューションから開始",
   "wizard.create.template.catalog": "カタログテンプレートから選択",
   "wizard.create.template.choose": "カタログテンプレートを選択",

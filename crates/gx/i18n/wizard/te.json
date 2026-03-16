@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "క్యాటలాగ్ మూలం (లోకల్ పాత్ లేదా oci:// ref)",
-  "wizard.advanced.catalog_sources": "క్యాటలాగ్ మూలాలు (ప్రస్తుతదాన్ని మార్చడానికి కామాలతో వేరు చేయండి)",
+  "wizard.advanced.catalog_source": "కాటలాగ్ మూలం (స్థానిక మార్గం, oci://, repo://, లేదా store:// ref)",
+  "wizard.advanced.catalog_sources": "కాటలాగ్ మూలాలు (ప్రస్తుతదాన్ని భర్తీ చేయడానికి కామాలతో వేరు చేసినవి; స్థానిక మార్గం, oci://, repo://, లేదా store://)",
   "wizard.create.template.basic": "ప్రాథమిక ఖాళీ సొల్యూషన్‌తో ప్రారంభించండి",
   "wizard.create.template.catalog": "క్యాటలాగ్ టెంప్లేట్‌ల నుంచి ఎంచుకోండి",
   "wizard.create.template.choose": "క్యాటలాగ్ టెంప్లేట్‌ను ఎంచుకోండి",

@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Moõgua catálogo rehegua (tape local térã oci:// ref)",
-  "wizard.advanced.catalog_sources": "Moõnguéra catálogo rehegua (oñemboja'o hag̃ua vírgula rupive oñemyengovia hag̃ua ko'ág̃agua)",
+  "wizard.advanced.catalog_source": "Moógui ou catálogo (tape yvygua, oci://, repo://, térã store:// ref)",
+  "wizard.advanced.catalog_sources": "Moógui ou catálogo kuéra (oñemboja'o hag̃ua coma rehe hag̃ua oñemyengovia hag̃ua ko'ág̃agua; tape yvygua, oci://, repo://, térã store://)",
   "wizard.create.template.basic": "Eñepyrũ peteĩ solución nandi básica guive",
   "wizard.create.template.catalog": "Eiporavo catálogo plantillakuéragui",
   "wizard.create.template.choose": "Eiporavo plantilla catálogo rehegua",

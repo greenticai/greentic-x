@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Catalogusbron (lokaal pad of oci://-ref)",
-  "wizard.advanced.catalog_sources": "Catalogusbronnen (kommagescheiden om huidige te vervangen)",
+  "wizard.advanced.catalog_source": "Catalogusbron (lokaal pad, oci://, repo://, of store://-ref)",
+  "wizard.advanced.catalog_sources": "Catalogusbronnen (door komma's gescheiden om huidige te vervangen; lokaal pad, oci://, repo://, of store://)",
   "wizard.create.template.basic": "Begin met een eenvoudige lege oplossing",
   "wizard.create.template.catalog": "Kies uit catalogussjablonen",
   "wizard.create.template.choose": "Kies catalogussjabloon",

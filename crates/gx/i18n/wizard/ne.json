@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "क्याटलग स्रोत (स्थानीय पथ वा oci:// ref)",
-  "wizard.advanced.catalog_sources": "क्याटलग स्रोतहरू (हालको प्रतिस्थापन गर्न अल्पविरामद्वारा छुट्याइएको)",
+  "wizard.advanced.catalog_source": "क्याटलग स्रोत (स्थानीय पथ, oci://, repo://, वा store:// ref)",
+  "wizard.advanced.catalog_sources": "क्याटलग स्रोतहरू (हालको प्रतिस्थापन गर्न अल्पविरामले छुट्याइएको; स्थानीय पथ, oci://, repo://, वा store://)",
   "wizard.create.template.basic": "आधारभूत खाली समाधानबाट सुरु गर्नुहोस्",
   "wizard.create.template.catalog": "क्याटलग टेम्प्लेटहरूबाट छान्नुहोस्",
   "wizard.create.template.choose": "क्याटलग टेम्प्लेट छान्नुहोस्",

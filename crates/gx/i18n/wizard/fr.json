@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Source du catalogue (chemin local ou référence oci://)",
-  "wizard.advanced.catalog_sources": "Sources du catalogue (séparées par des virgules pour remplacer l’existant)",
+  "wizard.advanced.catalog_source": "Source du catalogue (chemin local, oci://, repo:// ou référence store://)",
+  "wizard.advanced.catalog_sources": "Sources du catalogue (séparées par des virgules pour remplacer l’actuel ; chemin local, oci://, repo:// ou store://)",
   "wizard.create.template.basic": "Commencer à partir d’une solution vide de base",
   "wizard.create.template.catalog": "Choisir parmi les modèles du catalogue",
   "wizard.create.template.choose": "Choisir un modèle du catalogue",

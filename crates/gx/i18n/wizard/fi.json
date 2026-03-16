@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Katalogin lähde (paikallinen polku tai oci://-viite)",
-  "wizard.advanced.catalog_sources": "Katalogin lähteet (pilkuin eroteltu korvaamaan nykyinen)",
+  "wizard.advanced.catalog_source": "Luettelon lähde (paikallinen polku, oci://, repo:// tai store://-viite)",
+  "wizard.advanced.catalog_sources": "Luettelon lähteet (pilkuin eroteltuina korvaamaan nykyiset; paikallinen polku, oci://, repo:// tai store://)",
   "wizard.create.template.basic": "Aloita perusratkaisusta ilman sisältöä",
   "wizard.create.template.catalog": "Valitse katalogimalleista",
   "wizard.create.template.choose": "Valitse katalogimalli",

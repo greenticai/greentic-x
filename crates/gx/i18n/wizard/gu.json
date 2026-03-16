@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "કેટલોગ સ્ત્રોત (લોકલ પાથ અથવા oci:// ref)",
-  "wizard.advanced.catalog_sources": "કેટલોગ સ્ત્રોતો (વર્તમાનને બદલવા માટે અલ્પવિરામથી અલગ કરેલા)",
+  "wizard.advanced.catalog_source": "કેટલોગ સ્રોત (લોકલ પાથ, oci://, repo://, અથવા store:// ref)",
+  "wizard.advanced.catalog_sources": "કેટલોગ સ્રોતો (વર્તમાનને બદલવા માટે અલ્પવિરામથી અલગ; લોકલ પાથ, oci://, repo://, અથવા store://)",
   "wizard.create.template.basic": "મૂળભૂત ખાલી સોલ્યુશનથી શરૂ કરો",
   "wizard.create.template.catalog": "કેટલોગ ટેમ્પ્લેટ્સમાંથી પસંદ કરો",
   "wizard.create.template.choose": "કેટલોગ ટેમ્પ્લેટ પસંદ કરો",

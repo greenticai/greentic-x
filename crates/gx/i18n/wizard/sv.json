@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Katalogkälla (lokal sökväg eller oci://-ref)",
-  "wizard.advanced.catalog_sources": "Katalogkällor (kommaseparerade för att ersätta nuvarande)",
+  "wizard.advanced.catalog_source": "Katalogkälla (lokal sökväg, oci://, repo:// eller store://-ref)",
+  "wizard.advanced.catalog_sources": "Katalogkällor (kommaseparerade för att ersätta nuvarande; lokal sökväg, oci://, repo:// eller store://)",
   "wizard.create.template.basic": "Börja med en grundläggande tom lösning",
   "wizard.create.template.catalog": "Välj från katalogmallar",
   "wizard.create.template.choose": "Välj katalogmall",

@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Kataloga avots (lokālais ceļš vai oci:// atsauce)",
-  "wizard.advanced.catalog_sources": "Kataloga avoti (ar komatiem atdalīti, lai aizstātu pašreizējos)",
+  "wizard.advanced.catalog_source": "Kataloga avots (lokāls ceļš, oci://, repo:// vai store:// atsauce)",
+  "wizard.advanced.catalog_sources": "Kataloga avoti (atdalīti ar komatiem, lai aizstātu pašreizējos; lokāls ceļš, oci://, repo:// vai store://)",
   "wizard.create.template.basic": "Sākt no pamata tukša risinājuma",
   "wizard.create.template.catalog": "Izvēlēties no kataloga veidnēm",
   "wizard.create.template.choose": "Izvēlēties kataloga veidni",

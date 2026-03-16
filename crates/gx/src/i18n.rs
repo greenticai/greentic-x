@@ -18,12 +18,37 @@ fn catalogs() -> &'static CatalogsByLocale {
 }
 
 pub fn normalize_locale(raw: &str) -> String {
-    let lowered = raw.trim().to_ascii_lowercase();
-    if lowered.starts_with("nl") {
-        "nl".to_owned()
-    } else {
-        "en".to_owned()
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return "en".to_owned();
     }
+
+    let candidate = trimmed
+        .split(['.', '@'])
+        .next()
+        .unwrap_or_default()
+        .replace('_', "-");
+
+    if let Some(locale) = catalogs()
+        .keys()
+        .find(|locale| locale.eq_ignore_ascii_case(&candidate))
+    {
+        return locale.clone();
+    }
+
+    let base = candidate
+        .split('-')
+        .next()
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    if let Some(locale) = catalogs()
+        .keys()
+        .find(|locale| locale.eq_ignore_ascii_case(&base))
+    {
+        return locale.clone();
+    }
+
+    "en".to_owned()
 }
 
 pub fn locale_from_env() -> Option<String> {
@@ -85,6 +110,8 @@ mod tests {
     fn normalize_locale_maps_supported_prefixes() {
         assert_eq!(normalize_locale("nl-NL"), "nl");
         assert_eq!(normalize_locale("en_US"), "en");
+        assert_eq!(normalize_locale("ar"), "ar");
+        assert_eq!(normalize_locale("ar_EG"), "ar-EG");
     }
 
     #[test]
@@ -109,12 +136,14 @@ mod tests {
     fn resolve_locale_prefers_cli_then_doc() {
         assert_eq!(resolve_locale(Some("nl-NL"), Some("en")), "nl");
         assert_eq!(resolve_locale(None, Some("nl")), "nl");
+        assert_eq!(resolve_locale(Some("ar"), Some("en")), "ar");
     }
 
     #[test]
     fn translations_load_from_embedded_catalogs() {
         assert_eq!(tr("en", "wizard.qa.title"), "GX Wizard");
         assert_eq!(tr("nl", "wizard.qa.title"), "GX Wizard");
+        assert_eq!(tr("ar", "wizard.nav.exit"), "خروج");
     }
 
     #[test]

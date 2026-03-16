@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "கேட்டலாக் மூலம் (உள்ளூர் பாதை அல்லது oci:// ref)",
-  "wizard.advanced.catalog_sources": "கேட்டலாக் மூலங்கள் (தற்போதையதை மாற்ற கமா-பிரிக்கப்பட்டவை)",
+  "wizard.advanced.catalog_source": "கேட்டலாக் மூலம் (உள்ளூர் பாதை, oci://, repo://, அல்லது store:// குறிப்பு)",
+  "wizard.advanced.catalog_sources": "கேட்டலாக் மூலங்கள் (தற்போதையதை மாற்ற கமாவால் பிரிக்கப்பட்டவை; உள்ளூர் பாதை, oci://, repo://, அல்லது store://)",
   "wizard.create.template.basic": "அடிப்படை காலி தீர்விலிருந்து தொடங்கு",
   "wizard.create.template.catalog": "கேட்டலாக் வார்ப்புருக்களில் இருந்து தேர்வு செய்",
   "wizard.create.template.choose": "கேட்டலாக் வார்ப்புருவை தேர்வு செய்",

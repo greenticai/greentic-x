@@ -1,6 +1,6 @@
 {
-  "wizard.advanced.catalog_source": "Źródło katalogu (ścieżka lokalna lub odwołanie oci://)",
-  "wizard.advanced.catalog_sources": "Źródła katalogu (oddzielone przecinkami, aby zastąpić bieżące)",
+  "wizard.advanced.catalog_source": "Źródło katalogu (ścieżka lokalna, oci://, repo:// lub odwołanie store://)",
+  "wizard.advanced.catalog_sources": "Źródła katalogu (rozdzielone przecinkami, aby zastąpić bieżące; ścieżka lokalna, oci://, repo:// lub store://)",
   "wizard.create.template.basic": "Rozpocznij od podstawowego pustego rozwiązania",
   "wizard.create.template.catalog": "Wybierz z szablonów katalogu",
   "wizard.create.template.choose": "Wybierz szablon katalogu",
