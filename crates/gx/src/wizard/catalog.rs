@@ -1,20 +1,9 @@
 use std::fs;
-use std::io::{self, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 
-use async_trait::async_trait;
-use greentic_distributor_client::oci_packs::{
-    DefaultRegistryClient, PulledImage, PulledLayer, RegistryClient,
-};
-use greentic_distributor_client::store_auth::default_store_auth_path;
 use greentic_distributor_client::{
-    OciPackFetcher, PackFetchOptions, StoreCredentials, load_login_default, save_login_default,
+    DistClient, DistOptions, OciPackFetcher, PackFetchOptions, oci_packs::DefaultRegistryClient,
 };
-use oci_distribution::Reference;
-use oci_distribution::client::{Client, ClientConfig, ClientProtocol, ImageData};
-use oci_distribution::errors::OciDistributionError;
-use oci_distribution::secrets::RegistryAuth;
-use rpassword::read_password;
 use serde::Deserialize;
 use serde_json::Value;
 use tokio::runtime::Runtime;
@@ -351,10 +340,7 @@ pub(crate) fn normalize_pack_fetch_ref(reference: &str) -> Result<String, String
         return map_registry_ref(body, "GREENTIC_REPO_REGISTRY_BASE", "repo");
     }
     if let Some(body) = reference.strip_prefix("store://") {
-        if let Some(mapped) = map_greentic_biz_store_ref(body)? {
-            return Ok(mapped);
-        }
-        return map_registry_ref(body, "GREENTIC_STORE_REGISTRY_BASE", "store");
+        return Ok(format!("store://{body}"));
     }
     Ok(reference.to_owned())
 }
@@ -391,34 +377,19 @@ fn pack_fetch_options(cache_root: &Path) -> PackFetchOptions {
 }
 
 fn fetch_pack_artifact(cache_root: &Path, reference: &str) -> Result<ResolvedPackArtifact, String> {
-    let store_tenant = store_tenant_for_reference(reference)?;
+    if reference.starts_with("store://") {
+        return fetch_store_pack_artifact(cache_root, reference);
+    }
+
     let reference = normalize_pack_fetch_ref(reference)?;
     let options = pack_fetch_options(cache_root);
     let runtime =
         Runtime::new().map_err(|err| format!("failed to start pack fetch runtime: {err}"))?;
-    let resolved = if let Some(tenant) = store_tenant {
-        let credentials = runtime
-            .block_on(ensure_store_credentials(&tenant))
-            .map_err(|err| {
-                format!("failed to load store credentials for tenant `{tenant}`: {err}")
-            })?;
-        runtime
-            .block_on(
-                OciPackFetcher::with_client(
-                    AuthenticatedRegistryClient::with_basic_auth(credentials),
-                    options,
-                )
-                .fetch_pack_to_cache(&reference),
-            )
-            .map_err(|err| format!("failed to fetch pack artifact {reference}: {err}"))?
-    } else {
-        runtime
-            .block_on(
-                OciPackFetcher::<DefaultRegistryClient>::new(options)
-                    .fetch_pack_to_cache(&reference),
-            )
-            .map_err(|err| format!("failed to fetch pack artifact {reference}: {err}"))?
-    };
+    let resolved = runtime
+        .block_on(
+            OciPackFetcher::<DefaultRegistryClient>::new(options).fetch_pack_to_cache(&reference),
+        )
+        .map_err(|err| format!("failed to fetch pack artifact {reference}: {err}"))?;
     Ok(ResolvedPackArtifact {
         path: resolved.path,
         resolved_digest: resolved.resolved_digest,
@@ -426,52 +397,77 @@ fn fetch_pack_artifact(cache_root: &Path, reference: &str) -> Result<ResolvedPac
     })
 }
 
-async fn ensure_store_credentials(tenant: &str) -> Result<StoreCredentials, String> {
-    ensure_store_auth_dir()?;
-    match load_login_default(tenant).await {
-        Ok(credentials) => Ok(credentials),
-        Err(err) => {
-            if !io::stdin().is_terminal() || !io::stdout().is_terminal() {
-                return Err(err.to_string());
-            }
-            let token = prompt_store_token(tenant)?;
-            save_login_default(tenant, &token)
-                .await
-                .map_err(|save_err| save_err.to_string())?;
-            load_login_default(tenant)
-                .await
-                .map_err(|load_err| load_err.to_string())
-        }
-    }
+fn fetch_store_pack_artifact(
+    cache_root: &Path,
+    reference: &str,
+) -> Result<ResolvedPackArtifact, String> {
+    let options = DistOptions {
+        allow_tags: true,
+        offline: false,
+        cache_dir: cache_root.join(".gx").join("cache").join("distributor"),
+        ..DistOptions::default()
+    };
+    let runtime =
+        Runtime::new().map_err(|err| format!("failed to start store fetch runtime: {err}"))?;
+    let client = DistClient::new(options);
+    let downloaded = runtime
+        .block_on(client.download_store_artifact(reference))
+        .map_err(|err| format!("failed to fetch store artifact {reference}: {err}"))?;
+    let path = cache_store_artifact(cache_root, reference, &downloaded.digest, &downloaded.bytes)?;
+    Ok(ResolvedPackArtifact {
+        path,
+        resolved_digest: downloaded.digest,
+        media_type: downloaded.media_type,
+    })
 }
 
-fn ensure_store_auth_dir() -> Result<(), String> {
-    let path = default_store_auth_path();
+fn cache_store_artifact(
+    cache_root: &Path,
+    reference: &str,
+    digest: &str,
+    bytes: &[u8],
+) -> Result<PathBuf, String> {
+    let file_name = reference_file_name(reference);
+    let path = cache_root
+        .join(".gx")
+        .join("cache")
+        .join("store-download")
+        .join(digest.replace(':', "-"))
+        .join(file_name);
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|err| {
             format!(
-                "failed to create store auth directory {}: {err}",
+                "failed to create store download cache directory {}: {err}",
                 parent.display()
             )
         })?;
     }
-    Ok(())
+    fs::write(&path, bytes).map_err(|err| {
+        format!(
+            "failed to write store download cache {}: {err}",
+            path.display()
+        )
+    })?;
+    Ok(path)
 }
 
-fn prompt_store_token(tenant: &str) -> Result<String, String> {
-    let mut stdout = io::stdout();
-    writeln!(stdout, "Store login required for tenant `{tenant}`.")
-        .map_err(|err| format!("write prompt failed: {err}"))?;
-    write!(stdout, "Token: ").map_err(|err| format!("write prompt failed: {err}"))?;
-    stdout
-        .flush()
-        .map_err(|err| format!("flush prompt failed: {err}"))?;
-    let token = read_password().map_err(|err| format!("read prompt failed: {err}"))?;
-    let token = token.trim().to_owned();
-    if token.is_empty() {
-        return Err("token cannot be empty".to_owned());
+fn reference_file_name(reference: &str) -> String {
+    let candidate = reference
+        .rsplit('/')
+        .next()
+        .unwrap_or("artifact.bin")
+        .split('@')
+        .next()
+        .unwrap_or("artifact.bin")
+        .split(':')
+        .next()
+        .unwrap_or("artifact.bin")
+        .trim();
+    if candidate.is_empty() {
+        "artifact.bin".to_owned()
+    } else {
+        candidate.to_owned()
     }
-    Ok(token)
 }
 
 fn map_registry_ref(target: &str, env_var: &str, kind: &str) -> Result<String, String> {
@@ -496,111 +492,6 @@ fn looks_like_oci_reference(value: &str) -> bool {
         || first_segment.contains(':')
         || first_segment == "localhost"
         || value.contains('@')
-}
-
-fn store_tenant_for_reference(reference: &str) -> Result<Option<String>, String> {
-    let Some(target) = reference.strip_prefix("store://") else {
-        return Ok(None);
-    };
-    let Some(remainder) = target.strip_prefix("greentic-biz/") else {
-        return Ok(None);
-    };
-    let (tenant, package_path) = remainder.split_once('/').ok_or_else(|| {
-        "store://greentic-biz refs must include `<tenant>/<package-path>`".to_owned()
-    })?;
-    if tenant.trim().is_empty() || package_path.trim().is_empty() {
-        return Err(
-            "store://greentic-biz refs must include non-empty `<tenant>/<package-path>`".to_owned(),
-        );
-    }
-    Ok(Some(tenant.trim().to_owned()))
-}
-
-fn map_greentic_biz_store_ref(target: &str) -> Result<Option<String>, String> {
-    let Some(remainder) = target.strip_prefix("greentic-biz/") else {
-        return Ok(None);
-    };
-    let (_tenant, package_path) = remainder.split_once('/').ok_or_else(|| {
-        "store://greentic-biz refs must include `<tenant>/<package-path>`".to_owned()
-    })?;
-    let package_path = package_path.trim_matches('/');
-    if package_path.is_empty() {
-        return Err(
-            "store://greentic-biz refs must include non-empty `<tenant>/<package-path>`".to_owned(),
-        );
-    }
-    Ok(Some(format!("ghcr.io/greentic-biz/{package_path}")))
-}
-
-#[derive(Clone)]
-struct AuthenticatedRegistryClient {
-    inner: Client,
-    credentials: StoreCredentials,
-}
-
-impl AuthenticatedRegistryClient {
-    fn with_basic_auth(credentials: StoreCredentials) -> Self {
-        let config = ClientConfig {
-            protocol: ClientProtocol::Https,
-            ..Default::default()
-        };
-        Self {
-            inner: Client::new(config),
-            credentials,
-        }
-    }
-}
-
-#[async_trait]
-impl RegistryClient for AuthenticatedRegistryClient {
-    fn default_client() -> Self
-    where
-        Self: Sized,
-    {
-        Self::with_basic_auth(StoreCredentials {
-            tenant: String::new(),
-            username: String::new(),
-            token: String::new(),
-        })
-    }
-
-    async fn pull(
-        &self,
-        reference: &Reference,
-        accepted_manifest_types: &[&str],
-    ) -> Result<PulledImage, OciDistributionError> {
-        let image = self
-            .inner
-            .pull(
-                reference,
-                &RegistryAuth::Basic(
-                    self.credentials.username.clone(),
-                    self.credentials.token.clone(),
-                ),
-                accepted_manifest_types.to_vec(),
-            )
-            .await?;
-        Ok(convert_image(image))
-    }
-}
-
-fn convert_image(image: ImageData) -> PulledImage {
-    let layers = image
-        .layers
-        .into_iter()
-        .map(|layer| {
-            let digest = format!("sha256:{}", layer.sha256_digest());
-            PulledLayer {
-                media_type: layer.media_type,
-                data: layer.data,
-                digest: Some(digest),
-            }
-        })
-        .collect();
-    PulledImage {
-        digest: image.digest,
-        layers,
-    }
 }
 
 fn load_local_templates(
@@ -922,24 +813,18 @@ mod tests {
             normalize_pack_fetch_ref(
                 "store://greentic-biz/tenant-a/catalogs/zain-x/catalog.json:latest"
             )
-            .expect("store refs should map to greentic-biz ghcr paths"),
-            "ghcr.io/greentic-biz/catalogs/zain-x/catalog.json:latest"
+            .expect("store refs should be preserved for store downloads"),
+            "store://greentic-biz/tenant-a/catalogs/zain-x/catalog.json:latest"
         );
     }
 
     #[test]
-    fn store_tenant_for_reference_reads_greentic_biz_tenant() {
+    fn reference_file_name_strips_store_locator_suffixes() {
         assert_eq!(
-            store_tenant_for_reference(
+            reference_file_name(
                 "store://greentic-biz/tenant-a/catalogs/zain-x/catalog.json:latest"
-            )
-            .expect("greentic-biz store ref should parse tenant"),
-            Some("tenant-a".to_owned())
-        );
-        assert_eq!(
-            store_tenant_for_reference("oci://ghcr.io/demo/catalog.json:latest")
-                .expect("non-store refs should return no tenant"),
-            None
+            ),
+            "catalog.json"
         );
     }
 }
