@@ -14,7 +14,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.4.4"
+version = "0.4.5"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/greenticai/greentic-x"
@@ -29,12 +29,12 @@ clap = { version = "4.5", features = ["derive"] }
 flate2 = "1"
 greentic-distributor-client = { version = "0.4", default-features = false, features = ["dist-client", "pack-fetch"] }
 greentic-qa-lib = "0.4"
-greentic-x-contracts = { path = "crates/greentic-x-contracts" }
-greentic-x-events = { path = "crates/greentic-x-events" }
-greentic-x-flow = { path = "crates/greentic-x-flow" }
-greentic-x-ops = { path = "crates/greentic-x-ops" }
-greentic-x-runtime = { path = "crates/greentic-x-runtime" }
-greentic-x-types = { path = "crates/greentic-x-types" }
+greentic-x-contracts = { version = "0.4", path = "crates/greentic-x-contracts" }
+greentic-x-events = { version = "0.4", path = "crates/greentic-x-events" }
+greentic-x-flow = { version = "0.4", path = "crates/greentic-x-flow" }
+greentic-x-ops = { version = "0.4", path = "crates/greentic-x-ops" }
+greentic-x-runtime = { version = "0.4", path = "crates/greentic-x-runtime" }
+greentic-x-types = { version = "0.4", path = "crates/greentic-x-types" }
 jsonschema = "0.45"
 oci-distribution = "0.11"
 rpassword = "7"

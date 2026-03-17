@@ -867,7 +867,7 @@ dependencies = [
 
 [[package]]
 name = "end-to-end-demo"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "greentic-x-contracts",
  "greentic-x-ops",
@@ -1393,7 +1393,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-x"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "async-trait",
  "clap",
@@ -1417,7 +1417,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-x-contracts"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "greentic-x-events",
  "greentic-x-types",
@@ -1427,7 +1427,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-x-events"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "greentic-x-types",
  "serde",
@@ -1436,7 +1436,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-x-flow"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "greentic-x-ops",
  "greentic-x-runtime",
@@ -1447,7 +1447,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-x-ops"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "greentic-x-types",
  "serde",
@@ -1456,7 +1456,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-x-runtime"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "greentic-x-contracts",
  "greentic-x-events",
@@ -1468,7 +1468,7 @@ dependencies = [
 
 [[package]]
 name = "greentic-x-types"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "serde",
  "serde_json",
@@ -3373,7 +3373,7 @@ checksum = "e320a6c5ad31d271ad523dcf3ad13e2767ad8b1cb8f047f75a8aeaf8da139da2"
 
 [[package]]
 name = "simple-case-app"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "greentic-x-contracts",
  "greentic-x-runtime",
@@ -3383,7 +3383,7 @@ dependencies = [
 
 [[package]]
 name = "simple-playbook-app"
-version = "0.4.4"
+version = "0.4.5"
 dependencies = [
  "greentic-x-contracts",
  "greentic-x-ops",
