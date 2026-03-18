@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Catalogusbronnen (door komma's gescheiden om huidige te vervangen; lokaal pad, oci://, repo://, of store://)",
   "wizard.create.template.basic": "Begin met een eenvoudige lege oplossing",
   "wizard.create.template.catalog": "Kies uit catalogussjablonen",
+  "wizard.create.template.catalog_ref": "Gebruik een catalogus-URL of -pad",
   "wizard.create.template.choose": "Kies catalogussjabloon",
   "wizard.create.template.manual": "Geavanceerde handmatige sjabloonverwijzing",
   "wizard.create.template.title": "Van welk oplossingssjabloon moet dit starten?",

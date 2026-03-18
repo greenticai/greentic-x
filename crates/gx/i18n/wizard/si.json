@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "කැටලොග් මූලාශ්‍රයන් (දැනට තිබෙන දේ ප්‍රතිස්ථාපනය කිරීමට කොමා මගින් වෙන් කළ; දේශීය මාර්ගය, oci://, repo://, හෝ store://)",
   "wizard.create.template.basic": "මූලික හිස් විසඳුමකින් ආරම්භ කරන්න",
   "wizard.create.template.catalog": "නාමාවලි අච්චු වලින් තෝරන්න",
+  "wizard.create.template.catalog_ref": "නාමාවලි URL එකක් හෝ මාර්ගයක් භාවිතා කරන්න",
   "wizard.create.template.choose": "නාමාවලි අච්චුව තෝරන්න",
   "wizard.create.template.manual": "උසස් අතින් අච්චු යොමුව",
   "wizard.create.template.title": "මෙය ආරම්භ විය යුතු විසඳුම් අච්චුව කුමක්ද?",

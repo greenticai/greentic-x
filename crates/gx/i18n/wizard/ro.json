@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Surse de catalog (separate prin virgulă pentru a înlocui valorile curente; cale locală, oci://, repo:// sau store://)",
   "wizard.create.template.basic": "Pornește de la o soluție de bază goală",
   "wizard.create.template.catalog": "Alege din șabloanele din catalog",
+  "wizard.create.template.catalog_ref": "Utilizați un URL sau o cale de catalog",
   "wizard.create.template.choose": "Alege șablonul din catalog",
   "wizard.create.template.manual": "Referință manuală avansată pentru șablon",
   "wizard.create.template.title": "Din ce șablon de soluție ar trebui să pornească aceasta?",

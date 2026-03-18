@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Kataloga avoti (atdalīti ar komatiem, lai aizstātu pašreizējos; lokāls ceļš, oci://, repo:// vai store://)",
   "wizard.create.template.basic": "Sākt no pamata tukša risinājuma",
   "wizard.create.template.catalog": "Izvēlēties no kataloga veidnēm",
+  "wizard.create.template.catalog_ref": "Izmantojiet kataloga URL vai ceļu",
   "wizard.create.template.choose": "Izvēlēties kataloga veidni",
   "wizard.create.template.manual": "Paplašināta manuāla veidnes atsauce",
   "wizard.create.template.title": "No kuras risinājuma veidnes to sākt?",

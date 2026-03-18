@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "ប្រភពកាតាឡុក (បំបែកដោយសញ្ញាក្បៀស ដើម្បីជំនួសបច្ចុប្បន្ន; ផ្លូវមូលដ្ឋាន, oci://, repo://, ឬ store://)",
   "wizard.create.template.basic": "ចាប់ផ្តើមពីដំណោះស្រាយទទេមូលដ្ឋាន",
   "wizard.create.template.catalog": "ជ្រើសរើសពីពុម្ពកាតាឡុក",
+  "wizard.create.template.catalog_ref": "ប្រើ URL ឬ path កាតាឡុក",
   "wizard.create.template.choose": "ជ្រើសរើសពុម្ពកាតាឡុក",
   "wizard.create.template.manual": "សេចក្តីយោងពុម្ពដោយដៃកម្រិតខ្ពស់",
   "wizard.create.template.title": "ដំណោះស្រាយនេះគួរចាប់ផ្តើមពីពុម្ពដំណោះស្រាយមួយណា?",

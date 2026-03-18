@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Katalógusforrások (vesszővel elválasztva a jelenlegi lecseréléséhez; helyi útvonal, oci://, repo:// vagy store://)",
   "wizard.create.template.basic": "Kezdés egy alap üres megoldásból",
   "wizard.create.template.catalog": "Választás katalógussablonokból",
+  "wizard.create.template.catalog_ref": "Katalógus URL-jének vagy elérési útjának használata",
   "wizard.create.template.choose": "Katalógussablon kiválasztása",
   "wizard.create.template.manual": "Speciális kézi sablonhivatkozás",
   "wizard.create.template.title": "Melyik megoldássablonból induljon ez?",

@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "కాటలాగ్ మూలాలు (ప్రస్తుతదాన్ని భర్తీ చేయడానికి కామాలతో వేరు చేసినవి; స్థానిక మార్గం, oci://, repo://, లేదా store://)",
   "wizard.create.template.basic": "ప్రాథమిక ఖాళీ సొల్యూషన్‌తో ప్రారంభించండి",
   "wizard.create.template.catalog": "క్యాటలాగ్ టెంప్లేట్‌ల నుంచి ఎంచుకోండి",
+  "wizard.create.template.catalog_ref": "కాటలాగ్ URL లేదా పాత్ ఉపయోగించండి",
   "wizard.create.template.choose": "క్యాటలాగ్ టెంప్లేట్‌ను ఎంచుకోండి",
   "wizard.create.template.manual": "అధునాతన మాన్యువల్ టెంప్లేట్ సూచన",
   "wizard.create.template.title": "ఈ సొల్యూషన్ ఏ టెంప్లేట్‌తో ప్రారంభం కావాలి?",

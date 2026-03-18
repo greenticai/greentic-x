@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Sous katalòg yo (separe pa vigil pou ranplase sa ki la kounye a; chemen lokal, oci://, repo://, oswa store://)",
   "wizard.create.template.basic": "Kòmanse ak yon solisyon debaz vid",
   "wizard.create.template.catalog": "Chwazi nan modèl katalòg yo",
+  "wizard.create.template.catalog_ref": "Sèvi ak yon URL katalòg oswa yon chemen",
   "wizard.create.template.choose": "Chwazi modèl katalòg",
   "wizard.create.template.manual": "Referans modèl manyèl avanse",
   "wizard.create.template.title": "Sou ki modèl solisyon sa a ta dwe kòmanse?",

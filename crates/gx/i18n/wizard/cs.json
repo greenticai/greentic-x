@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Zdroje katalogu (oddělené čárkami pro nahrazení aktuálních; místní cesta, oci://, repo:// nebo store://)",
   "wizard.create.template.basic": "Začít ze základního prázdného řešení",
   "wizard.create.template.catalog": "Vybrat ze šablon katalogu",
+  "wizard.create.template.catalog_ref": "Použijte URL katalogu nebo cestu",
   "wizard.create.template.choose": "Vybrat šablonu katalogu",
   "wizard.create.template.manual": "Pokročilý ruční odkaz na šablonu",
   "wizard.create.template.title": "Ze které šablony řešení se má začít?",

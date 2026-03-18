@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Catalog sources (comma-separated to replace current; local path, oci://, repo://, or store://)",
   "wizard.create.template.basic": "Start from a basic empty solution",
   "wizard.create.template.catalog": "Choose from catalog templates",
+  "wizard.create.template.catalog_ref": "Use a catalog URL or path",
   "wizard.create.template.choose": "Choose catalog template",
   "wizard.create.template.manual": "Advanced manual template reference",
   "wizard.create.template.title": "Which solution template should this start from?",

@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Catálogo paq pukyukuna (coma-wan rakisqa, kunan kaqta tikranapaq; llaqta ñan, oci://, repo://, utaq store://)",
   "wizard.create.template.basic": "Huk básico ch'usaq soluciónmanta qallariy",
   "wizard.create.template.catalog": "Catálogo plantillakunamanta akllay",
+  "wizard.create.template.catalog_ref": "Katalogupa URLninta utaq ñanta llamk'achiy",
   "wizard.create.template.choose": "Catálogo plantilla akllay",
   "wizard.create.template.manual": "Ñawpaqman risaq makiwan plantilla qhawachiy",
   "wizard.create.template.title": "Mayqin solución plantillamantataq kay qallarinan?",

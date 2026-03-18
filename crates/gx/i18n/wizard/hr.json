@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Izvori kataloga (odvojeni zarezima za zamjenu trenutačnih; lokalna putanja, oci://, repo:// ili store://)",
   "wizard.create.template.basic": "Započni od osnovnog praznog rješenja",
   "wizard.create.template.catalog": "Odaberi iz predložaka kataloga",
+  "wizard.create.template.catalog_ref": "Upotrijebite URL kataloga ili putanju",
   "wizard.create.template.choose": "Odaberi predložak kataloga",
   "wizard.create.template.manual": "Napredna ručna referenca predloška",
   "wizard.create.template.title": "Od kojeg predloška rješenja ovo treba započeti?",

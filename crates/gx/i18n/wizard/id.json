@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Sumber katalog (dipisahkan koma untuk mengganti yang saat ini; jalur lokal, oci://, repo://, atau store://)",
   "wizard.create.template.basic": "Mulai dari solusi kosong dasar",
   "wizard.create.template.catalog": "Pilih dari templat katalog",
+  "wizard.create.template.catalog_ref": "Gunakan URL atau jalur katalog",
   "wizard.create.template.choose": "Pilih templat katalog",
   "wizard.create.template.manual": "Referensi templat manual lanjutan",
   "wizard.create.template.title": "Templat solusi mana yang harus digunakan untuk memulai?",

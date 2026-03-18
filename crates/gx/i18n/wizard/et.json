@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Kataloogi allikad (komadega eraldatud praeguse asendamiseks; kohalik tee, oci://, repo:// või store://)",
   "wizard.create.template.basic": "Alusta lihtsast tühjast lahendusest",
   "wizard.create.template.catalog": "Vali kataloogi mallide hulgast",
+  "wizard.create.template.catalog_ref": "Kasuta kataloogi URL-i või teed",
   "wizard.create.template.choose": "Vali kataloogi mall",
   "wizard.create.template.manual": "Täiustatud käsitsi malli viide",
   "wizard.create.template.title": "Millisest lahenduse mallist peaks see algama?",

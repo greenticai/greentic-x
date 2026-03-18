@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Catalog အရင်းအမြစ်များ (လက်ရှိရှိသည့်အရာကို အစားထိုးရန် comma ဖြင့်ခွဲထားသော; local path, oci://, repo://, သို့မဟုတ် store://)",
   "wizard.create.template.basic": "အခြေခံ ဗလာ solution တစ်ခုမှ စတင်ပါ",
   "wizard.create.template.catalog": "ကက်တလော့ဂ် template များမှ ရွေးချယ်ပါ",
+  "wizard.create.template.catalog_ref": "ကတ်တလောက် URL သို့မဟုတ် လမ်းကြောင်းကို အသုံးပြုပါ",
   "wizard.create.template.choose": "ကက်တလော့ဂ် template ကို ရွေးချယ်ပါ",
   "wizard.create.template.manual": "အဆင့်မြင့် လက်ဖြင့် template reference",
   "wizard.create.template.title": "ဤ solution ကို မည်သည့် solution template မှ စတင်သင့်ပါသလဲ?",

@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "目录来源（用逗号分隔以替换当前值；本地路径、oci://、repo:// 或 store://）",
   "wizard.create.template.basic": "从基础空白解决方案开始",
   "wizard.create.template.catalog": "从目录模板中选择",
+  "wizard.create.template.catalog_ref": "使用目录 URL 或路径",
   "wizard.create.template.choose": "选择目录模板",
   "wizard.create.template.manual": "高级手动模板引用",
   "wizard.create.template.title": "此解决方案应从哪个模板开始？",

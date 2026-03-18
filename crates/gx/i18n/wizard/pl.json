@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Źródła katalogu (rozdzielone przecinkami, aby zastąpić bieżące; ścieżka lokalna, oci://, repo:// lub store://)",
   "wizard.create.template.basic": "Rozpocznij od podstawowego pustego rozwiązania",
   "wizard.create.template.catalog": "Wybierz z szablonów katalogu",
+  "wizard.create.template.catalog_ref": "Użyj adresu URL katalogu lub ścieżki",
   "wizard.create.template.choose": "Wybierz szablon katalogu",
   "wizard.create.template.manual": "Zaawansowane ręczne odwołanie do szablonu",
   "wizard.create.template.title": "Od którego szablonu rozwiązania to powinno się zaczynać?",

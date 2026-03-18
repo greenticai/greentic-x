@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Sources du catalogue (séparées par des virgules pour remplacer l’actuel ; chemin local, oci://, repo:// ou store://)",
   "wizard.create.template.basic": "Commencer à partir d’une solution vide de base",
   "wizard.create.template.catalog": "Choisir parmi les modèles du catalogue",
+  "wizard.create.template.catalog_ref": "Utilisez une URL ou un chemin de catalogue",
   "wizard.create.template.choose": "Choisir un modèle du catalogue",
   "wizard.create.template.manual": "Référence avancée de modèle manuel",
   "wizard.create.template.title": "À partir de quel modèle de solution ceci doit-il commencer ?",

@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Katalogkilder (kommaseparert for å erstatte gjeldende; lokal sti, oci://, repo:// eller store://)",
   "wizard.create.template.basic": "Start fra en grunnleggende tom løsning",
   "wizard.create.template.catalog": "Velg fra katalogmaler",
+  "wizard.create.template.catalog_ref": "Bruk en katalog-URL eller -bane",
   "wizard.create.template.choose": "Velg katalogmal",
   "wizard.create.template.manual": "Avansert manuell malreferanse",
   "wizard.create.template.title": "Hvilken løsningsmal skal dette starte fra?",

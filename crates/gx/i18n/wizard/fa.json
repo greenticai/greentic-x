@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "منابع کاتالوگ (جداشده با ویرگول برای جایگزینی مورد فعلی؛ مسیر محلی، oci://، repo://، یا store://)",
   "wizard.create.template.basic": "شروع از یک راه‌حل پایه و خالی",
   "wizard.create.template.catalog": "انتخاب از الگوهای کاتالوگ",
+  "wizard.create.template.catalog_ref": "از URL یا مسیر کاتالوگ استفاده کنید",
   "wizard.create.template.choose": "انتخاب الگوی کاتالوگ",
   "wizard.create.template.manual": "ارجاع پیشرفته و دستی الگو",
   "wizard.create.template.title": "این راه‌حل باید از کدام الگو شروع شود؟",

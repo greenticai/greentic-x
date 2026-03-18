@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "કેટલોગ સ્રોતો (વર્તમાનને બદલવા માટે અલ્પવિરામથી અલગ; લોકલ પાથ, oci://, repo://, અથવા store://)",
   "wizard.create.template.basic": "મૂળભૂત ખાલી સોલ્યુશનથી શરૂ કરો",
   "wizard.create.template.catalog": "કેટલોગ ટેમ્પ્લેટ્સમાંથી પસંદ કરો",
+  "wizard.create.template.catalog_ref": "કૅટલોગ URL અથવા પાથનો ઉપયોગ કરો",
   "wizard.create.template.choose": "કેટલોગ ટેમ્પ્લેટ પસંદ કરો",
   "wizard.create.template.manual": "અદ્યતન મેન્યુઅલ ટેમ્પ્લેટ સંદર્ભ",
   "wizard.create.template.title": "આ કયા સોલ્યુશન ટેમ્પ્લેટથી શરૂ થવું જોઈએ?",

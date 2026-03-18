@@ -189,13 +189,13 @@ fn resolve_template(
 }
 
 fn resolve_provider_presets(
-    cwd: &Path,
+    _cwd: &Path,
     request: &CompositionRequest,
     catalogs: &WizardCatalogSet,
-    execution_resolves_remote: bool,
-    fetcher: &dyn RemoteCatalogFetcher,
+    _execution_resolves_remote: bool,
+    _fetcher: &dyn RemoteCatalogFetcher,
 ) -> Result<Vec<Value>, String> {
-    let mut presets = match request.provider_selection.as_str() {
+    let presets = match request.provider_selection.as_str() {
         "webchat" | "teams" | "webex" | "slack" => {
             let provider_ref =
                 builtin_provider_ref(&request.provider_selection).ok_or_else(|| {
@@ -241,23 +241,6 @@ fn resolve_provider_presets(
         })],
         other => return Err(format!("unsupported provider_selection {other}")),
     };
-    if execution_resolves_remote {
-        for preset in &mut presets {
-            if let Some(provider_refs) = preset
-                .get_mut("provider_refs")
-                .and_then(Value::as_array_mut)
-            {
-                for provider_ref in provider_refs {
-                    if let Some(reference) = provider_ref.as_str()
-                        && reference.contains(":latest")
-                    {
-                        let digest = fetcher.resolve_pack_ref(cwd, reference)?;
-                        *provider_ref = Value::String(pin_reference(reference, &digest));
-                    }
-                }
-            }
-        }
-    }
     Ok(presets)
 }
 

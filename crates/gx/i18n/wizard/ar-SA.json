@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "مصادر الكتالوج (مفصولة بفواصل لاستبدال الحالي؛ مسار محلي، oci://، repo://، أو store://)",
   "wizard.create.template.basic": "البدء من حل أساسي فارغ",
   "wizard.create.template.catalog": "الاختيار من قوالب الفهرس",
+  "wizard.create.template.catalog_ref": "استخدم عنوان URL للفهرس أو المسار",
   "wizard.create.template.choose": "اختر قالب الفهرس",
   "wizard.create.template.manual": "مرجع قالب يدوي متقدم",
   "wizard.create.template.title": "من أي قالب حل يجب أن يبدأ هذا؟",

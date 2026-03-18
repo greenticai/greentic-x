@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "کیٹلاگ ماخذات (موجودہ کو تبدیل کرنے کے لیے کاما سے جدا؛ مقامی پاتھ، oci://، repo://، یا store://)",
   "wizard.create.template.basic": "ایک بنیادی خالی حل سے آغاز کریں",
   "wizard.create.template.catalog": "کیٹلاگ ٹیمپلیٹس میں سے انتخاب کریں",
+  "wizard.create.template.catalog_ref": "کیٹلاگ URL یا راستہ استعمال کریں",
   "wizard.create.template.choose": "کیٹلاگ ٹیمپلیٹ منتخب کریں",
   "wizard.create.template.manual": "اعلی درجے کا دستی ٹیمپلیٹ حوالہ",
   "wizard.create.template.title": "یہ حل کس ٹیمپلیٹ سے شروع ہونا چاہیے؟",

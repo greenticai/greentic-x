@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Katalogo šaltiniai (atskirti kableliais, kad pakeistų dabartinius; vietinis kelias, oci://, repo:// arba store://)",
   "wizard.create.template.basic": "Pradėti nuo pagrindinio tuščio sprendimo",
   "wizard.create.template.catalog": "Pasirinkti iš katalogo šablonų",
+  "wizard.create.template.catalog_ref": "Naudokite katalogo URL arba kelią",
   "wizard.create.template.choose": "Pasirinkite katalogo šabloną",
   "wizard.create.template.manual": "Išplėstinė rankinė šablono nuoroda",
   "wizard.create.template.title": "Nuo kurio sprendimo šablono tai turėtų prasidėti?",

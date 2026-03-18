@@ -47,7 +47,7 @@ pub(crate) fn collect_interactive_answers(
                 return Ok(true);
             }
             Navigation::Value(value) if value == "3" => {
-                run_advanced_options(document, &locale)?;
+                run_advanced_options(cwd, document, fetcher, &locale)?;
             }
             _ => {}
         }
@@ -75,44 +75,56 @@ fn run_create_flow(
     fetcher: &dyn RemoteCatalogFetcher,
     locale: &str,
 ) -> Result<(), String> {
-    let mut catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
     document.answers.insert(
         "mode".to_owned(),
         serde_json::Value::String("create".to_owned()),
     );
 
-    match prompt_menu(
-        &tr(locale, "wizard.create.template.title"),
-        &[
-            &menu_option(locale, 1, "wizard.create.template.catalog"),
-            &menu_option(locale, 2, "wizard.create.template.basic"),
-            &menu_option(locale, 3, "wizard.create.template.manual"),
-            "4) Use a catalog URL or path",
-            "",
-            &main_menu_option(locale),
-            &back_or_exit_option(locale, false),
-        ],
-        Navigation::Back,
-    )? {
-        Navigation::MainMenu | Navigation::Exit => return Err(cancelled(locale)),
-        Navigation::Back => return Err(cancelled(locale)),
-        Navigation::Value(value) if value == "1" => {
-            choose_catalog_template(document, &catalogs, locale)?
+    loop {
+        let mut catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
+        match prompt_menu(
+            &tr(locale, "wizard.create.template.title"),
+            &[
+                &menu_option(locale, 1, "wizard.create.template.catalog"),
+                &menu_option(locale, 2, "wizard.create.template.basic"),
+                &menu_option(locale, 3, "wizard.create.template.manual"),
+                &menu_option(locale, 4, "wizard.create.template.catalog_ref"),
+                "",
+                &main_menu_option(locale),
+                &back_or_exit_option(locale, false),
+            ],
+            Navigation::Back,
+        )? {
+            Navigation::MainMenu | Navigation::Exit => return Err(cancelled(locale)),
+            Navigation::Back => return Err(cancelled(locale)),
+            Navigation::Value(value) if value == "1" => {
+                if choose_catalog_template(document, &catalogs, locale)? {
+                    break;
+                }
+            }
+            Navigation::Value(value) if value == "2" => {
+                document.answers.insert(
+                    "template_mode".to_owned(),
+                    serde_json::Value::String("basic_empty".to_owned()),
+                );
+                break;
+            }
+            Navigation::Value(value) if value == "3" => {
+                choose_manual_template(document, locale)?;
+                break;
+            }
+            Navigation::Value(value) if value == "4" => {
+                if !prompt_catalog_sources(cwd, document, fetcher, locale)? {
+                    continue;
+                }
+                catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
+                let explicit_catalogs = explicit_catalog_templates_only(catalogs.clone());
+                if choose_catalog_template(document, &explicit_catalogs, locale)? {
+                    break;
+                }
+            }
+            _ => return Err(tr(locale, "wizard.error.invalid_template_selection")),
         }
-        Navigation::Value(value) if value == "2" => {
-            document.answers.insert(
-                "template_mode".to_owned(),
-                serde_json::Value::String("basic_empty".to_owned()),
-            );
-        }
-        Navigation::Value(value) if value == "3" => choose_manual_template(document, locale)?,
-        Navigation::Value(value) if value == "4" => {
-            prompt_catalog_sources(document, locale)?;
-            catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
-            let explicit_catalogs = explicit_catalog_templates_only(catalogs.clone());
-            choose_catalog_template(document, &explicit_catalogs, locale)?;
-        }
-        _ => return Err(tr(locale, "wizard.error.invalid_template_selection")),
     }
 
     let solution_name = prompt_text(locale, "wizard.field.solution_name", None)?;
@@ -140,6 +152,7 @@ fn run_create_flow(
         "output_dir".to_owned(),
         serde_json::Value::String(normalize_output_dir(&output_dir)),
     );
+    let catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
     choose_provider(document, &catalogs, None, locale)?;
     Ok(())
 }
@@ -254,34 +267,90 @@ fn run_update_flow(
     Ok(())
 }
 
-fn run_advanced_options(document: &mut WizardAnswerDocument, locale: &str) -> Result<(), String> {
-    prompt_catalog_sources(document, locale)
+fn run_advanced_options(
+    cwd: &Path,
+    document: &mut WizardAnswerDocument,
+    fetcher: &dyn RemoteCatalogFetcher,
+    locale: &str,
+) -> Result<(), String> {
+    let _ = prompt_catalog_sources(cwd, document, fetcher, locale)?;
+    Ok(())
 }
 
-fn prompt_catalog_sources(document: &mut WizardAnswerDocument, locale: &str) -> Result<(), String> {
+fn prompt_catalog_sources(
+    cwd: &Path,
+    document: &mut WizardAnswerDocument,
+    fetcher: &dyn RemoteCatalogFetcher,
+    locale: &str,
+) -> Result<bool, String> {
     let current = catalog_refs(document);
     let prompt = if current.is_empty() {
         tr(locale, "wizard.advanced.catalog_source")
     } else {
         tr(locale, "wizard.advanced.catalog_sources")
     };
-    let default = if current.is_empty() {
+    let guidance = "Leave blank to go back.";
+    let current_text = if current.is_empty() {
         None
     } else {
         Some(current.join(", "))
     };
-    let value = prompt_text_raw(&prompt, default.as_deref(), locale)?;
-    let refs = value
-        .split(',')
-        .map(|item| item.trim())
-        .filter(|item| !item.is_empty())
-        .map(|item| item.to_owned())
-        .collect::<Vec<_>>();
-    document.answers.insert(
-        "catalog_oci_refs".to_owned(),
-        serde_json::Value::Array(refs.into_iter().map(serde_json::Value::String).collect()),
-    );
-    Ok(())
+
+    loop {
+        let mut stdout = io::stdout();
+        if let Some(current_text) = current_text.as_deref() {
+            writeln!(stdout, "{prompt}").map_err(|err| format!("write prompt failed: {err}"))?;
+            writeln!(stdout, "Current: {current_text}")
+                .map_err(|err| format!("write prompt failed: {err}"))?;
+            writeln!(stdout, "{guidance}").map_err(|err| format!("write prompt failed: {err}"))?;
+            write!(stdout, "> ").map_err(|err| format!("write prompt failed: {err}"))?;
+        } else {
+            writeln!(stdout, "{prompt}").map_err(|err| format!("write prompt failed: {err}"))?;
+            writeln!(stdout, "{guidance}").map_err(|err| format!("write prompt failed: {err}"))?;
+            write!(stdout, "> ").map_err(|err| format!("write prompt failed: {err}"))?;
+        }
+        stdout
+            .flush()
+            .map_err(|err| format!("flush prompt failed: {err}"))?;
+
+        let mut line = String::new();
+        io::stdin()
+            .read_line(&mut line)
+            .map_err(|err| format!("read prompt failed: {err}"))?;
+        let trimmed = line.trim();
+        if trimmed.eq_ignore_ascii_case("m") || trimmed == "0" {
+            return Err(cancelled(locale));
+        }
+        if trimmed.is_empty() {
+            return Ok(false);
+        }
+
+        let refs = trimmed
+            .split(',')
+            .map(|item| item.trim())
+            .filter(|item| !item.is_empty())
+            .map(|item| item.to_owned())
+            .collect::<Vec<_>>();
+        if refs.is_empty() {
+            return Ok(false);
+        }
+
+        match load_catalogs(cwd, &refs, fetcher) {
+            Ok(_) => {
+                document.answers.insert(
+                    "catalog_oci_refs".to_owned(),
+                    serde_json::Value::Array(
+                        refs.into_iter().map(serde_json::Value::String).collect(),
+                    ),
+                );
+                return Ok(true);
+            }
+            Err(err) => {
+                writeln!(stdout, "{err}")
+                    .map_err(|write_err| format!("write prompt failed: {write_err}"))?;
+            }
+        }
+    }
 }
 
 fn explicit_catalog_templates_only(
@@ -306,7 +375,7 @@ fn choose_catalog_template(
     document: &mut WizardAnswerDocument,
     catalogs: &crate::WizardCatalogSet,
     locale: &str,
-) -> Result<(), String> {
+) -> Result<bool, String> {
     if catalogs.templates.is_empty() {
         return Err(tr(locale, "wizard.error.no_catalog_templates"));
     }
@@ -323,8 +392,10 @@ fn choose_catalog_template(
         &options.iter().map(String::as_str).collect::<Vec<_>>(),
         Navigation::Back,
     )?;
-    let Navigation::Value(value) = selection else {
-        return Err(cancelled(locale));
+    let value = match selection {
+        Navigation::Value(value) => value,
+        Navigation::Back => return Ok(false),
+        Navigation::MainMenu | Navigation::Exit => return Err(cancelled(locale)),
     };
     let index = value
         .parse::<usize>()
@@ -344,7 +415,7 @@ fn choose_catalog_template(
         "template_display_name".to_owned(),
         serde_json::Value::String(entry.display_name.clone()),
     );
-    Ok(())
+    Ok(true)
 }
 
 fn choose_manual_template(document: &mut WizardAnswerDocument, locale: &str) -> Result<(), String> {

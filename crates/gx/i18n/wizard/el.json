@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Πηγές καταλόγου (διαχωρισμένες με κόμμα για αντικατάσταση της τρέχουσας· τοπική διαδρομή, oci://, repo:// ή store://)",
   "wizard.create.template.basic": "Ξεκινήστε από μια βασική κενή λύση",
   "wizard.create.template.catalog": "Επιλέξτε από πρότυπα καταλόγου",
+  "wizard.create.template.catalog_ref": "Χρησιμοποιήστε ένα URL ή διαδρομή καταλόγου",
   "wizard.create.template.choose": "Επιλέξτε πρότυπο καταλόγου",
   "wizard.create.template.manual": "Προηγμένη χειροκίνητη αναφορά προτύπου",
   "wizard.create.template.title": "Από ποιο πρότυπο λύσης θα πρέπει να ξεκινήσει αυτό;",

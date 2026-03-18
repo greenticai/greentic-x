@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Catálogo itech pehuah (coma ica tlaxeloltili para kipatla in axkan; local path, oci://, repo://, o store://)",
   "wizard.create.template.basic": "Xipehua ipan se básico vacío solución",
   "wizard.create.template.catalog": "Xicpejpena ipan tlanextiloyan plantillas",
+  "wizard.create.template.catalog_ref": "Xictequiti se URL noso ohtli tlen catálogo",
   "wizard.create.template.choose": "Xicpejpena tlanextiloyan plantilla",
   "wizard.create.template.manual": "Hueyi manual plantilla referencia",
   "wizard.create.template.title": "¿Ipan tlein solución plantilla monequi inin pehuaz?",

@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Източници на каталог (разделени със запетаи за замяна на текущите; локален път, oci://, repo:// или store://)",
   "wizard.create.template.basic": "Започни от базово празно решение",
   "wizard.create.template.catalog": "Избери от шаблоните в каталога",
+  "wizard.create.template.catalog_ref": "Използвайте URL или път към каталог",
   "wizard.create.template.choose": "Избери шаблон от каталога",
   "wizard.create.template.manual": "Разширена ръчна препратка към шаблон",
   "wizard.create.template.title": "От кой шаблон за решение трябва да започне това?",

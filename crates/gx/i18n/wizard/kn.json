@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "ಕ್ಯಾಟಲಾಗ್ ಮೂಲಗಳು (ಪ್ರಸ್ತುತದ್ದನ್ನು ಬದಲಿಸಲು ಕಾಮಾ-ಪ್ರತ್ಯೇಕಿತ; ಸ್ಥಳೀಯ ಪಥ, oci://, repo://, ಅಥವಾ store://)",
   "wizard.create.template.basic": "ಮೂಲಭೂತ ಖಾಲಿ ಪರಿಹಾರದಿಂದ ಪ್ರಾರಂಭಿಸಿ",
   "wizard.create.template.catalog": "ಕ್ಯಾಟಲಾಗ್ ಟೆಂಪ್ಲೇಟ್‌ಗಳಿಂದ ಆಯ್ಕೆಮಾಡಿ",
+  "wizard.create.template.catalog_ref": "ಕ್ಯಾಟಲಾಗ್ URL ಅಥವಾ ಪಥವನ್ನು ಬಳಸಿ",
   "wizard.create.template.choose": "ಕ್ಯಾಟಲಾಗ್ ಟೆಂಪ್ಲೇಟ್ ಆಯ್ಕೆಮಾಡಿ",
   "wizard.create.template.manual": "ಸುಧಾರಿತ ಕೈಯಾರೆ ಟೆಂಪ್ಲೇಟ್ ಉಲ್ಲೇಖ",
   "wizard.create.template.title": "ಈ ಪರಿಹಾರವು ಯಾವ ಟೆಂಪ್ಲೇಟ್‌ನಿಂದ ಪ್ರಾರಂಭವಾಗಬೇಕು?",

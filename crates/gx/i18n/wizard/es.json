@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Orígenes del catálogo (separados por comas para reemplazar el actual; ruta local, oci://, repo:// o store://)",
   "wizard.create.template.basic": "Comenzar desde una solución básica vacía",
   "wizard.create.template.catalog": "Elegir entre plantillas del catálogo",
+  "wizard.create.template.catalog_ref": "Usa una URL o ruta del catálogo",
   "wizard.create.template.choose": "Elegir plantilla del catálogo",
   "wizard.create.template.manual": "Referencia manual avanzada de plantilla",
   "wizard.create.template.title": "¿Desde qué plantilla de solución debería comenzar esto?",

@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "കാറ്റലോഗ് ഉറവിടങ്ങൾ (നിലവിലുള്ളത് മാറ്റിസ്ഥാപിക്കാൻ കോമയാൽ വേർതിരിച്ചത്; ലോക്കൽ പാത്ത്, oci://, repo://, അല്ലെങ്കിൽ store://)",
   "wizard.create.template.basic": "ഒരു അടിസ്ഥാന ശൂന്യ പരിഹാരത്തിൽ നിന്ന് ആരംഭിക്കുക",
   "wizard.create.template.catalog": "കാറ്റലോഗ് ടെംപ്ലേറ്റുകളിൽ നിന്ന് തിരഞ്ഞെടുക്കുക",
+  "wizard.create.template.catalog_ref": "ഒരു കാറ്റലോഗ് URL അല്ലെങ്കിൽ പാത്ത് ഉപയോഗിക്കുക",
   "wizard.create.template.choose": "കാറ്റലോഗ് ടെംപ്ലേറ്റ് തിരഞ്ഞെടുക്കുക",
   "wizard.create.template.manual": "ഉന്നത മാനുവൽ ടെംപ്ലേറ്റ് റഫറൻസ്",
   "wizard.create.template.title": "ഈ പരിഹാരം ഏത് ടെംപ്ലേറ്റിൽ നിന്നാണ് ആരംഭിക്കേണ്ടത്?",

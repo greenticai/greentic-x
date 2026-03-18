@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "कॅटलॉग स्रोत (सध्याचे बदलण्यासाठी स्वल्पविरामाने विभक्त; स्थानिक मार्ग, oci://, repo://, किंवा store://)",
   "wizard.create.template.basic": "मूलभूत रिकाम्या सोल्यूशनपासून सुरू करा",
   "wizard.create.template.catalog": "कॅटलॉग टेम्पलेटमधून निवडा",
+  "wizard.create.template.catalog_ref": "कॅटलॉग URL किंवा मार्ग वापरा",
   "wizard.create.template.choose": "कॅटलॉग टेम्पलेट निवडा",
   "wizard.create.template.manual": "प्रगत मॅन्युअल टेम्पलेट संदर्भ",
   "wizard.create.template.title": "हे कोणत्या सोल्यूशन टेम्पलेटपासून सुरू व्हावे?",

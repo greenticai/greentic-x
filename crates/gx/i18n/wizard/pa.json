@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "ਕੈਟਾਲਾਗ ਸਰੋਤ (ਮੌਜੂਦਾ ਨੂੰ ਬਦਲਣ ਲਈ ਕਾਮਾ-ਵੱਖਰੇ; ਲੋਕਲ ਪਾਥ, oci://, repo://, ਜਾਂ store://)",
   "wizard.create.template.basic": "ਇੱਕ ਬੁਨਿਆਦੀ ਖਾਲੀ ਹੱਲ ਨਾਲ ਸ਼ੁਰੂ ਕਰੋ",
   "wizard.create.template.catalog": "ਕੈਟਾਲੌਗ ਟੈਂਪਲੇਟਾਂ ਵਿੱਚੋਂ ਚੁਣੋ",
+  "wizard.create.template.catalog_ref": "ਕੈਟਾਲਾਗ URL ਜਾਂ ਪਾਥ ਵਰਤੋ",
   "wizard.create.template.choose": "ਕੈਟਾਲੌਗ ਟੈਂਪਲੇਟ ਚੁਣੋ",
   "wizard.create.template.manual": "ਉੱਨਤ ਮੈਨੂਅਲ ਟੈਂਪਲੇਟ ਹਵਾਲਾ",
   "wizard.create.template.title": "ਇਹ ਕਿਸ ਹੱਲ ਟੈਂਪਲੇਟ ਤੋਂ ਸ਼ੁਰੂ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ?",

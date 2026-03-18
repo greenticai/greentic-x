@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Katalogkällor (kommaseparerade för att ersätta nuvarande; lokal sökväg, oci://, repo:// eller store://)",
   "wizard.create.template.basic": "Börja med en grundläggande tom lösning",
   "wizard.create.template.catalog": "Välj från katalogmallar",
+  "wizard.create.template.catalog_ref": "Använd en katalog-URL eller sökväg",
   "wizard.create.template.choose": "Välj katalogmall",
   "wizard.create.template.manual": "Avancerad manuell mallreferens",
   "wizard.create.template.title": "Vilken lösningsmall ska detta börja från?",

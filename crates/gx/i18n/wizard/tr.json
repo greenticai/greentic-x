@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Katalog kaynakları (geçerli olanı değiştirmek için virgülle ayrılmış; yerel yol, oci://, repo:// veya store://)",
   "wizard.create.template.basic": "Temel boş bir çözümden başla",
   "wizard.create.template.catalog": "Katalog şablonlarından seç",
+  "wizard.create.template.catalog_ref": "Bir katalog URL'si veya yolu kullan",
   "wizard.create.template.choose": "Katalog şablonu seç",
   "wizard.create.template.manual": "Gelişmiş manuel şablon başvurusu",
   "wizard.create.template.title": "Bu çözüm hangi şablondan başlamalı?",

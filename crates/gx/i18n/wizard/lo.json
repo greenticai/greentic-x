@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "ແຫຼ່ງຂໍ້ມູນລາຍການ (ແຍກດ້ວຍ comma ເພື່ອແທນທີ່ຄ່າປັດຈຸບັນ; local path, oci://, repo://, ຫຼື store://)",
   "wizard.create.template.basic": "ເລີ່ມຈາກ solution ວ່າງແບບພື້ນຖານ",
   "wizard.create.template.catalog": "ເລືອກຈາກແມ່ແບບ catalog",
+  "wizard.create.template.catalog_ref": "ໃຊ້ URL ຫຼື ເສັ້ນທາງຂອງແຄັດຕາລັອກ",
   "wizard.create.template.choose": "ເລືອກແມ່ແບບ catalog",
   "wizard.create.template.manual": "ອ້າງອີງແມ່ແບບແບບກຳນົດເອງຂັ້ນສູງ",
   "wizard.create.template.title": "solution ນີ້ຄວນເລີ່ມຈາກແມ່ແບບໃດ?",

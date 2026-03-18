@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Các nguồn danh mục (phân tách bằng dấu phẩy để thay thế hiện tại; đường dẫn cục bộ, oci://, repo:// hoặc store://)",
   "wizard.create.template.basic": "Bắt đầu từ một giải pháp trống cơ bản",
   "wizard.create.template.catalog": "Chọn từ các mẫu trong danh mục",
+  "wizard.create.template.catalog_ref": "Sử dụng URL hoặc đường dẫn danh mục",
   "wizard.create.template.choose": "Chọn mẫu danh mục",
   "wizard.create.template.manual": "Tham chiếu mẫu thủ công nâng cao",
   "wizard.create.template.title": "Giải pháp này nên bắt đầu từ mẫu giải pháp nào?",

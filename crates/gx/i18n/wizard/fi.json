@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Luettelon lähteet (pilkuin eroteltuina korvaamaan nykyiset; paikallinen polku, oci://, repo:// tai store://)",
   "wizard.create.template.basic": "Aloita perusratkaisusta ilman sisältöä",
   "wizard.create.template.catalog": "Valitse katalogimalleista",
+  "wizard.create.template.catalog_ref": "Käytä katalogin URL-osoitetta tai polkua",
   "wizard.create.template.choose": "Valitse katalogimalli",
   "wizard.create.template.manual": "Edistynyt manuaalinen malliviite",
   "wizard.create.template.title": "Mistä ratkaisumallista tämän pitäisi alkaa?",

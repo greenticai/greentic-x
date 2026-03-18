@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Zdroje katalógu (oddelené čiarkami na nahradenie aktuálnych; lokálna cesta, oci://, repo:// alebo store://)",
   "wizard.create.template.basic": "Začať od základného prázdneho riešenia",
   "wizard.create.template.catalog": "Vybrať zo šablón katalógu",
+  "wizard.create.template.catalog_ref": "Použite URL alebo cestu ku katalógu",
   "wizard.create.template.choose": "Vybrať šablónu katalógu",
   "wizard.create.template.manual": "Pokročilý manuálny odkaz na šablónu",
   "wizard.create.template.title": "Z ktorej šablóny riešenia sa má začať?",

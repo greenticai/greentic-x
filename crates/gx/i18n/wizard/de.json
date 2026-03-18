@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "Katalogquellen (kommagetrennt, um die aktuelle zu ersetzen; lokaler Pfad, oci://, repo:// oder store://)",
   "wizard.create.template.basic": "Mit einer einfachen leeren Lösung beginnen",
   "wizard.create.template.catalog": "Aus Katalogvorlagen auswählen",
+  "wizard.create.template.catalog_ref": "Verwenden Sie eine Katalog-URL oder einen Pfad",
   "wizard.create.template.choose": "Katalogvorlage auswählen",
   "wizard.create.template.manual": "Erweiterte manuelle Vorlagenreferenz",
   "wizard.create.template.title": "Mit welcher Lösungsvorlage soll dies beginnen?",

@@ -35,6 +35,7 @@ pub(crate) fn init_catalog_repo(
         .map_err(|err| format!("failed to create {}: {err}", path.display()))?;
     for dir in [
         "assistant_templates",
+        "provider_presets",
         "bundles",
         "views",
         "overlays",
@@ -107,12 +108,27 @@ pub(crate) fn init_catalog_repo(
         )?;
     }
     if include_publish_workflow {
+        let ci_dir = path.join("ci");
+        fs::create_dir_all(&ci_dir)
+            .map_err(|err| format!("failed to create {}: {err}", ci_dir.display()))?;
+        fs::write(
+            ci_dir.join("create_bundle_archive.sh"),
+            create_bundle_archive_script(repo_name),
+        )
+        .map_err(|err| format!("failed to write bundle archive script: {err}"))?;
+        fs::write(
+            ci_dir.join("render_remote_catalog.py"),
+            render_remote_catalog_script(),
+        )
+        .map_err(|err| format!("failed to write remote catalog renderer: {err}"))?;
         let workflow_dir = path.join(".github").join("workflows");
         fs::create_dir_all(&workflow_dir)
             .map_err(|err| format!("failed to create {}: {err}", workflow_dir.display()))?;
+        fs::write(workflow_dir.join("ci.yml"), ci_workflow(repo_name))
+            .map_err(|err| format!("failed to write CI workflow: {err}"))?;
         fs::write(
-            workflow_dir.join("publish-catalog.yml"),
-            publish_catalog_workflow(),
+            workflow_dir.join("publish.yml"),
+            publish_workflow(repo_name),
         )
         .map_err(|err| format!("failed to write publish workflow: {err}"))?;
     }
@@ -619,108 +635,384 @@ fn scaffold_cargo_toml(repo_name: &str, title: Option<&str>) -> String {
     )
 }
 
-fn publish_catalog_workflow() -> String {
-    r#"name: publish-catalog
+fn ci_workflow(repo_name: &str) -> String {
+    CI_WORKFLOW_TEMPLATE.replace("__REPO_NAME__", repo_name)
+}
+
+fn publish_workflow(repo_name: &str) -> String {
+    PUBLISH_WORKFLOW_TEMPLATE.replace("__REPO_NAME__", repo_name)
+}
+
+fn create_bundle_archive_script(repo_name: &str) -> String {
+    CREATE_BUNDLE_ARCHIVE_TEMPLATE.replace("__REPO_NAME__", repo_name)
+}
+
+fn render_remote_catalog_script() -> String {
+    RENDER_REMOTE_CATALOG_TEMPLATE.to_owned()
+}
+
+const CI_WORKFLOW_TEMPLATE: &str = r#"name: CI
 
 on:
-  workflow_dispatch:
+  pull_request:
   push:
     branches:
-      - main
       - master
+      - main
 
 permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUNDLE_OCI_REF: ghcr.io/${{ github.repository_owner }}/bundles/__REPO_NAME__-bundle
+  CATALOG_OCI_REF: ghcr.io/${{ github.repository_owner }}/catalogs/__REPO_NAME__
+  CATALOG_ARTIFACT_TYPE: application/vnd.greentic.catalog.v1+json
+  CATALOG_LAYER_MEDIA_TYPE: application/vnd.greentic.catalog.root.v1+json
+  BUNDLE_LAYER_MEDIA_TYPE: application/vnd.greentic.catalog-bundle.v1+tar+gzip
+
 jobs:
-  publish:
+  catalog-validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: cargo-bins/cargo-binstall@main
-      - name: Install tooling
+      - uses: taiki-e/install-action@cargo-binstall
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/greentic-x
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+          key: ${{ runner.os }}-greentic-x-bin-${{ hashFiles('.github/workflows/ci.yml', '.github/workflows/publish.yml') }}
+      - name: Add cargo bin to PATH
+        shell: bash
+        run: echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Install greentic-x CLI
+        shell: bash
         run: |
-          cargo binstall --no-confirm "greentic-x@0.4"
-          cargo binstall --no-confirm "greentic-pack@0.4"
-      - name: Build and validate catalog
-        run: |
-          greentic-x catalog build --repo .
-          greentic-x catalog validate --repo .
+          set -euo pipefail
+          export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+          if ! command -v greentic-x >/dev/null 2>&1; then
+            cargo binstall --no-confirm greentic-x
+          fi
+          if ! command -v greentic-x >/dev/null 2>&1; then
+            cargo binstall --force --no-confirm greentic-x
+          fi
+          greentic-x --version
+      - name: Build canonical catalog
+        run: greentic-x catalog build --repo .
+      - name: Validate canonical catalog
+        run: greentic-x catalog validate --repo .
+
+  publish-ghcr:
+    runs-on: ubuntu-latest
+    needs:
+      - catalog-validate
+    if: github.event_name == 'push' && (github.ref_name == 'master' || github.ref_name == 'main')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@cargo-binstall
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/greentic-x
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+          key: ${{ runner.os }}-greentic-x-bin-${{ hashFiles('.github/workflows/ci.yml', '.github/workflows/publish.yml') }}
       - uses: oras-project/setup-oras@v1
-      - uses: docker/login-action@v3
+      - name: Add cargo bin to PATH
+        shell: bash
+        run: echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Determine repo version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(sed -n '/^\[package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)"
+          if [ -z "$VERSION" ]; then
+            echo "Unable to determine version from Cargo.toml" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Install greentic-x CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+          if ! command -v greentic-x >/dev/null 2>&1; then
+            cargo binstall --no-confirm greentic-x
+          fi
+          if ! command -v greentic-x >/dev/null 2>&1; then
+            cargo binstall --force --no-confirm greentic-x
+          fi
+          greentic-x --version
+      - name: Build canonical catalog
+        run: greentic-x catalog build --repo .
+      - name: Validate canonical catalog
+        run: greentic-x catalog validate --repo .
+      - name: Render remote catalog variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p target
+          python3 ci/render_remote_catalog.py \
+            --input catalog.json \
+            --output target/catalog.remote.json \
+            --bundle-ref "oci://${BUNDLE_OCI_REF}:${{ steps.version.outputs.version }}"
+          python3 ci/render_remote_catalog.py \
+            --input catalog.json \
+            --output target/catalog.remote.latest.json \
+            --bundle-ref "oci://${BUNDLE_OCI_REF}:latest"
+      - name: Build bundle archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARCHIVE="target/__REPO_NAME__-bundle-${{ steps.version.outputs.version }}.tar.gz"
+          bash ci/create_bundle_archive.sh "${{ steps.version.outputs.version }}" "$ARCHIVE"
+          ls -l "$ARCHIVE"
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push catalog index to GHCR
+          password: ${{ secrets.GHCR_TOKEN || github.token }}
+      - name: Push remote catalog
+        shell: bash
         run: |
-          repo_name="${GITHUB_REPOSITORY##*/}"
-          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
           oras push \
-            "ghcr.io/${owner}/catalogs/${repo_name}/catalog.json:latest" \
-            --artifact-type application/vnd.greentic.catalog.v1+json \
-            catalog.json:application/json
-      - name: Build and push packs to GHCR
+            --artifact-type "${CATALOG_ARTIFACT_TYPE}" \
+            "${CATALOG_OCI_REF}:${VERSION}" \
+            "target/catalog.remote.json:${CATALOG_LAYER_MEDIA_TYPE}"
+          oras push \
+            --artifact-type "${CATALOG_ARTIFACT_TYPE}" \
+            "${CATALOG_OCI_REF}:latest" \
+            "target/catalog.remote.latest.json:${CATALOG_LAYER_MEDIA_TYPE}"
+      - name: Push bundle archive
         shell: bash
         run: |
           set -euo pipefail
-          repo_name="${GITHUB_REPOSITORY##*/}"
-          owner="${GITHUB_REPOSITORY_OWNER,,}"
-          if [ ! -d packs ]; then
-            echo "No packs directory present; skipping pack publication."
-            exit 0
-          fi
-          found=0
-          for pack_dir in packs/*; do
-            [ -d "$pack_dir" ] || continue
-            [ -f "$pack_dir/pack.yaml" ] || continue
-            found=1
-            pack_name="$(basename "$pack_dir")"
-            greentic-pack build --in "$pack_dir"
-            artifact="$pack_dir/dist/${pack_name}.gtpack"
-            oras push \
-              "ghcr.io/${owner}/packs/${repo_name}/${pack_name}:latest" \
-              --artifact-type application/vnd.greentic.pack.v1+archive \
-              "$artifact:application/octet-stream"
-          done
-          if [ "$found" -eq 0 ]; then
-            echo "No pack.yaml entries found under packs/; skipping pack publication."
-          fi
-      - name: Build catalog bundle
+          VERSION="${{ steps.version.outputs.version }}"
+          ARCHIVE="target/__REPO_NAME__-bundle-${VERSION}.tar.gz"
+          oras push "${BUNDLE_OCI_REF}:${VERSION}" \
+            "$ARCHIVE:${BUNDLE_LAYER_MEDIA_TYPE}"
+          oras push "${BUNDLE_OCI_REF}:latest" \
+            "$ARCHIVE:${BUNDLE_LAYER_MEDIA_TYPE}"
+"#;
+
+const PUBLISH_WORKFLOW_TEMPLATE: &str = r#"name: Publish
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-manual-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BUNDLE_OCI_REF: ghcr.io/${{ github.repository_owner }}/bundles/__REPO_NAME__-bundle
+  CATALOG_OCI_REF: ghcr.io/${{ github.repository_owner }}/catalogs/__REPO_NAME__
+  CATALOG_ARTIFACT_TYPE: application/vnd.greentic.catalog.v1+json
+  CATALOG_LAYER_MEDIA_TYPE: application/vnd.greentic.catalog.root.v1+json
+  BUNDLE_LAYER_MEDIA_TYPE: application/vnd.greentic.catalog-bundle.v1+tar+gzip
+
+jobs:
+  publish-ghcr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@cargo-binstall
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/greentic-x
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+          key: ${{ runner.os }}-greentic-x-bin-${{ hashFiles('.github/workflows/ci.yml', '.github/workflows/publish.yml') }}
+      - uses: oras-project/setup-oras@v1
+      - name: Add cargo bin to PATH
+        shell: bash
+        run: echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Determine repo version
+        id: version
         shell: bash
         run: |
           set -euo pipefail
-          repo_name="${GITHUB_REPOSITORY##*/}"
+          VERSION="$(sed -n '/^\[package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)"
+          if [ -z "$VERSION" ]; then
+            echo "Unable to determine version from Cargo.toml" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Install greentic-x CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+          if ! command -v greentic-x >/dev/null 2>&1; then
+            cargo binstall --no-confirm greentic-x
+          fi
+          if ! command -v greentic-x >/dev/null 2>&1; then
+            cargo binstall --force --no-confirm greentic-x
+          fi
+          greentic-x --version
+      - name: Build canonical catalog
+        run: greentic-x catalog build --repo .
+      - name: Validate canonical catalog
+        run: greentic-x catalog validate --repo .
+      - name: Render remote catalog variants
+        shell: bash
+        run: |
+          set -euo pipefail
           mkdir -p target
-          tar -czf "target/${repo_name}-bundle.tar.gz" \
-            catalog.json \
-            assistant_templates \
-            bundles \
-            views \
-            overlays \
-            setup_profiles \
-            contracts \
-            resolvers \
-            adapters \
-            analysis \
-            playbooks \
-            README.md \
-            Cargo.toml
-      - name: Push catalog bundle to GHCR
+          python3 ci/render_remote_catalog.py \
+            --input catalog.json \
+            --output target/catalog.remote.json \
+            --bundle-ref "oci://${BUNDLE_OCI_REF}:${{ steps.version.outputs.version }}"
+          python3 ci/render_remote_catalog.py \
+            --input catalog.json \
+            --output target/catalog.remote.latest.json \
+            --bundle-ref "oci://${BUNDLE_OCI_REF}:latest"
+      - name: Build bundle archive
         shell: bash
         run: |
           set -euo pipefail
-          repo_name="${GITHUB_REPOSITORY##*/}"
-          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          ARCHIVE="target/__REPO_NAME__-bundle-${{ steps.version.outputs.version }}.tar.gz"
+          bash ci/create_bundle_archive.sh "${{ steps.version.outputs.version }}" "$ARCHIVE"
+          ls -l "$ARCHIVE"
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN || github.token }}
+      - name: Push remote catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
           oras push \
-            "ghcr.io/${owner}/${repo_name}-bundle:latest" \
-            --artifact-type application/vnd.greentic.catalog-bundle.v1+tar.gz \
-            "target/${repo_name}-bundle.tar.gz:application/vnd.oci.image.layer.v1.tar+gzip"
-"#
-    .to_owned()
-}
+            --artifact-type "${CATALOG_ARTIFACT_TYPE}" \
+            "${CATALOG_OCI_REF}:${VERSION}" \
+            "target/catalog.remote.json:${CATALOG_LAYER_MEDIA_TYPE}"
+          oras push \
+            --artifact-type "${CATALOG_ARTIFACT_TYPE}" \
+            "${CATALOG_OCI_REF}:latest" \
+            "target/catalog.remote.latest.json:${CATALOG_LAYER_MEDIA_TYPE}"
+      - name: Push bundle archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          ARCHIVE="target/__REPO_NAME__-bundle-${VERSION}.tar.gz"
+          oras push "${BUNDLE_OCI_REF}:${VERSION}" \
+            "$ARCHIVE:${BUNDLE_LAYER_MEDIA_TYPE}"
+          oras push "${BUNDLE_OCI_REF}:latest" \
+            "$ARCHIVE:${BUNDLE_LAYER_MEDIA_TYPE}"
+"#;
+
+const CREATE_BUNDLE_ARCHIVE_TEMPLATE: &str = r#"#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -ne 2 ]; then
+  echo "usage: $0 <version> <output-path>" >&2
+  exit 1
+fi
+
+VERSION="$1"
+OUTPUT_PATH="$2"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+STAGING_DIR="$ROOT_DIR/target/bundle-archive"
+ARCHIVE_ROOT="__REPO_NAME__-bundle-${VERSION}"
+
+rm -rf "$STAGING_DIR"
+mkdir -p "$STAGING_DIR/$ARCHIVE_ROOT"
+mkdir -p "$(dirname "$OUTPUT_PATH")"
+
+cp "$ROOT_DIR/catalog.json" "$STAGING_DIR/$ARCHIVE_ROOT/"
+cp "$ROOT_DIR/README.md" "$STAGING_DIR/$ARCHIVE_ROOT/"
+cp "$ROOT_DIR/Cargo.toml" "$STAGING_DIR/$ARCHIVE_ROOT/"
+
+for path in \
+  assistant_templates \
+  provider_presets \
+  bundles \
+  views \
+  overlays \
+  setup_profiles \
+  contracts \
+  resolvers \
+  adapters \
+  analysis \
+  playbooks \
+  packs
+do
+  if [ -e "$ROOT_DIR/$path" ]; then
+    cp -R "$ROOT_DIR/$path" "$STAGING_DIR/$ARCHIVE_ROOT/"
+  fi
+done
+
+tar -C "$STAGING_DIR" -czf "$OUTPUT_PATH" "$ARCHIVE_ROOT"
+echo "$OUTPUT_PATH"
+"#;
+
+const RENDER_REMOTE_CATALOG_TEMPLATE: &str = r#"#!/usr/bin/env python3
+import argparse
+import json
+from pathlib import Path
+
+
+def rewrite_catalog(value: dict, bundle_ref: str) -> dict:
+    entries = value.get("entries")
+    if not isinstance(entries, list):
+        raise SystemExit("catalog root is missing entries")
+
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise SystemExit("catalog entry is not an object")
+        reference = entry.get("ref")
+        if not isinstance(reference, str) or not reference:
+            raise SystemExit("catalog entry is missing ref")
+        metadata = entry.setdefault("metadata", {})
+        if not isinstance(metadata, dict):
+            raise SystemExit("catalog entry metadata must be an object")
+        metadata["bundle_ref"] = bundle_ref
+        if entry.get("kind") == "assistant_template":
+            metadata.setdefault("assistant_template_ref", reference)
+    return value
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--bundle-ref", required=True)
+    args = parser.parse_args()
+
+    source = Path(args.input)
+    target = Path(args.output)
+    value = json.loads(source.read_text())
+    rendered = json.dumps(rewrite_catalog(value, args.bundle_ref), indent=2) + "\n"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(rendered)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+"#;
 
 #[cfg(test)]
 mod tests {
@@ -734,15 +1026,19 @@ mod tests {
         init_catalog_repo(&repo, "zain-x", None, None, true, true)?;
         assert!(repo.join("catalog.json").exists());
         assert!(repo.join("Cargo.toml").exists());
-        assert!(repo.join(".github/workflows/publish-catalog.yml").exists());
+        assert!(repo.join("provider_presets").exists());
+        assert!(repo.join("ci/create_bundle_archive.sh").exists());
+        assert!(repo.join("ci/render_remote_catalog.py").exists());
+        assert!(repo.join(".github/workflows/ci.yml").exists());
+        assert!(repo.join(".github/workflows/publish.yml").exists());
         let cargo_toml = fs::read_to_string(repo.join("Cargo.toml"))?;
         assert!(cargo_toml.contains("greentic-x-contracts = \"0.4\""));
         assert!(cargo_toml.contains("greentic-x-flow = \"0.4\""));
-        let workflow = fs::read_to_string(repo.join(".github/workflows/publish-catalog.yml"))?;
-        assert!(workflow.contains("cargo binstall --no-confirm \"greentic-x@0.4\""));
-        assert!(workflow.contains("ghcr.io/${owner}/catalogs/${repo_name}/catalog.json:latest"));
-        assert!(workflow.contains("ghcr.io/${owner}/packs/${repo_name}/${pack_name}:latest"));
-        assert!(workflow.contains("ghcr.io/${owner}/${repo_name}-bundle:latest"));
+        let workflow = fs::read_to_string(repo.join(".github/workflows/ci.yml"))?;
+        assert!(workflow.contains("cargo binstall --no-confirm greentic-x"));
+        assert!(workflow.contains("ghcr.io/${{ github.repository_owner }}/catalogs/zain-x"));
+        assert!(workflow.contains("ghcr.io/${{ github.repository_owner }}/bundles/zain-x-bundle"));
+        assert!(workflow.contains("python3 ci/render_remote_catalog.py"));
         validate_catalog_repo(&repo)?;
         Ok(())
     }

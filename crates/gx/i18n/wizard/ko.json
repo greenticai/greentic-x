@@ -3,6 +3,7 @@
   "wizard.advanced.catalog_sources": "카탈로그 소스(현재 값을 대체할 쉼표로 구분된 목록; 로컬 경로, oci://, repo:// 또는 store://)",
   "wizard.create.template.basic": "기본 빈 솔루션에서 시작",
   "wizard.create.template.catalog": "카탈로그 템플릿에서 선택",
+  "wizard.create.template.catalog_ref": "카탈로그 URL 또는 경로 사용",
   "wizard.create.template.choose": "카탈로그 템플릿 선택",
   "wizard.create.template.manual": "고급 수동 템플릿 참조",
   "wizard.create.template.title": "이 솔루션을 어떤 템플릿으로 시작하시겠습니까?",
