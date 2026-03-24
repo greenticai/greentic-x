@@ -186,11 +186,54 @@ jobs:
           name: greentic-x-${{ matrix.target }}
           path: ${{ steps.package_windows.outputs.asset_path }}
 
+  publish-template-oci:
+    needs:
+      - test
+      - release-metadata
+    if: needs.release-metadata.outputs.create_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      TEMPLATE_OCI_PREFIX: ghcr.io/greenticai/greentic-x/templates
+      TEMPLATE_ARTIFACT_TYPE: application/vnd.greentic.template.v1+json
+      TEMPLATE_LAYER_MEDIA_TYPE: application/json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oras-project/setup-oras@v1
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN || github.token }}
+      - name: Push template artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.release-metadata.outputs.version }}"
+          shopt -s nullglob
+          for template_file in templates/assistant/*.json templates/domain/*.json; do
+            template_group="$(basename "$(dirname "$template_file")")"
+            template_name="$(basename "$template_file" .json)"
+            template_ref="${TEMPLATE_OCI_PREFIX}/${template_group}/${template_name}"
+            oras push \
+              --artifact-type "${TEMPLATE_ARTIFACT_TYPE}" \
+              "${template_ref}:${VERSION}" \
+              "${template_file}:${TEMPLATE_LAYER_MEDIA_TYPE}"
+            oras push \
+              --artifact-type "${TEMPLATE_ARTIFACT_TYPE}" \
+              "${template_ref}:latest" \
+              "${template_file}:${TEMPLATE_LAYER_MEDIA_TYPE}"
+          done
+
   github-release:
     needs:
       - release-metadata
       - publish-crates
       - build-binstall
+      - publish-template-oci
     if: needs.release-metadata.outputs.create_release == 'true'
     runs-on: ubuntu-latest
     permissions:

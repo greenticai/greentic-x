@@ -272,6 +272,12 @@ fn print_completion_message(cwd: &Path, plan: &WizardPlanEnvelope) -> Result<(),
         .and_then(Value::as_str)
         .ok_or_else(|| "wizard result missing bundle_output_path".to_owned())?;
     let resolved = resolve_wizard_path(cwd, Path::new(path));
+    if !resolved.exists() {
+        return Err(format!(
+            "wizard reported bundle output {}, but the file was not created",
+            resolved.display()
+        ));
+    }
     println!("Solution created successfully.");
     println!();
     println!("Generated bundle: {}", resolved.display());

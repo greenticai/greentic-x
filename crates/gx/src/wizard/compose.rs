@@ -407,6 +407,7 @@ fn build_bundle_answers(
             "provider_preset_refs".to_owned(),
             Value::Array(provider_refs.iter().cloned().map(Value::String).collect()),
         ),
+        ("export_intent".to_owned(), Value::Bool(true)),
     ]);
     if let Some(overlay) = overlay {
         answers.insert("overlay".to_owned(), overlay.clone());
@@ -417,7 +418,10 @@ fn build_bundle_answers(
         schema_version: SCHEMA_VERSION.to_owned(),
         locale: locale.to_owned(),
         answers,
-        locks: serde_json::Map::new(),
+        locks: serde_json::Map::from_iter([(
+            "execution".to_owned(),
+            Value::String("execute".to_owned()),
+        )]),
     }
 }
 
@@ -610,9 +614,11 @@ mod tests {
                 display_name: "Network Assistant".to_owned(),
                 description: "Network Assistant template".to_owned(),
                 assistant_template_ref:
-                    "oci://ghcr.io/greenticai/templates/network-assistant:latest".to_owned(),
+                    "oci://ghcr.io/greenticai/greentic-x/templates/assistant/network-phase1:latest"
+                        .to_owned(),
                 domain_template_ref: Some(
-                    "oci://ghcr.io/greenticai/templates/network-domain:latest".to_owned(),
+                    "oci://ghcr.io/greenticai/greentic-x/templates/domain/network-phase1:latest"
+                        .to_owned(),
                 ),
                 bundle_ref: None,
                 provenance: Some(CatalogProvenance {
@@ -640,8 +646,10 @@ mod tests {
         );
         assert_eq!(
             generated.bundle_answers.answers["assistant_template_source"],
-            "oci://ghcr.io/greenticai/templates/network-assistant:latest"
+            "oci://ghcr.io/greenticai/greentic-x/templates/assistant/network-phase1:latest"
         );
+        assert_eq!(generated.bundle_answers.answers["export_intent"], true);
+        assert_eq!(generated.bundle_answers.locks["execution"], "execute");
     }
 
     #[test]

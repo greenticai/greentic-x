@@ -4,6 +4,6 @@
   "version": "1.0.0",
   "display_name": "Network Assistant Phase 1",
   "description": "Starter network assistant composition template.",
-  "assistant_template_ref": "oci://ghcr.io/greenticai/templates/assistant/network-phase1:latest",
-  "domain_template_ref": "oci://ghcr.io/greenticai/templates/domain/network-phase1:latest"
+  "assistant_template_ref": "templates/assistant/network-phase1.json",
+  "domain_template_ref": "templates/domain/network-phase1.json"
 }
