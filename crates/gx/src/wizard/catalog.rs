@@ -503,6 +503,11 @@ fn load_local_templates(
         entry.provenance = Some(local_provenance(&path));
         target.push(entry);
     }
+    for path in json_files_in_dir(&cwd.join("assistant_templates"))? {
+        let mut entry: AssistantTemplateCatalogEntry = read_json_file(&path)?;
+        entry.provenance = Some(local_provenance(&path));
+        target.push(entry);
+    }
     Ok(())
 }
 
@@ -718,9 +723,9 @@ mod tests {
     fn load_catalogs_merges_local_and_oci_entries() {
         let temp = tempfile::TempDir::new().expect("tempdir");
         let root = temp.path();
-        fs::create_dir_all(root.join("catalog/templates")).expect("mkdir");
+        fs::create_dir_all(root.join("assistant_templates")).expect("mkdir");
         fs::write(
-            root.join("catalog/templates/local.json"),
+            root.join("assistant_templates/local.json"),
             r#"{
               "entry_id": "local-template",
               "kind": "assistant-template",
