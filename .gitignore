@@ -1,3 +1,6 @@
 /target
 /packs/*/dist/
 .gx/
+
+# OS
+.DS_Store
