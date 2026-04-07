@@ -482,7 +482,7 @@ fn choose_provider(
         }
         Navigation::Value(value) if value == "7" => {
             let default = current_provider
-                .unwrap_or("ghcr.io/greenticai/packs/messaging/messaging-webchat:latest");
+                .unwrap_or("oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest");
             let provider_ref = prompt_text(locale, "wizard.field.provider_oci_ref", Some(default))?;
             document.answers.insert(
                 "provider_selection".to_owned(),

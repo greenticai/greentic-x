@@ -399,7 +399,7 @@ mod tests {
                 "provider_presets": [{
                     "entry_id": "builtin.teams",
                     "display_name": "Teams",
-                    "provider_refs": ["ghcr.io/greenticai/packs/messaging/messaging-teams:latest"]
+                    "provider_refs": ["oci://ghcr.io/greenticai/packs/messaging/messaging-teams:latest"]
                 }]
             }))
             .expect("serialize"),
@@ -432,7 +432,7 @@ mod tests {
         );
         assert_eq!(
             request.provider_refs,
-            vec!["ghcr.io/greenticai/packs/messaging/messaging-teams:latest".to_owned()]
+            vec!["oci://ghcr.io/greenticai/packs/messaging/messaging-teams:latest".to_owned()]
         );
     }
 }

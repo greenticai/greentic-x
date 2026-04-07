@@ -1,0 +1,34 @@
+{
+  "schema_id": "gx.solution.manifest",
+  "schema_version": "1.0.0",
+  "solution_id": "gx-solution",
+  "solution_name": "GX Solution",
+  "description": "",
+  "output_dir": "dist",
+  "template": {
+    "assistant_template_ref": "templates/assistant/basic-empty.json",
+    "display_name": "Basic empty solution",
+    "domain_template_ref": "templates/domain/basic-empty.json",
+    "entry_id": "builtin.basic-empty",
+    "kind": "assistant-template",
+    "provenance": {
+      "resolved_digest": null,
+      "source_ref": "builtin:basic-empty",
+      "source_type": "local"
+    },
+    "version": "1.0.0"
+  },
+  "provider_presets": [
+    {
+      "display_name": "Webchat",
+      "entry_id": "builtin.webchat",
+      "kind": "provider-preset",
+      "provider_refs": [
+        "ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+      ],
+      "version": "1.0.0"
+    }
+  ],
+  "overlay": null,
+  "catalog_sources": []
+}
