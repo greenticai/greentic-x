@@ -188,7 +188,7 @@ jobs:
 
   publish-template-oci:
     needs:
-      - test
+      - ci
       - release-metadata
     if: needs.release-metadata.outputs.create_release == 'true'
     runs-on: ubuntu-latest
