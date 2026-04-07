@@ -2,7 +2,7 @@
   "schema_id": "gx.bundle.plan",
   "schema_version": "1.0.0",
   "solution_id": "gx-solution",
-  "bundle_output_path": "dist/gx-solution.gtbundle",
+  "bundle_output_path": "dist/dist/gx-solution.gtbundle",
   "bundle_answers_path": "dist/gx-solution.bundle.answers.json",
   "steps": [
     {
@@ -27,7 +27,7 @@
     },
     {
       "kind": "delegate_bundle_generation",
-      "path": "dist/gx-solution.gtbundle"
+      "path": "dist/dist/gx-solution.gtbundle"
     }
   ]
 }

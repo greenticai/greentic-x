@@ -404,9 +404,10 @@ fn build_bundle_answers(
             Value::String(domain_template_source.to_owned()),
         ),
         (
-            "provider_preset_refs".to_owned(),
+            "extension_providers".to_owned(),
             Value::Array(provider_refs.iter().cloned().map(Value::String).collect()),
         ),
+        ("export_intent".to_owned(), Value::Bool(true)),
     ]);
     if let Some(overlay) = overlay {
         answers.insert("overlay".to_owned(), overlay.clone());
@@ -417,7 +418,10 @@ fn build_bundle_answers(
         schema_version: SCHEMA_VERSION.to_owned(),
         locale: locale.to_owned(),
         answers,
-        locks: serde_json::Map::new(),
+        locks: serde_json::Map::from_iter([(
+            "execution".to_owned(),
+            Value::String("execute".to_owned()),
+        )]),
     }
 }
 
@@ -569,6 +573,16 @@ mod tests {
         )
         .expect("presets");
         assert_eq!(presets.len(), 4);
+        for preset in presets {
+            let provider_refs = preset["provider_refs"].as_array().expect("provider refs");
+            assert_eq!(provider_refs.len(), 1);
+            assert!(
+                provider_refs[0]
+                    .as_str()
+                    .expect("provider ref")
+                    .starts_with("oci://")
+            );
+        }
     }
 
     #[test]
@@ -610,9 +624,11 @@ mod tests {
                 display_name: "Network Assistant".to_owned(),
                 description: "Network Assistant template".to_owned(),
                 assistant_template_ref:
-                    "oci://ghcr.io/greenticai/templates/network-assistant:latest".to_owned(),
+                    "oci://ghcr.io/greenticai/greentic-x/templates/assistant/network-phase1:latest"
+                        .to_owned(),
                 domain_template_ref: Some(
-                    "oci://ghcr.io/greenticai/templates/network-domain:latest".to_owned(),
+                    "oci://ghcr.io/greenticai/greentic-x/templates/domain/network-phase1:latest"
+                        .to_owned(),
                 ),
                 bundle_ref: None,
                 provenance: Some(CatalogProvenance {
@@ -640,7 +656,67 @@ mod tests {
         );
         assert_eq!(
             generated.bundle_answers.answers["assistant_template_source"],
-            "oci://ghcr.io/greenticai/templates/network-assistant:latest"
+            "oci://ghcr.io/greenticai/greentic-x/templates/assistant/network-phase1:latest"
+        );
+        assert_eq!(generated.bundle_answers.answers["export_intent"], true);
+        assert_eq!(generated.bundle_answers.locks["execution"], "execute");
+    }
+
+    #[test]
+    fn bundle_answers_map_provider_refs_to_extension_providers() {
+        let request = CompositionRequest {
+            mode: "create".to_owned(),
+            template_mode: "basic_empty".to_owned(),
+            template_entry_id: None,
+            template_display_name: None,
+            assistant_template_ref: None,
+            domain_template_ref: None,
+            solution_name: "Demo".to_owned(),
+            solution_id: "demo".to_owned(),
+            description: String::new(),
+            output_dir: "dist".to_owned(),
+            provider_selection: "all".to_owned(),
+            provider_preset_entry_id: None,
+            provider_preset_display_name: None,
+            provider_refs: Vec::new(),
+            overlay_entry_id: None,
+            overlay_display_name: None,
+            overlay_default_locale: None,
+            overlay_tenant_id: None,
+            catalog_oci_refs: Vec::new(),
+            catalog_resolution_policy: "update_then_pin".to_owned(),
+            bundle_output_path: "dist/demo.gtbundle".to_owned(),
+            solution_manifest_path: "dist/demo.solution.json".to_owned(),
+            bundle_plan_path: "dist/demo.bundle-plan.json".to_owned(),
+            bundle_answers_path: "dist/demo.bundle.answers.json".to_owned(),
+            setup_answers_path: "dist/demo.setup.answers.json".to_owned(),
+            readme_path: "dist/demo.README.generated.md".to_owned(),
+            existing_solution_path: None,
+        };
+        let generated = generate_artifacts(
+            Path::new("."),
+            &request,
+            &WizardCatalogSet::default(),
+            "en",
+            false,
+            &StubFetcher {
+                digests: RefCell::new(Vec::new()),
+            },
+        )
+        .expect("artifacts");
+        let providers = generated
+            .bundle_answers
+            .answers
+            .get("extension_providers")
+            .and_then(Value::as_array)
+            .expect("extension providers");
+        assert_eq!(providers.len(), 4);
+        assert!(
+            generated
+                .bundle_answers
+                .answers
+                .get("provider_preset_refs")
+                .is_none()
         );
     }
 

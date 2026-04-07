@@ -84,7 +84,7 @@ fn normalize_composition_request(document: &mut WizardAnswerDocument) -> Composi
     let default_solution_id = slugify(&solution_name);
     let solution_id = upsert_string_answer(document, "solution_id", &default_solution_id);
     let output_dir = upsert_string_answer(document, "output_dir", "dist");
-    let bundle_output_path = format!("{output_dir}/{solution_id}.gtbundle");
+    let bundle_output_path = bundle_output_path(&output_dir, &solution_id);
     CompositionRequest {
         mode: upsert_string_answer(document, "mode", "create"),
         template_mode: upsert_string_answer(document, "template_mode", "basic_empty"),
@@ -157,7 +157,7 @@ fn prefill_from_existing_solution(
     request.solution_id = prefer_existing(&request.solution_id, &manifest.solution_id);
     request.description = prefer_existing(&request.description, &manifest.description);
     request.output_dir = prefer_existing(&request.output_dir, &manifest.output_dir);
-    request.bundle_output_path = format!("{}/{}.gtbundle", request.output_dir, request.solution_id);
+    request.bundle_output_path = bundle_output_path(&request.output_dir, &request.solution_id);
     request.solution_manifest_path = format!(
         "{}/{}.solution.json",
         request.output_dir, request.solution_id
@@ -254,6 +254,10 @@ fn prefill_from_existing_solution(
         Value::String(request.output_dir.clone()),
     );
     Ok(())
+}
+
+fn bundle_output_path(output_dir: &str, solution_id: &str) -> String {
+    format!("{output_dir}/dist/{solution_id}.gtbundle")
 }
 
 fn upsert_computed_answers(document: &mut WizardAnswerDocument, request: &CompositionRequest) {
@@ -395,7 +399,7 @@ mod tests {
                 "provider_presets": [{
                     "entry_id": "builtin.teams",
                     "display_name": "Teams",
-                    "provider_refs": ["ghcr.io/greenticai/packs/messaging/messaging-teams:latest"]
+                    "provider_refs": ["oci://ghcr.io/greenticai/packs/messaging/messaging-teams:latest"]
                 }]
             }))
             .expect("serialize"),
@@ -428,7 +432,7 @@ mod tests {
         );
         assert_eq!(
             request.provider_refs,
-            vec!["ghcr.io/greenticai/packs/messaging/messaging-teams:latest".to_owned()]
+            vec!["oci://ghcr.io/greenticai/packs/messaging/messaging-teams:latest".to_owned()]
         );
     }
 }

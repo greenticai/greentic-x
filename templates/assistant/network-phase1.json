@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0.0",
+  "template_kind": "assistant",
+  "template_name": "Network Assistant Phase 1",
+  "description": "Generic starter assistant template for bounded network investigations."
+}

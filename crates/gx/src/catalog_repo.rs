@@ -671,9 +671,12 @@ concurrency:
 env:
   BUNDLE_OCI_REF: ghcr.io/${{ github.repository_owner }}/bundles/__REPO_NAME__-bundle
   CATALOG_OCI_REF: ghcr.io/${{ github.repository_owner }}/catalogs/__REPO_NAME__
+  TEMPLATE_OCI_PREFIX: ghcr.io/greenticai/greentic-x/templates
   CATALOG_ARTIFACT_TYPE: application/vnd.greentic.catalog.v1+json
   CATALOG_LAYER_MEDIA_TYPE: application/vnd.greentic.catalog.root.v1+json
   BUNDLE_LAYER_MEDIA_TYPE: application/vnd.greentic.catalog-bundle.v1+tar+gzip
+  TEMPLATE_ARTIFACT_TYPE: application/vnd.greentic.template.v1+json
+  TEMPLATE_LAYER_MEDIA_TYPE: application/json
 
 jobs:
   catalog-validate:
@@ -805,6 +808,25 @@ jobs:
             "$ARCHIVE:${BUNDLE_LAYER_MEDIA_TYPE}"
           oras push "${BUNDLE_OCI_REF}:latest" \
             "$ARCHIVE:${BUNDLE_LAYER_MEDIA_TYPE}"
+      - name: Push template artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          shopt -s nullglob
+          for template_file in templates/assistant/*.json templates/domain/*.json; do
+            template_group="$(basename "$(dirname "$template_file")")"
+            template_name="$(basename "$template_file" .json)"
+            template_ref="${TEMPLATE_OCI_PREFIX}/${template_group}/${template_name}"
+            oras push \
+              --artifact-type "${TEMPLATE_ARTIFACT_TYPE}" \
+              "${template_ref}:${VERSION}" \
+              "${template_file}:${TEMPLATE_LAYER_MEDIA_TYPE}"
+            oras push \
+              --artifact-type "${TEMPLATE_ARTIFACT_TYPE}" \
+              "${template_ref}:latest" \
+              "${template_file}:${TEMPLATE_LAYER_MEDIA_TYPE}"
+          done
 "#;
 
 const PUBLISH_WORKFLOW_TEMPLATE: &str = r#"name: Publish
@@ -823,9 +845,12 @@ concurrency:
 env:
   BUNDLE_OCI_REF: ghcr.io/${{ github.repository_owner }}/bundles/__REPO_NAME__-bundle
   CATALOG_OCI_REF: ghcr.io/${{ github.repository_owner }}/catalogs/__REPO_NAME__
+  TEMPLATE_OCI_PREFIX: ghcr.io/greenticai/greentic-x/templates
   CATALOG_ARTIFACT_TYPE: application/vnd.greentic.catalog.v1+json
   CATALOG_LAYER_MEDIA_TYPE: application/vnd.greentic.catalog.root.v1+json
   BUNDLE_LAYER_MEDIA_TYPE: application/vnd.greentic.catalog-bundle.v1+tar+gzip
+  TEMPLATE_ARTIFACT_TYPE: application/vnd.greentic.template.v1+json
+  TEMPLATE_LAYER_MEDIA_TYPE: application/json
 
 jobs:
   publish-ghcr:
@@ -921,6 +946,25 @@ jobs:
             "$ARCHIVE:${BUNDLE_LAYER_MEDIA_TYPE}"
           oras push "${BUNDLE_OCI_REF}:latest" \
             "$ARCHIVE:${BUNDLE_LAYER_MEDIA_TYPE}"
+      - name: Push template artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          shopt -s nullglob
+          for template_file in templates/assistant/*.json templates/domain/*.json; do
+            template_group="$(basename "$(dirname "$template_file")")"
+            template_name="$(basename "$template_file" .json)"
+            template_ref="${TEMPLATE_OCI_PREFIX}/${template_group}/${template_name}"
+            oras push \
+              --artifact-type "${TEMPLATE_ARTIFACT_TYPE}" \
+              "${template_ref}:${VERSION}" \
+              "${template_file}:${TEMPLATE_LAYER_MEDIA_TYPE}"
+            oras push \
+              --artifact-type "${TEMPLATE_ARTIFACT_TYPE}" \
+              "${template_ref}:latest" \
+              "${template_file}:${TEMPLATE_LAYER_MEDIA_TYPE}"
+          done
 "#;
 
 const CREATE_BUNDLE_ARCHIVE_TEMPLATE: &str = r#"#!/usr/bin/env bash

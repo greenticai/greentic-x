@@ -1,0 +1,33 @@
+{
+  "schema": "gx.setup_profile.v1",
+  "entry_id": "setup-profile.network-assistant.phase1",
+  "id": "network-assistant.phase1",
+  "version": "1.0.0",
+  "display_name": "Network Assistant Phase 1 Profile",
+  "title": "Network Assistant Phase 1 Profile",
+  "description": "Default setup profile for generic network assistant workflows.",
+  "profile_id": "network-assistant.phase1",
+  "kind": "setup-profile",
+  "status": "implemented",
+  "template_ref": "assistant.network.phase1",
+  "settings": {
+    "defaults": {
+      "default_scope_mode": "network",
+      "default_utilisation_threshold_percent": 85.0,
+      "preferred_source_profiles": [
+        "network_events",
+        "network_inventory",
+        "network_telemetry"
+      ]
+    }
+  },
+  "defaults": {
+    "default_scope_mode": "network",
+    "default_utilisation_threshold_percent": 85.0,
+    "preferred_source_profiles": [
+      "network_events",
+      "network_inventory",
+      "network_telemetry"
+    ]
+  }
+}
