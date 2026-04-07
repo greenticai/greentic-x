@@ -159,7 +159,12 @@ fn trim_digest_prefix(digest: &str) -> &str {
 fn digest_for_bytes(bytes: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(bytes);
-    format!("sha256:{:x}", hasher.finalize())
+    let digest = hasher.finalize();
+    let hex = digest
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+    format!("sha256:{hex}")
 }
 
 fn resolve_local_path(cwd: &Path, reference: &str) -> Option<PathBuf> {
