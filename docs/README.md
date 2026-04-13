@@ -3,6 +3,7 @@
 This directory contains the in-repo architecture and specification notes for Greentic-X.
 
 - `architecture.md`: repo boundaries and how the major pieces fit together
+- `architecture/gx-to-pack-flow.md`: how GX pack compatibility artifacts map into `greentic-pack`
 - `specs-overview.md`: how the new `specs/` layer maps to current GX concepts
 - `core-catalog.md`: overview of the minimal reusable GX catalog
 - `authoring-profile-observability.md`: optional profile for compact observability-style authoring
@@ -15,6 +16,7 @@ This directory contains the in-repo architecture and specification notes for Gre
 - `parallelism-and-join-semantics.md`: the current split/join model and why it stays deterministic for now
 - `evidence-and-view-separation.md`: why evidence capture and neutral views are distinct concerns
 - `tooling-overview.md`: current `gx` CLI commands and how they fit with `greentic-pack`
+- `migration/gx-pack-bundle-deprecation.md`: deprecated GX packaging assumptions and current toolchain boundary
 - `how-to-build-a-downstream-solution.md`: downstream repo workflow and reuse guidance
 - `simulation-workflow.md`: how to iterate on flow packages with stubbed simulation
 - `reference-examples.md`: the current flow/profile-driven reference examples and what they demonstrate
@@ -22,5 +24,7 @@ This directory contains the in-repo architecture and specification notes for Gre
 - `why-six-primitives.md`: rationale for the current GX primitive set
 - `governance.md`: lightweight compatibility, versioning, and proposal notes
 - `examples.md`: walkthrough of the runnable example applications
+- `audit/`: cross-repo toolchain audit notes for wizard, pack, bundle, QA, and
+  capability ownership boundaries
 
 Pack-specific notes live alongside the source packs in `packs/README.md`.

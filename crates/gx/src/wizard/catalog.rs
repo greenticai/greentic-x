@@ -314,15 +314,6 @@ pub(crate) fn find_overlay_by_id<'a>(
         .find(|item| item.entry_id == entry_id)
 }
 
-pub(crate) fn builtin_channel_options() -> [(&'static str, &'static str); 4] {
-    [
-        ("webchat", "Webchat"),
-        ("teams", "Teams"),
-        ("webex", "WebEx"),
-        ("slack", "Slack"),
-    ]
-}
-
 pub(crate) fn builtin_provider_ref(label: &str) -> Option<&'static str> {
     match label {
         "webchat" => Some(BUILTIN_WEBCHAT_REF),

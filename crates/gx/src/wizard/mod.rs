@@ -3,6 +3,8 @@ mod bundle;
 mod catalog;
 mod compose;
 mod handoff;
+mod intent_to_pack;
+mod launcher;
 mod plan;
 mod qa;
 mod remote;
@@ -27,7 +29,7 @@ use plan::{
     should_delegate_bundle_handoff, wizard_action_name, wizard_expected_writes,
     wizard_normalized_summary, wizard_plan_steps, wizard_warnings,
 };
-use qa::collect_interactive_answers;
+use qa::{build_runtime_form_spec_for_document, collect_interactive_answers};
 
 #[allow(unused_imports)]
 pub(crate) use handoff::bundle_handoff_invocation;
@@ -94,16 +96,16 @@ pub(crate) fn run_wizard(
     );
     document.locale = locale.clone();
     document.schema_version = target_schema_version;
-    document.answers.insert(
-        "gx_action".to_owned(),
-        Value::String(wizard_action_name(action).to_owned()),
-    );
     let fetcher = DistributorCatalogFetcher;
     if should_collect_interactive_answers(action, execution, &args)
         && !collect_interactive_answers(cwd, &mut document, &fetcher)?
     {
         return Ok(String::new());
     }
+    document.answers.insert(
+        "gx_action".to_owned(),
+        Value::String(wizard_action_name(action).to_owned()),
+    );
 
     let normalized_answers = normalize_wizard_answers(
         cwd,
@@ -170,6 +172,52 @@ pub(crate) fn run_default_wizard(cwd: &Path, args: WizardCommonArgs) -> Result<S
     run_wizard(cwd, WizardAction::Run, args)
 }
 
+pub(crate) fn render_answer_schema(cwd: &Path, args: WizardCommonArgs) -> Result<String, String> {
+    let preferred_locale = normalize_locale(args.locale.as_deref().unwrap_or("en"));
+    let target_schema_version = normalize_schema_version(
+        args.schema_version
+            .as_deref()
+            .unwrap_or(GX_WIZARD_SCHEMA_VERSION),
+        &preferred_locale,
+    )?;
+    let mut document = load_wizard_answers(cwd, &args, &target_schema_version, &preferred_locale)?;
+    if !args.catalog.is_empty() {
+        let mut refs = document
+            .answers
+            .get("catalog_oci_refs")
+            .and_then(Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .map(ToOwned::to_owned)
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        for catalog in &args.catalog {
+            if !refs.iter().any(|existing| existing == catalog) {
+                refs.push(catalog.clone());
+            }
+        }
+        document.answers.insert(
+            "catalog_oci_refs".to_owned(),
+            Value::Array(refs.into_iter().map(Value::String).collect()),
+        );
+    }
+    let locale = resolve_locale(
+        args.locale.as_deref(),
+        args.answers.as_ref().map(|_| document.locale.as_str()),
+    );
+    document.locale = locale;
+
+    let fetcher = DistributorCatalogFetcher;
+    let runtime_form = build_runtime_form_spec_for_document(cwd, &document, &fetcher)?;
+    let schema = wizard_answer_schema(&target_schema_version, &runtime_form);
+    serde_json::to_string_pretty(&schema)
+        .map(|rendered| format!("{rendered}\n"))
+        .map_err(|err| format!("failed to serialize wizard schema: {err}"))
+}
+
 fn should_collect_interactive_answers(
     action: WizardAction,
     execution: WizardExecutionMode,
@@ -199,6 +247,201 @@ fn is_automated_context() -> bool {
         || std::env::var_os("GX_WIZARD_NON_INTERACTIVE").is_some()
 }
 
+fn wizard_answer_schema(schema_version: &str, runtime_form: &Value) -> Value {
+    serde_json::json!({
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://greenticai.github.io/greentic-x/schemas/wizard.answers.schema.json",
+        "title": "Greentic-X Wizard AnswerDocument",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+            "wizard_id": {
+                "type": "string",
+                "const": GX_WIZARD_ID
+            },
+            "schema_id": {
+                "type": "string",
+                "const": GX_WIZARD_SCHEMA_ID
+            },
+            "schema_version": {
+                "type": "string",
+                "const": schema_version
+            },
+            "locale": {
+                "type": "string",
+                "minLength": 1
+            },
+            "answers": {
+                "$ref": "#/$defs/gx_answers"
+            },
+            "locks": {
+                "type": "object"
+            }
+        },
+        "required": ["wizard_id", "schema_id", "schema_version", "locale", "answers", "locks"],
+        "$defs": {
+            "gx_runtime_form": runtime_form,
+            "gx_answers": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "gx_action": {
+                        "type": "string",
+                        "enum": ["run", "validate", "apply"]
+                    },
+                    "mode": {
+                        "type": "string",
+                        "enum": ["create", "update"]
+                    },
+                    "existing_solution_path": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "solution_name": {
+                        "type": "string",
+                        "minLength": 2
+                    },
+                    "solution_id": {
+                        "type": "string",
+                        "minLength": 2
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "output_dir": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "catalog_oci_refs": {
+                        "type": "array",
+                        "items": { "type": "string", "minLength": 1 }
+                    },
+                    "template_mode": {
+                        "type": "string",
+                        "enum": ["basic_empty", "catalog", "manual"]
+                    },
+                    "template_entry_id": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "assistant_template_ref": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "domain_template_ref": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "provider_selection": {
+                        "type": "string",
+                        "enum": ["webchat", "teams", "webex", "slack", "all", "catalog", "manual"]
+                    },
+                    "provider_preset_entry_id": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "provider_refs": {
+                        "type": "array",
+                        "items": { "type": "string", "minLength": 1 }
+                    },
+                    "template_display_name": {
+                        "type": "string"
+                    },
+                    "provider_preset_display_name": {
+                        "type": "string"
+                    },
+                    "overlay_entry_id": {
+                        "type": "string"
+                    },
+                    "overlay_display_name": {
+                        "type": "string"
+                    },
+                    "overlay_default_locale": {
+                        "type": "string"
+                    },
+                    "overlay_tenant_id": {
+                        "type": "string"
+                    },
+                    "catalog_resolution_policy": {
+                        "type": "string"
+                    }
+                },
+                "required": ["mode", "solution_name", "solution_id", "output_dir", "provider_selection"],
+                "allOf": [
+                    {
+                        "if": {
+                            "properties": {
+                                "mode": { "const": "update" }
+                            },
+                            "required": ["mode"]
+                        },
+                        "then": {
+                            "required": ["existing_solution_path"]
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "mode": { "const": "create" }
+                            },
+                            "required": ["mode"]
+                        },
+                        "then": {
+                            "required": ["template_mode"]
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "mode": { "const": "create" },
+                                "template_mode": { "const": "catalog" }
+                            },
+                            "required": ["mode", "template_mode"]
+                        },
+                        "then": {
+                            "required": ["template_entry_id"]
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "mode": { "const": "create" },
+                                "template_mode": { "const": "manual" }
+                            },
+                            "required": ["mode", "template_mode"]
+                        },
+                        "then": {
+                            "required": ["assistant_template_ref", "domain_template_ref"]
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "provider_selection": { "const": "catalog" }
+                            },
+                            "required": ["provider_selection"]
+                        },
+                        "then": {
+                            "required": ["provider_preset_entry_id"]
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "provider_selection": { "const": "manual" }
+                            },
+                            "required": ["provider_selection"]
+                        },
+                        "then": {
+                            "required": ["provider_refs"]
+                        }
+                    }
+                ]
+            }
+        }
+    })
+}
+
 fn wizard_apply(
     cwd: &Path,
     action: WizardAction,
@@ -217,7 +460,7 @@ fn wizard_apply(
             args,
             normalized_answers,
         ),
-        warnings: wizard_warnings(normalized_answers, locale),
+        warnings: wizard_warnings(action, execution, args, normalized_answers, locale),
     }
 }
 
@@ -240,11 +483,14 @@ fn wizard_execute_plan(
     write_generated_artifacts(cwd, request, &generated)?;
 
     if should_delegate_bundle_handoff(action, execution, args, normalized_answers) {
+        eprintln!(
+            "warning: GX is invoking a deprecated downstream bundle compatibility bridge; prefer emitted handoff artifacts and downstream launcher integration."
+        );
         let bundle_answers_path = emit_answers_path
             .map(Path::to_path_buf)
             .unwrap_or_else(|| resolve_wizard_path(cwd, Path::new(&request.bundle_answers_path)));
         if emit_answers_path.is_none() {
-            write_answer_document(&bundle_answers_path, &generated.bundle_answers)?;
+            write_answer_document(&bundle_answers_path, &generated.handoff.bundle_answers)?;
         }
         run_bundle_handoff(cwd, &bundle_answers_path)?;
     }
@@ -252,38 +498,62 @@ fn wizard_execute_plan(
 }
 
 fn run_interactive_session(cwd: &Path, args: WizardCommonArgs) -> Result<(), String> {
-    loop {
-        let mut session_args = args.clone();
-        session_args.bundle_handoff = true;
-        let plan_json = run_wizard(cwd, WizardAction::Apply, session_args)?;
-        if plan_json.trim().is_empty() {
-            return Ok(());
-        }
-        let plan: WizardPlanEnvelope = serde_json::from_str(&plan_json)
-            .map_err(|err| format!("failed to parse interactive wizard result: {err}"))?;
-        print_completion_message(cwd, &plan)?;
+    let plan_json = run_wizard(cwd, WizardAction::Run, args)?;
+    if plan_json.trim().is_empty() {
+        return Ok(());
     }
+    let plan: WizardPlanEnvelope = serde_json::from_str(&plan_json)
+        .map_err(|err| format!("failed to parse interactive wizard result: {err}"))?;
+    print_completion_message(cwd, &plan)
 }
 
 fn print_completion_message(cwd: &Path, plan: &WizardPlanEnvelope) -> Result<(), String> {
-    let path = plan
+    let solution_manifest = plan
         .normalized_input_summary
-        .get("bundle_output_path")
+        .get("solution_manifest_path")
         .and_then(Value::as_str)
-        .ok_or_else(|| "wizard result missing bundle_output_path".to_owned())?;
-    let resolved = resolve_wizard_path(cwd, Path::new(path));
-    if !resolved.exists() {
+        .ok_or_else(|| "wizard result missing solution_manifest_path".to_owned())?;
+    let handoff = plan
+        .normalized_input_summary
+        .get("toolchain_handoff_path")
+        .and_then(Value::as_str)
+        .ok_or_else(|| "wizard result missing toolchain_handoff_path".to_owned())?;
+    let launcher_answers = plan
+        .normalized_input_summary
+        .get("launcher_answers_path")
+        .and_then(Value::as_str)
+        .ok_or_else(|| "wizard result missing launcher_answers_path".to_owned())?;
+    let pack_input = plan
+        .normalized_input_summary
+        .get("pack_input_path")
+        .and_then(Value::as_str)
+        .ok_or_else(|| "wizard result missing pack_input_path".to_owned())?;
+
+    let resolved_solution_manifest = resolve_wizard_path(cwd, Path::new(solution_manifest));
+    if !resolved_solution_manifest.exists() {
         return Err(format!(
-            "wizard reported bundle output {}, but the file was not created",
-            resolved.display()
+            "wizard reported solution manifest {}, but the file was not created",
+            resolved_solution_manifest.display()
         ));
     }
-    println!("Solution created successfully.");
+    println!("Solution intent created successfully.");
     println!();
-    println!("Generated bundle: {}", resolved.display());
-    println!();
-    println!("M) Main menu");
-    println!("0) Exit");
+    println!(
+        "Solution manifest: {}",
+        resolved_solution_manifest.display()
+    );
+    println!(
+        "Toolchain handoff: {}",
+        resolve_wizard_path(cwd, Path::new(handoff)).display()
+    );
+    println!(
+        "Launcher answers: {}",
+        resolve_wizard_path(cwd, Path::new(launcher_answers)).display()
+    );
+    println!(
+        "Pack input: {}",
+        resolve_wizard_path(cwd, Path::new(pack_input)).display()
+    );
     println!();
     Ok(())
 }

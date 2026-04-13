@@ -1,0 +1,29 @@
+{
+  "id": "gx.wizard.composition",
+  "title": "GX Composition Wizard",
+  "version": "1.0.0",
+  "description": "Collects GX composition answers through QA-spec forms.",
+  "presentation": {
+    "intro": "Provide composition inputs for GX solution intent and downstream handoff artifacts.",
+    "default_locale": "en"
+  },
+  "progress_policy": {
+    "skip_answered": true,
+    "autofill_defaults": false,
+    "treat_default_as_answered": false
+  },
+  "validations": [],
+  "store": [],
+  "includes": [
+    {
+      "form_ref": "gx.questions.core"
+    },
+    {
+      "form_ref": "gx.questions.composition"
+    },
+    {
+      "form_ref": "gx.questions.providers"
+    }
+  ],
+  "questions": []
+}

@@ -2,683 +2,554 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
+use greentic_qa_lib::{I18nConfig, QaLibError, WizardDriver, WizardFrontend, WizardRunConfig};
+use serde_json::Value;
+
 use crate::WizardAnswerDocument;
-use crate::i18n::tr;
+use crate::i18n::resolved_wizard_i18n;
 
-use super::catalog::{
-    RemoteCatalogFetcher, builtin_channel_options, find_provider_preset_by_id, load_catalogs,
-};
+use super::catalog::{RemoteCatalogFetcher, load_catalogs};
 
-pub(crate) enum Navigation {
-    MainMenu,
-    Back,
-    Exit,
-    Value(String),
-}
+const GX_WIZARD_FORM: &str = include_str!("../../questions/wizard.form.json");
+const GX_WIZARD_CORE_FORM: &str = include_str!("../../questions/core.json");
+const GX_WIZARD_COMPOSITION_FORM: &str = include_str!("../../questions/composition.json");
+const GX_WIZARD_PROVIDERS_FORM: &str = include_str!("../../questions/providers.json");
+const CANCELLED_SENTINEL: &str = "__gx_wizard_cancelled__";
 
 pub(crate) fn collect_interactive_answers(
     cwd: &Path,
     document: &mut WizardAnswerDocument,
     fetcher: &dyn RemoteCatalogFetcher,
 ) -> Result<bool, String> {
-    let locale = document.locale.clone();
+    let spec = build_runtime_form_spec_for_document(cwd, document, fetcher)?;
+    let initial_answers = serde_json::to_string(&Value::Object(document.answers.clone()))
+        .map_err(|err| format!("failed to serialize initial answers: {err}"))?;
+    let config = WizardRunConfig {
+        spec_json: serde_json::to_string(&spec)
+            .map_err(|err| format!("failed to serialize QA wizard spec: {err}"))?,
+        initial_answers_json: Some(initial_answers),
+        frontend: WizardFrontend::JsonUi,
+        i18n: I18nConfig {
+            locale: Some(document.locale.clone()),
+            resolved: Some(resolved_wizard_i18n(&document.locale)),
+            debug: false,
+        },
+        verbose: false,
+    };
+
+    let mut driver =
+        WizardDriver::new(config).map_err(|err| format!("GX QA wizard failed: {err}"))?;
+
     loop {
-        match prompt_menu(
-            &tr(&locale, "wizard.menu.title"),
-            &[
-                &menu_option(&locale, 1, "wizard.menu.create"),
-                &menu_option(&locale, 2, "wizard.menu.update"),
-                &menu_option(&locale, 3, "wizard.menu.advanced"),
-                "",
-                &main_menu_option(&locale),
-                &back_or_exit_option(&locale, true),
-            ],
-            Navigation::Exit,
-        )? {
-            Navigation::Exit => return Ok(false),
-            Navigation::MainMenu => continue,
-            Navigation::Back => return Ok(false),
-            Navigation::Value(value) if value == "1" => {
-                run_create_flow(cwd, document, fetcher, &locale)?;
-                return Ok(true);
-            }
-            Navigation::Value(value) if value == "2" => {
-                run_update_flow(cwd, document, fetcher, &locale)?;
-                return Ok(true);
-            }
-            Navigation::Value(value) if value == "3" => {
-                run_advanced_options(cwd, document, fetcher, &locale)?;
-            }
-            _ => {}
+        driver
+            .next_payload_json()
+            .map_err(|err| format!("GX QA wizard failed: {err}"))?;
+        if driver.is_complete() {
+            break;
         }
-    }
-}
 
-pub(crate) fn parse_navigation(
-    input: &str,
-    allow_main_menu: bool,
-    zero_navigation: Navigation,
-) -> Navigation {
-    let trimmed = input.trim();
-    if trimmed == "0" {
-        return zero_navigation;
-    }
-    if allow_main_menu && trimmed.eq_ignore_ascii_case("m") {
-        return Navigation::MainMenu;
-    }
-    Navigation::Value(trimmed.to_owned())
-}
+        let ui_raw = driver
+            .last_ui_json()
+            .ok_or_else(|| "GX QA wizard failed: missing last_ui_json".to_owned())?;
+        let ui: Value = serde_json::from_str(ui_raw)
+            .map_err(|err| format!("GX QA wizard failed: failed to parse UI payload: {err}"))?;
+        let question_id = ui
+            .get("next_question_id")
+            .and_then(Value::as_str)
+            .ok_or_else(|| "GX QA wizard failed: missing next_question_id".to_owned())?
+            .to_owned();
+        let question = find_question(&ui, &question_id)
+            .map_err(|err| format!("GX QA wizard failed: {err}"))?;
 
-fn run_create_flow(
-    cwd: &Path,
-    document: &mut WizardAnswerDocument,
-    fetcher: &dyn RemoteCatalogFetcher,
-    locale: &str,
-) -> Result<(), String> {
-    document.answers.insert(
-        "mode".to_owned(),
-        serde_json::Value::String("create".to_owned()),
-    );
-
-    loop {
-        let mut catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
-        match prompt_menu(
-            &tr(locale, "wizard.create.template.title"),
-            &[
-                &menu_option(locale, 1, "wizard.create.template.catalog"),
-                &menu_option(locale, 2, "wizard.create.template.basic"),
-                &menu_option(locale, 3, "wizard.create.template.manual"),
-                &menu_option(locale, 4, "wizard.create.template.catalog_ref"),
-                "",
-                &main_menu_option(locale),
-                &back_or_exit_option(locale, false),
-            ],
-            Navigation::Back,
-        )? {
-            Navigation::MainMenu | Navigation::Exit => return Err(cancelled(locale)),
-            Navigation::Back => return Err(cancelled(locale)),
-            Navigation::Value(value) if value == "1" => {
-                if choose_catalog_template(document, &catalogs, locale)? {
-                    break;
+        loop {
+            let answer = match prompt_for_question(&question_id, &question) {
+                Ok(answer) => answer,
+                Err(QaLibError::Component(message)) if message == CANCELLED_SENTINEL => {
+                    return Ok(false);
                 }
-            }
-            Navigation::Value(value) if value == "2" => {
-                document.answers.insert(
-                    "template_mode".to_owned(),
-                    serde_json::Value::String("basic_empty".to_owned()),
-                );
+                Err(err) => return Err(format!("GX QA wizard failed: {err}")),
+            };
+            let patch = serde_json::json!({ question_id.clone(): answer }).to_string();
+            let submit = driver
+                .submit_patch_json(&patch)
+                .map_err(|err| format!("GX QA wizard failed: {err}"))?;
+            if submit.status != "error" {
                 break;
             }
-            Navigation::Value(value) if value == "3" => {
-                choose_manual_template(document, locale)?;
-                break;
-            }
-            Navigation::Value(value) if value == "4" => {
-                if !prompt_catalog_sources(cwd, document, fetcher, locale)? {
-                    continue;
+
+            match classify_submit_error(&submit.response_json, &question_id) {
+                SubmitErrorDisposition::Retry(message) => {
+                    eprintln!("{message}");
                 }
-                catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
-                let explicit_catalogs = explicit_catalog_templates_only(catalogs.clone());
-                if choose_catalog_template(document, &explicit_catalogs, locale)? {
-                    break;
+                SubmitErrorDisposition::Fatal(message) => {
+                    return Err(format!("GX QA wizard failed: {message}"));
                 }
-            }
-            _ => return Err(tr(locale, "wizard.error.invalid_template_selection")),
-        }
-    }
-
-    let solution_name = prompt_text(locale, "wizard.field.solution_name", None)?;
-    let default_solution_id = slugify(&solution_name);
-    let solution_id = prompt_text(
-        locale,
-        "wizard.field.solution_id",
-        Some(&default_solution_id),
-    )?;
-    let description = prompt_text(locale, "wizard.field.short_description", None)?;
-    let output_dir = prompt_text(locale, "wizard.field.output_dir", Some("./dist"))?;
-    document.answers.insert(
-        "solution_name".to_owned(),
-        serde_json::Value::String(solution_name),
-    );
-    document.answers.insert(
-        "solution_id".to_owned(),
-        serde_json::Value::String(solution_id),
-    );
-    document.answers.insert(
-        "description".to_owned(),
-        serde_json::Value::String(description),
-    );
-    document.answers.insert(
-        "output_dir".to_owned(),
-        serde_json::Value::String(normalize_output_dir(&output_dir)),
-    );
-    let catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
-    choose_provider(document, &catalogs, None, locale)?;
-    Ok(())
-}
-
-fn run_update_flow(
-    cwd: &Path,
-    document: &mut WizardAnswerDocument,
-    fetcher: &dyn RemoteCatalogFetcher,
-    locale: &str,
-) -> Result<(), String> {
-    let catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
-    let manifests = find_solution_manifests(cwd)?;
-    let Some(path) = select_solution_manifest(&manifests)? else {
-        return Err(cancelled(locale));
-    };
-    document.answers.insert(
-        "mode".to_owned(),
-        serde_json::Value::String("update".to_owned()),
-    );
-    document.answers.insert(
-        "existing_solution_path".to_owned(),
-        serde_json::Value::String(path.display().to_string()),
-    );
-
-    let raw = fs::read_to_string(&path).map_err(|err| {
-        format!(
-            "{} {}: {err}",
-            tr(locale, "wizard.error.read_failed"),
-            path.display()
-        )
-    })?;
-    let manifest: serde_json::Value = serde_json::from_str(&raw).map_err(|err| {
-        format!(
-            "{} {}: {err}",
-            tr(locale, "wizard.error.parse_failed"),
-            path.display()
-        )
-    })?;
-    let current_name = manifest
-        .get("solution_name")
-        .and_then(serde_json::Value::as_str)
-        .unwrap_or("GX Solution");
-    let current_id = manifest
-        .get("solution_id")
-        .and_then(serde_json::Value::as_str)
-        .unwrap_or("gx-solution");
-    let current_description = manifest
-        .get("description")
-        .and_then(serde_json::Value::as_str)
-        .unwrap_or("");
-    let current_output_dir = manifest
-        .get("output_dir")
-        .and_then(serde_json::Value::as_str)
-        .unwrap_or("dist");
-
-    let solution_name = prompt_text(locale, "wizard.field.solution_name", Some(current_name))?;
-    let solution_id = prompt_text(locale, "wizard.field.solution_id", Some(current_id))?;
-    let description = prompt_text(
-        locale,
-        "wizard.field.short_description",
-        Some(current_description),
-    )?;
-    let output_dir = prompt_text(locale, "wizard.field.output_dir", Some(current_output_dir))?;
-    document.answers.insert(
-        "solution_name".to_owned(),
-        serde_json::Value::String(solution_name),
-    );
-    document.answers.insert(
-        "solution_id".to_owned(),
-        serde_json::Value::String(solution_id),
-    );
-    document.answers.insert(
-        "description".to_owned(),
-        serde_json::Value::String(description),
-    );
-    document.answers.insert(
-        "output_dir".to_owned(),
-        serde_json::Value::String(normalize_output_dir(&output_dir)),
-    );
-
-    let current_provider = manifest
-        .get("provider_presets")
-        .and_then(serde_json::Value::as_array)
-        .and_then(|items| items.first())
-        .and_then(|item| item.get("display_name"))
-        .and_then(serde_json::Value::as_str)
-        .unwrap_or("Webchat");
-
-    match prompt_menu(
-        &format!(
-            "{}: {current_provider}\n{}",
-            tr(locale, "wizard.update.current_provider"),
-            tr(locale, "wizard.update.change_provider")
-        ),
-        &[
-            &menu_option(locale, 1, "wizard.update.keep_provider"),
-            &menu_option(locale, 2, "wizard.update.change_provider_option"),
-            &main_menu_option(locale),
-            &back_or_exit_option(locale, false),
-        ],
-        Navigation::Back,
-    )? {
-        Navigation::Value(value) if value == "1" => {}
-        Navigation::Value(value) if value == "2" => {
-            choose_provider(document, &catalogs, Some(current_provider), locale)?
-        }
-        Navigation::MainMenu | Navigation::Exit | Navigation::Back => {
-            return Err(cancelled(locale));
-        }
-        _ => {}
-    }
-    Ok(())
-}
-
-fn run_advanced_options(
-    cwd: &Path,
-    document: &mut WizardAnswerDocument,
-    fetcher: &dyn RemoteCatalogFetcher,
-    locale: &str,
-) -> Result<(), String> {
-    let _ = prompt_catalog_sources(cwd, document, fetcher, locale)?;
-    Ok(())
-}
-
-fn prompt_catalog_sources(
-    cwd: &Path,
-    document: &mut WizardAnswerDocument,
-    fetcher: &dyn RemoteCatalogFetcher,
-    locale: &str,
-) -> Result<bool, String> {
-    let current = catalog_refs(document);
-    let prompt = if current.is_empty() {
-        tr(locale, "wizard.advanced.catalog_source")
-    } else {
-        tr(locale, "wizard.advanced.catalog_sources")
-    };
-    let guidance = "Leave blank to go back.";
-    let current_text = if current.is_empty() {
-        None
-    } else {
-        Some(current.join(", "))
-    };
-
-    loop {
-        let mut stdout = io::stdout();
-        if let Some(current_text) = current_text.as_deref() {
-            writeln!(stdout, "{prompt}").map_err(|err| format!("write prompt failed: {err}"))?;
-            writeln!(stdout, "Current: {current_text}")
-                .map_err(|err| format!("write prompt failed: {err}"))?;
-            writeln!(stdout, "{guidance}").map_err(|err| format!("write prompt failed: {err}"))?;
-            write!(stdout, "> ").map_err(|err| format!("write prompt failed: {err}"))?;
-        } else {
-            writeln!(stdout, "{prompt}").map_err(|err| format!("write prompt failed: {err}"))?;
-            writeln!(stdout, "{guidance}").map_err(|err| format!("write prompt failed: {err}"))?;
-            write!(stdout, "> ").map_err(|err| format!("write prompt failed: {err}"))?;
-        }
-        stdout
-            .flush()
-            .map_err(|err| format!("flush prompt failed: {err}"))?;
-
-        let mut line = String::new();
-        io::stdin()
-            .read_line(&mut line)
-            .map_err(|err| format!("read prompt failed: {err}"))?;
-        let trimmed = line.trim();
-        if trimmed.eq_ignore_ascii_case("m") || trimmed == "0" {
-            return Err(cancelled(locale));
-        }
-        if trimmed.is_empty() {
-            return Ok(false);
-        }
-
-        let refs = trimmed
-            .split(',')
-            .map(|item| item.trim())
-            .filter(|item| !item.is_empty())
-            .map(|item| item.to_owned())
-            .collect::<Vec<_>>();
-        if refs.is_empty() {
-            return Ok(false);
-        }
-
-        match load_catalogs(cwd, &refs, fetcher) {
-            Ok(_) => {
-                document.answers.insert(
-                    "catalog_oci_refs".to_owned(),
-                    serde_json::Value::Array(
-                        refs.into_iter().map(serde_json::Value::String).collect(),
-                    ),
-                );
-                return Ok(true);
-            }
-            Err(err) => {
-                writeln!(stdout, "{err}")
-                    .map_err(|write_err| format!("write prompt failed: {write_err}"))?;
+                SubmitErrorDisposition::Advance => break,
             }
         }
     }
-}
 
-fn explicit_catalog_templates_only(
-    mut catalogs: crate::WizardCatalogSet,
-) -> crate::WizardCatalogSet {
-    catalogs
-        .templates
-        .retain(|entry| !is_builtin_local_template(entry));
-    catalogs
-}
-
-fn is_builtin_local_template(entry: &crate::AssistantTemplateCatalogEntry) -> bool {
-    entry.provenance.as_ref().is_some_and(|provenance| {
-        let normalized = provenance.source_ref.replace('\\', "/");
-        provenance.source_type == "local"
-            && (normalized.contains("/catalog/templates/")
-                || normalized.starts_with("catalog/templates/"))
-    })
-}
-
-fn choose_catalog_template(
-    document: &mut WizardAnswerDocument,
-    catalogs: &crate::WizardCatalogSet,
-    locale: &str,
-) -> Result<bool, String> {
-    if catalogs.templates.is_empty() {
-        return Err(tr(locale, "wizard.error.no_catalog_templates"));
-    }
-    let mut options = catalogs
-        .templates
-        .iter()
-        .enumerate()
-        .map(|(idx, item)| format!("{}) {}", idx + 1, item.display_name))
-        .collect::<Vec<_>>();
-    options.push("M) Main menu".to_owned());
-    options.push("0) Back".to_owned());
-    let selection = prompt_menu(
-        &tr(locale, "wizard.create.template.choose"),
-        &options.iter().map(String::as_str).collect::<Vec<_>>(),
-        Navigation::Back,
-    )?;
-    let value = match selection {
-        Navigation::Value(value) => value,
-        Navigation::Back => return Ok(false),
-        Navigation::MainMenu | Navigation::Exit => return Err(cancelled(locale)),
-    };
-    let index = value
-        .parse::<usize>()
-        .map_err(|_| tr(locale, "wizard.error.invalid_template_selection"))?;
-    let Some(entry) = catalogs.templates.get(index.saturating_sub(1)) else {
-        return Err(tr(locale, "wizard.error.invalid_template_selection"));
-    };
-    document.answers.insert(
-        "template_mode".to_owned(),
-        serde_json::Value::String("catalog".to_owned()),
-    );
-    document.answers.insert(
-        "template_entry_id".to_owned(),
-        serde_json::Value::String(entry.entry_id.clone()),
-    );
-    document.answers.insert(
-        "template_display_name".to_owned(),
-        serde_json::Value::String(entry.display_name.clone()),
-    );
+    let result = driver
+        .finish()
+        .map_err(|err| format!("GX QA wizard failed: {err}"))?;
+    apply_answer_object(document, result.answer_set.answers);
     Ok(true)
 }
 
-fn choose_manual_template(document: &mut WizardAnswerDocument, locale: &str) -> Result<(), String> {
-    let template_ref = prompt_text(locale, "wizard.field.template_reference", None)?;
-    let domain_ref = prompt_text(
-        locale,
-        "wizard.field.domain_template_reference",
-        Some(&template_ref),
-    )?;
-    document.answers.insert(
-        "template_mode".to_owned(),
-        serde_json::Value::String("manual".to_owned()),
-    );
-    document.answers.insert(
-        "assistant_template_ref".to_owned(),
-        serde_json::Value::String(template_ref),
-    );
-    document.answers.insert(
-        "domain_template_ref".to_owned(),
-        serde_json::Value::String(domain_ref),
-    );
-    Ok(())
+pub(crate) fn build_runtime_form_spec_for_document(
+    cwd: &Path,
+    document: &WizardAnswerDocument,
+    fetcher: &dyn RemoteCatalogFetcher,
+) -> Result<Value, String> {
+    let catalogs = load_catalogs(cwd, &catalog_refs(document), fetcher)?;
+    let manifests = find_solution_manifests(cwd)?;
+    build_runtime_form_spec(document, &catalogs, &manifests)
 }
 
-fn choose_provider(
-    document: &mut WizardAnswerDocument,
-    catalogs: &crate::WizardCatalogSet,
-    current_provider: Option<&str>,
-    locale: &str,
-) -> Result<(), String> {
-    let prompt = tr(locale, "wizard.provider.title");
-    let selection = prompt_menu(
-        &prompt,
-        &[
-            &menu_option(locale, 1, "wizard.provider.webchat"),
-            &menu_option(locale, 2, "wizard.provider.teams"),
-            &menu_option(locale, 3, "wizard.provider.webex"),
-            &menu_option(locale, 4, "wizard.provider.slack"),
-            &menu_option(locale, 5, "wizard.provider.all"),
-            &menu_option(locale, 6, "wizard.provider.catalog"),
-            &menu_option(locale, 7, "wizard.provider.manual"),
-            &main_menu_option(locale),
-            &back_or_exit_option(locale, false),
-        ],
-        Navigation::Back,
-    )?;
-    match selection {
-        Navigation::Value(value) if value == "1" => set_builtin_provider(document, "webchat"),
-        Navigation::Value(value) if value == "2" => set_builtin_provider(document, "teams"),
-        Navigation::Value(value) if value == "3" => set_builtin_provider(document, "webex"),
-        Navigation::Value(value) if value == "4" => set_builtin_provider(document, "slack"),
-        Navigation::Value(value) if value == "5" => {
-            document.answers.insert(
-                "provider_selection".to_owned(),
-                serde_json::Value::String("all".to_owned()),
-            );
-            document.answers.insert(
-                "provider_preset_display_name".to_owned(),
-                serde_json::Value::String(tr(locale, "wizard.provider.all_label")),
-            );
-        }
-        Navigation::Value(value) if value == "6" => {
-            choose_catalog_provider(document, catalogs, locale)?;
-        }
-        Navigation::Value(value) if value == "7" => {
-            let default = current_provider
-                .unwrap_or("oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest");
-            let provider_ref = prompt_text(locale, "wizard.field.provider_oci_ref", Some(default))?;
-            document.answers.insert(
-                "provider_selection".to_owned(),
-                serde_json::Value::String("manual".to_owned()),
-            );
-            document.answers.insert(
-                "provider_refs".to_owned(),
-                serde_json::Value::Array(vec![serde_json::Value::String(provider_ref)]),
-            );
-            document.answers.insert(
-                "provider_preset_display_name".to_owned(),
-                serde_json::Value::String(tr(locale, "wizard.provider.manual_label")),
-            );
-        }
-        _ => return Err(cancelled(locale)),
-    }
-    Ok(())
+fn find_question(ui: &Value, question_id: &str) -> Result<Value, String> {
+    ui.get("questions")
+        .and_then(Value::as_array)
+        .and_then(|questions| {
+            questions.iter().find_map(|question| {
+                (question.get("id").and_then(Value::as_str) == Some(question_id))
+                    .then(|| question.clone())
+            })
+        })
+        .ok_or_else(|| format!("question `{question_id}` missing from UI payload"))
 }
 
-fn choose_catalog_provider(
-    document: &mut WizardAnswerDocument,
-    catalogs: &crate::WizardCatalogSet,
-    locale: &str,
-) -> Result<(), String> {
-    if catalogs.provider_presets.is_empty() {
-        return Err(tr(locale, "wizard.error.no_catalog_provider_presets"));
-    }
-    let mut options = catalogs
-        .provider_presets
-        .iter()
-        .enumerate()
-        .map(|(idx, item)| format!("{}) {}", idx + 1, item.display_name))
-        .collect::<Vec<_>>();
-    options.push("M) Main menu".to_owned());
-    options.push("0) Back".to_owned());
-    let choice = prompt_menu(
-        &tr(locale, "wizard.provider.choose"),
-        &options.iter().map(String::as_str).collect::<Vec<_>>(),
-        Navigation::Back,
-    )?;
-    let Navigation::Value(value) = choice else {
-        return Err(cancelled(locale));
+enum SubmitErrorDisposition {
+    Retry(String),
+    Advance,
+    Fatal(String),
+}
+
+fn classify_submit_error(response_json: &str, question_id: &str) -> SubmitErrorDisposition {
+    let Ok(value) = serde_json::from_str::<Value>(response_json) else {
+        return SubmitErrorDisposition::Fatal(format!(
+            "failed to parse validation response: {response_json}"
+        ));
     };
-    let index = value
-        .parse::<usize>()
-        .map_err(|_| tr(locale, "wizard.error.invalid_provider_preset_selection"))?;
-    let entry = catalogs
-        .provider_presets
-        .get(index.saturating_sub(1))
-        .ok_or_else(|| tr(locale, "wizard.error.invalid_provider_preset_selection"))?;
-    document.answers.insert(
-        "provider_selection".to_owned(),
-        serde_json::Value::String("catalog".to_owned()),
-    );
-    document.answers.insert(
-        "provider_preset_entry_id".to_owned(),
-        serde_json::Value::String(entry.entry_id.clone()),
-    );
-    document.answers.insert(
-        "provider_preset_display_name".to_owned(),
-        serde_json::Value::String(entry.display_name.clone()),
-    );
-    if let Some(resolved) = find_provider_preset_by_id(catalogs, &entry.entry_id) {
-        document.answers.insert(
-            "provider_refs".to_owned(),
-            serde_json::Value::Array(
-                resolved
-                    .provider_refs
-                    .iter()
-                    .cloned()
-                    .map(serde_json::Value::String)
-                    .collect(),
-            ),
+    let validation = value.get("validation").cloned().unwrap_or(Value::Null);
+    let unknown_fields = validation
+        .get("unknown_fields")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+    if !unknown_fields.is_empty() {
+        let fields = unknown_fields
+            .iter()
+            .filter_map(Value::as_str)
+            .collect::<Vec<_>>()
+            .join(", ");
+        return SubmitErrorDisposition::Fatal(format!("unknown answer fields: {fields}"));
+    }
+
+    let missing_required = validation
+        .get("missing_required")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+    if missing_required
+        .iter()
+        .filter_map(Value::as_str)
+        .any(|field| field == question_id)
+    {
+        return SubmitErrorDisposition::Retry(format!("{question_id} is required."));
+    }
+
+    let question_errors = validation
+        .get("errors")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|error| {
+            error
+                .get("question_id")
+                .and_then(Value::as_str)
+                .is_some_and(|id| id == question_id)
+                || error
+                    .get("path")
+                    .and_then(Value::as_str)
+                    .is_some_and(|path| path == format!("/{question_id}"))
+        })
+        .collect::<Vec<_>>();
+    if let Some(message) = question_errors
+        .iter()
+        .filter_map(|error| error.get("message").and_then(Value::as_str))
+        .next()
+    {
+        return SubmitErrorDisposition::Retry(message.to_owned());
+    }
+
+    SubmitErrorDisposition::Advance
+}
+
+fn build_runtime_form_spec(
+    document: &WizardAnswerDocument,
+    catalogs: &crate::WizardCatalogSet,
+    manifests: &[PathBuf],
+) -> Result<Value, String> {
+    let mut root = serde_json::from_str::<Value>(GX_WIZARD_FORM)
+        .map_err(|err| format!("failed to parse embedded GX wizard form: {err}"))?;
+
+    let include_refs = root
+        .get("includes")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|item| {
+            item.get("form_ref")
+                .and_then(Value::as_str)
+                .map(ToOwned::to_owned)
+        })
+        .collect::<Vec<_>>();
+
+    let mut merged_questions = Vec::new();
+    for form_ref in include_refs {
+        let fragment = embedded_form_fragment(&form_ref)?;
+        merged_questions.extend(
+            fragment
+                .get("questions")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default(),
         );
     }
+    root["includes"] = Value::Array(Vec::new());
+    root["questions"] = Value::Array(merged_questions);
+
+    inject_runtime_defaults(&mut root, document, catalogs, manifests)?;
+    Ok(root)
+}
+
+fn embedded_form_fragment(form_ref: &str) -> Result<Value, String> {
+    let raw = match form_ref {
+        "gx.questions.core" => GX_WIZARD_CORE_FORM,
+        "gx.questions.composition" => GX_WIZARD_COMPOSITION_FORM,
+        "gx.questions.providers" => GX_WIZARD_PROVIDERS_FORM,
+        other => return Err(format!("unknown embedded GX QA form include `{other}`")),
+    };
+    serde_json::from_str(raw).map_err(|err| format!("failed to parse {form_ref}: {err}"))
+}
+
+fn inject_runtime_defaults(
+    form: &mut Value,
+    document: &WizardAnswerDocument,
+    catalogs: &crate::WizardCatalogSet,
+    manifests: &[PathBuf],
+) -> Result<(), String> {
+    let Some(questions) = form.get_mut("questions").and_then(Value::as_array_mut) else {
+        return Err("GX wizard form missing questions array".to_owned());
+    };
+
+    for question in questions {
+        let Some(id) = question
+            .get("id")
+            .and_then(Value::as_str)
+            .map(ToOwned::to_owned)
+        else {
+            continue;
+        };
+        match id.as_str() {
+            "existing_solution_path" => {
+                if !manifests.is_empty() {
+                    question["type"] = Value::String("enum".to_owned());
+                    question["choices"] = Value::Array(
+                        manifests
+                            .iter()
+                            .map(|path| Value::String(path.display().to_string()))
+                            .collect(),
+                    );
+                    if let Some(first) = manifests.first() {
+                        set_default_value(question, Some(first.display().to_string()));
+                    }
+                    append_description(
+                        question,
+                        &format!(
+                            "Discovered solutions: {}",
+                            manifests
+                                .iter()
+                                .map(|path| path.display().to_string())
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        ),
+                    );
+                }
+            }
+            "template_entry_id" => {
+                if !catalogs.templates.is_empty() {
+                    question["type"] = Value::String("enum".to_owned());
+                    question["choices"] = Value::Array(
+                        catalogs
+                            .templates
+                            .iter()
+                            .map(|entry| Value::String(entry.entry_id.clone()))
+                            .collect(),
+                    );
+                    set_default_value(
+                        question,
+                        catalogs
+                            .templates
+                            .first()
+                            .map(|entry| entry.entry_id.clone()),
+                    );
+                    append_description(
+                        question,
+                        &format!(
+                            "Available templates: {}",
+                            catalogs
+                                .templates
+                                .iter()
+                                .map(|entry| format!("{} ({})", entry.entry_id, entry.display_name))
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        ),
+                    );
+                }
+            }
+            "provider_preset_entry_id" => {
+                if !catalogs.provider_presets.is_empty() {
+                    question["type"] = Value::String("enum".to_owned());
+                    question["choices"] = Value::Array(
+                        catalogs
+                            .provider_presets
+                            .iter()
+                            .map(|entry| Value::String(entry.entry_id.clone()))
+                            .collect(),
+                    );
+                    set_default_value(
+                        question,
+                        catalogs
+                            .provider_presets
+                            .first()
+                            .map(|entry| entry.entry_id.clone()),
+                    );
+                    append_description(
+                        question,
+                        &format!(
+                            "Available provider presets: {}",
+                            catalogs
+                                .provider_presets
+                                .iter()
+                                .map(|entry| format!("{} ({})", entry.entry_id, entry.display_name))
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        ),
+                    );
+                }
+            }
+            _ => {}
+        }
+
+        if let Some(existing) = document.answers.get(&id) {
+            match existing {
+                Value::String(value) if !value.trim().is_empty() => {
+                    set_default_value(question, Some(value.clone()));
+                }
+                Value::Array(items) if id == "catalog_oci_refs" || id == "provider_refs" => {
+                    let joined = items
+                        .iter()
+                        .filter_map(Value::as_str)
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    if !joined.is_empty() {
+                        set_default_value(question, Some(joined));
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
     Ok(())
 }
 
-fn set_builtin_provider(document: &mut WizardAnswerDocument, key: &str) {
-    let display_name = builtin_channel_options()
-        .into_iter()
-        .find(|(value, _)| value == &key)
-        .map(|(_, label)| label.to_owned())
-        .unwrap_or_else(|| key.to_owned());
-    document.answers.insert(
-        "provider_selection".to_owned(),
-        serde_json::Value::String(key.to_owned()),
-    );
-    document.answers.insert(
-        "provider_preset_display_name".to_owned(),
-        serde_json::Value::String(display_name),
-    );
-}
-
-fn prompt_menu(
-    title: &str,
-    options: &[&str],
-    zero_navigation: Navigation,
-) -> Result<Navigation, String> {
-    let mut stdout = io::stdout();
-    writeln!(stdout, "{title}").map_err(|err| format!("write prompt failed: {err}"))?;
-    for option in options {
-        writeln!(stdout, "{option}").map_err(|err| format!("write prompt failed: {err}"))?;
-    }
-    write!(stdout, "> ").map_err(|err| format!("write prompt failed: {err}"))?;
-    stdout
-        .flush()
-        .map_err(|err| format!("flush prompt failed: {err}"))?;
-    let mut line = String::new();
-    io::stdin()
-        .read_line(&mut line)
-        .map_err(|err| format!("read prompt failed: {err}"))?;
-    let nav = parse_navigation(&line, true, zero_navigation);
-    if matches!(nav, Navigation::Value(ref value) if value.is_empty()) {
-        Ok(Navigation::Back)
+fn append_description(question: &mut Value, extra: &str) {
+    let current = question
+        .get("description")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let merged = if current.is_empty() {
+        extra.to_owned()
     } else {
-        Ok(nav)
-    }
-}
-
-fn prompt_text(locale: &str, key: &str, default: Option<&str>) -> Result<String, String> {
-    let title = tr(locale, key);
-    prompt_text_raw(&title, default, locale)
-}
-
-fn prompt_text_raw(title: &str, default: Option<&str>, locale: &str) -> Result<String, String> {
-    let mut stdout = io::stdout();
-    loop {
-        if let Some(default) = default {
-            write!(stdout, "{title} [{default}]: ")
-                .map_err(|err| format!("write prompt failed: {err}"))?;
-        } else {
-            write!(stdout, "{title}: ").map_err(|err| format!("write prompt failed: {err}"))?;
-        }
-        stdout
-            .flush()
-            .map_err(|err| format!("flush prompt failed: {err}"))?;
-        let mut line = String::new();
-        io::stdin()
-            .read_line(&mut line)
-            .map_err(|err| format!("read prompt failed: {err}"))?;
-        let trimmed = line.trim();
-        if trimmed.eq_ignore_ascii_case("m") {
-            return Err(cancelled(locale));
-        }
-        if trimmed == "0" {
-            return Err(cancelled(locale));
-        }
-        if trimmed.is_empty() {
-            if let Some(default) = default {
-                return Ok(default.to_owned());
-            }
-            continue;
-        }
-        return Ok(trimmed.to_owned());
-    }
-}
-
-fn menu_option(locale: &str, index: usize, key: &str) -> String {
-    format!("{index}) {}", tr(locale, key))
-}
-
-fn main_menu_option(locale: &str) -> String {
-    format!("M) {}", tr(locale, "wizard.nav.main_menu"))
-}
-
-fn back_or_exit_option(locale: &str, exit: bool) -> String {
-    let key = if exit {
-        "wizard.nav.exit"
-    } else {
-        "wizard.nav.back"
+        format!("{current} {extra}")
     };
-    format!("0) {}", tr(locale, key))
+    question["description"] = Value::String(merged);
 }
 
-fn cancelled(locale: &str) -> String {
-    tr(locale, "wizard.error.cancelled")
+fn set_default_value(question: &mut Value, value: Option<String>) {
+    match value {
+        Some(value) => question["default_value"] = Value::String(value),
+        None => question["default_value"] = Value::Null,
+    }
+}
+
+fn prompt_for_question(question_id: &str, question: &Value) -> Result<Value, QaLibError> {
+    let title = question
+        .get("title")
+        .and_then(Value::as_str)
+        .unwrap_or(question_id);
+    let description = question.get("description").and_then(Value::as_str);
+    let kind = question
+        .get("type")
+        .and_then(Value::as_str)
+        .unwrap_or("string");
+    let required = question
+        .get("required")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let default_value = question
+        .get("default_value")
+        .and_then(Value::as_str)
+        .map(ToOwned::to_owned);
+    let choices = question
+        .get("choices")
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(ToOwned::to_owned)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
+    let mut stdout = io::stdout();
+    writeln!(stdout, "{title}").map_err(io_error)?;
+    if let Some(description) = description
+        && !description.is_empty()
+    {
+        writeln!(stdout, "{description}").map_err(io_error)?;
+    }
+    if kind == "enum" && !choices.is_empty() {
+        for (index, choice) in choices.iter().enumerate() {
+            writeln!(stdout, "{}. {}", index + 1, choice).map_err(io_error)?;
+        }
+    } else if !choices.is_empty() {
+        writeln!(stdout, "Choices: {}", choices.join(", ")).map_err(io_error)?;
+    }
+    let prompt = match default_prompt_value(kind, default_value.as_deref(), &choices) {
+        Some(default) if !default.is_empty() => format!("> [{default}] "),
+        _ => "> ".to_owned(),
+    };
+
+    loop {
+        write!(stdout, "{prompt}").map_err(io_error)?;
+        stdout.flush().map_err(io_error)?;
+        let mut line = String::new();
+        io::stdin().read_line(&mut line).map_err(io_error)?;
+        let trimmed = line.trim();
+        if trimmed.eq_ignore_ascii_case("m") || trimmed == "0" {
+            return Err(QaLibError::Component(CANCELLED_SENTINEL.to_owned()));
+        }
+
+        let value = if trimmed.is_empty() {
+            if let Some(default) = default_value.as_deref() {
+                default.to_owned()
+            } else if required {
+                writeln!(stdout, "This question requires an answer.").map_err(io_error)?;
+                continue;
+            } else {
+                String::new()
+            }
+        } else {
+            trimmed.to_owned()
+        };
+
+        match parse_question_value(kind, &value, &choices) {
+            Ok(parsed) => return Ok(parsed),
+            Err(err) => {
+                writeln!(stdout, "{err}").map_err(io_error)?;
+            }
+        }
+    }
+}
+
+fn parse_question_value(kind: &str, raw: &str, choices: &[String]) -> Result<Value, String> {
+    match kind {
+        "boolean" => match raw.to_ascii_lowercase().as_str() {
+            "y" | "yes" | "true" | "1" => Ok(Value::Bool(true)),
+            "n" | "no" | "false" | "0" => Ok(Value::Bool(false)),
+            _ => Err("Enter yes/no, y/n, true/false, or 1/0.".to_owned()),
+        },
+        "enum" => {
+            if choices.is_empty() {
+                Ok(Value::String(raw.to_owned()))
+            } else if let Some(choice) = enum_choice_value(raw, choices) {
+                Ok(Value::String(choice.to_owned()))
+            } else {
+                Err(format!("Choose a number between 1 and {}.", choices.len()))
+            }
+        }
+        "integer" => raw
+            .parse::<i64>()
+            .map(Value::from)
+            .map_err(|_| "Enter a whole number.".to_owned()),
+        "number" => raw
+            .parse::<f64>()
+            .map(Value::from)
+            .map_err(|_| "Enter a number.".to_owned()),
+        _ => Ok(Value::String(raw.to_owned())),
+    }
+}
+
+fn default_prompt_value<'a>(
+    kind: &str,
+    default_value: Option<&'a str>,
+    choices: &'a [String],
+) -> Option<String> {
+    match (kind, default_value) {
+        ("enum", Some(default)) => choices
+            .iter()
+            .position(|choice| choice == default)
+            .map(|index| (index + 1).to_string())
+            .or_else(|| Some(default.to_owned())),
+        (_, Some(default)) => Some(default.to_owned()),
+        _ => None,
+    }
+}
+
+fn enum_choice_value<'a>(raw: &str, choices: &'a [String]) -> Option<&'a str> {
+    raw.parse::<usize>()
+        .ok()
+        .and_then(|index| choices.get(index.saturating_sub(1)))
+        .map(String::as_str)
+        .or_else(|| {
+            choices
+                .iter()
+                .find(|choice| choice.as_str() == raw)
+                .map(String::as_str)
+        })
+}
+
+fn apply_answer_object(document: &mut WizardAnswerDocument, answers: Value) {
+    let Some(map) = answers.as_object() else {
+        return;
+    };
+    for (key, value) in map {
+        if value.is_null() {
+            document.answers.remove(key);
+        } else {
+            document.answers.insert(key.clone(), value.clone());
+        }
+    }
 }
 
 fn catalog_refs(document: &WizardAnswerDocument) -> Vec<String> {
     document
         .answers
         .get("catalog_oci_refs")
-        .and_then(serde_json::Value::as_array)
+        .and_then(Value::as_array)
         .map(|items| {
             items
                 .iter()
-                .filter_map(serde_json::Value::as_str)
+                .filter_map(Value::as_str)
                 .map(ToOwned::to_owned)
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default()
-}
-
-fn normalize_output_dir(value: &str) -> String {
-    value.strip_prefix("./").unwrap_or(value).to_owned()
 }
 
 fn find_solution_manifests(cwd: &Path) -> Result<Vec<PathBuf>, String> {
@@ -714,121 +585,171 @@ fn collect_solution_manifests(
     Ok(())
 }
 
-fn select_solution_manifest(manifests: &[PathBuf]) -> Result<Option<PathBuf>, String> {
-    if manifests.is_empty() {
-        return Ok(None);
-    }
-    if manifests.len() == 1 {
-        return Ok(manifests.first().cloned());
-    }
-    let mut options = manifests
-        .iter()
-        .enumerate()
-        .map(|(idx, path)| format!("{}) {}", idx + 1, path.display()))
-        .collect::<Vec<_>>();
-    options.push("M) Main menu".to_owned());
-    options.push("0) Back".to_owned());
-    let choice = prompt_menu(
-        "Choose existing solution",
-        &options.iter().map(String::as_str).collect::<Vec<_>>(),
-        Navigation::Back,
-    )?;
-    let Navigation::Value(value) = choice else {
-        return Ok(None);
-    };
-    let index = value
-        .parse::<usize>()
-        .map_err(|_| "invalid solution selection".to_owned())?;
-    Ok(manifests.get(index.saturating_sub(1)).cloned())
-}
-
-fn slugify(raw: &str) -> String {
-    let mut out = String::new();
-    let mut last_dash = false;
-    for ch in raw.chars() {
-        if ch.is_ascii_alphanumeric() {
-            out.push(ch.to_ascii_lowercase());
-            last_dash = false;
-        } else if !last_dash && !out.is_empty() {
-            out.push('-');
-            last_dash = true;
-        }
-    }
-    out.trim_matches('-').to_owned()
+fn io_error(err: io::Error) -> QaLibError {
+    QaLibError::Component(format!("interactive prompt failed: {err}"))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AssistantTemplateCatalogEntry, CatalogProvenance, WizardCatalogSet};
+    use crate::{
+        AssistantTemplateCatalogEntry, CatalogProvenance, ProviderPresetCatalogEntry,
+        WizardCatalogSet,
+    };
+    use serde_json::Map;
 
     #[test]
-    fn navigation_supports_main_menu_and_exit() {
-        assert!(matches!(
-            parse_navigation("M", true, Navigation::Exit),
-            Navigation::MainMenu
-        ));
-        assert!(matches!(
-            parse_navigation("m", true, Navigation::Exit),
-            Navigation::MainMenu
-        ));
-        assert!(matches!(
-            parse_navigation("0", true, Navigation::Exit),
-            Navigation::Exit
-        ));
-    }
-
-    #[test]
-    fn navigation_supports_back_for_submenus() {
-        assert!(matches!(
-            parse_navigation("0", true, Navigation::Back),
-            Navigation::Back
-        ));
-    }
-
-    #[test]
-    fn explicit_catalog_templates_only_removes_builtin_local_templates() {
-        let builtin = AssistantTemplateCatalogEntry {
-            entry_id: "assistant.network.phase1".to_owned(),
-            kind: "assistant-template".to_owned(),
-            version: "1.0.0".to_owned(),
-            display_name: "Network Assistant Phase 1".to_owned(),
-            description: String::new(),
-            assistant_template_ref: "oci://broken".to_owned(),
-            domain_template_ref: None,
-            bundle_ref: None,
-            provenance: Some(CatalogProvenance {
-                source_type: "local".to_owned(),
-                source_ref: "catalog/templates/assistant.network.phase1.json".to_owned(),
-                resolved_digest: None,
-            }),
+    fn build_runtime_form_spec_merges_embedded_includes() {
+        let document = WizardAnswerDocument {
+            wizard_id: "greentic-bundle.wizard.run".to_owned(),
+            schema_id: "greentic-bundle.wizard.answers".to_owned(),
+            schema_version: "1.0.0".to_owned(),
+            locale: "en".to_owned(),
+            answers: Map::new(),
+            locks: Map::new(),
         };
-        let remote = AssistantTemplateCatalogEntry {
-            entry_id: "zx.network.phase1".to_owned(),
-            kind: "assistant-template".to_owned(),
-            version: "1.0.0".to_owned(),
-            display_name: "Network Assistant Phase 1".to_owned(),
-            description: String::new(),
-            assistant_template_ref: "assistant_templates/network-assistant.phase1.json".to_owned(),
-            domain_template_ref: None,
-            bundle_ref: Some(
-                "store://greentic-biz/tenant/catalogs/zain-x-bundle:latest".to_owned(),
-            ),
-            provenance: Some(CatalogProvenance {
-                source_type: "store".to_owned(),
-                source_ref: "store://greentic-biz/tenant/catalogs/zain-x/catalog.json:latest"
-                    .to_owned(),
-                resolved_digest: Some("sha256:abc".to_owned()),
-            }),
+        let form =
+            build_runtime_form_spec(&document, &WizardCatalogSet::default(), &[]).expect("form");
+        let questions = form["questions"].as_array().expect("questions");
+        assert!(questions.iter().any(|question| question["id"] == "mode"));
+        assert!(
+            questions
+                .iter()
+                .any(|question| question["id"] == "template_mode")
+        );
+        assert!(
+            questions
+                .iter()
+                .any(|question| question["id"] == "provider_selection")
+        );
+    }
+
+    #[test]
+    fn build_runtime_form_spec_injects_catalog_choices() {
+        let document = WizardAnswerDocument {
+            wizard_id: "greentic-bundle.wizard.run".to_owned(),
+            schema_id: "greentic-bundle.wizard.answers".to_owned(),
+            schema_version: "1.0.0".to_owned(),
+            locale: "en".to_owned(),
+            answers: Map::new(),
+            locks: Map::new(),
         };
         let catalogs = WizardCatalogSet {
-            templates: vec![builtin, remote.clone()],
+            templates: vec![AssistantTemplateCatalogEntry {
+                entry_id: "assistant.network.phase1".to_owned(),
+                kind: "assistant-template".to_owned(),
+                version: "1.0.0".to_owned(),
+                display_name: "Network Assistant".to_owned(),
+                description: String::new(),
+                assistant_template_ref: "oci://example/template:latest".to_owned(),
+                domain_template_ref: None,
+                bundle_ref: None,
+                provenance: Some(CatalogProvenance {
+                    source_type: "store".to_owned(),
+                    source_ref: "store://demo/catalog".to_owned(),
+                    resolved_digest: None,
+                }),
+            }],
+            provider_presets: vec![ProviderPresetCatalogEntry {
+                entry_id: "preset.webchat".to_owned(),
+                kind: "provider-preset".to_owned(),
+                version: "1.0.0".to_owned(),
+                display_name: "Webchat".to_owned(),
+                description: String::new(),
+                provider_refs: vec!["oci://example/provider:latest".to_owned()],
+                bundle_ref: None,
+                provenance: None,
+            }],
             ..WizardCatalogSet::default()
         };
 
-        let filtered = explicit_catalog_templates_only(catalogs);
+        let form = build_runtime_form_spec(&document, &catalogs, &[]).expect("form");
+        let questions = form["questions"].as_array().expect("questions");
+        let template = questions
+            .iter()
+            .find(|question| question["id"] == "template_entry_id")
+            .expect("template question");
+        let provider = questions
+            .iter()
+            .find(|question| question["id"] == "provider_preset_entry_id")
+            .expect("provider question");
 
-        assert_eq!(filtered.templates.len(), 1);
-        assert_eq!(filtered.templates[0].entry_id, remote.entry_id);
+        assert_eq!(template["type"], "enum");
+        assert_eq!(provider["type"], "enum");
+        assert_eq!(template["choices"][0], "assistant.network.phase1");
+        assert_eq!(provider["choices"][0], "preset.webchat");
+    }
+
+    #[test]
+    fn parse_question_value_supports_boolean_and_enum() {
+        assert_eq!(
+            parse_question_value("boolean", "yes", &[]).expect("boolean"),
+            Value::Bool(true)
+        );
+        assert_eq!(
+            parse_question_value("enum", "teams", &["teams".to_owned()]).expect("enum"),
+            Value::String("teams".to_owned())
+        );
+        assert_eq!(
+            parse_question_value(
+                "enum",
+                "2",
+                &["webchat".to_owned(), "teams".to_owned(), "slack".to_owned()]
+            )
+            .expect("numeric enum"),
+            Value::String("teams".to_owned())
+        );
+        assert!(parse_question_value("enum", "slack", &["teams".to_owned()]).is_err());
+    }
+
+    #[test]
+    fn default_prompt_value_uses_choice_index_for_enums() {
+        let choices = vec!["webchat".to_owned(), "teams".to_owned(), "slack".to_owned()];
+        assert_eq!(
+            default_prompt_value("enum", Some("teams"), &choices),
+            Some("2".to_owned())
+        );
+        assert_eq!(
+            default_prompt_value("string", Some("dist"), &choices),
+            Some("dist".to_owned())
+        );
+    }
+
+    #[test]
+    fn classify_submit_error_retries_question_local_validation() {
+        let response = serde_json::json!({
+            "validation": {
+                "errors": [
+                    {
+                        "question_id": "solution_name",
+                        "path": "/solution_name",
+                        "message": "qa_spec.min_len"
+                    }
+                ],
+                "missing_required": [],
+                "unknown_fields": []
+            }
+        });
+
+        match classify_submit_error(&response.to_string(), "solution_name") {
+            SubmitErrorDisposition::Retry(message) => assert_eq!(message, "qa_spec.min_len"),
+            _ => panic!("expected retry disposition"),
+        }
+    }
+
+    #[test]
+    fn classify_submit_error_advances_on_incomplete_form_state() {
+        let response = serde_json::json!({
+            "validation": {
+                "errors": [],
+                "missing_required": ["solution_name", "template_mode"],
+                "unknown_fields": []
+            }
+        });
+
+        assert!(matches!(
+            classify_submit_error(&response.to_string(), "mode"),
+            SubmitErrorDisposition::Advance
+        ));
     }
 }

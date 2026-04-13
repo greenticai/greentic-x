@@ -13,6 +13,22 @@
 
 Greentic core should stay smaller and more foundational. Greentic-X is where the richer object model and extension story can evolve.
 
+## Toolchain Ownership Boundary
+
+Greentic-X includes composition and authoring logic, but it is not the owner of
+the broader Greentic packaging toolchain.
+
+- `gx` in this repo owns solution composition, validation, and compatibility
+  artifact emission.
+- `greentic-dev` is the current top-level wizard launcher in the wider
+  Greentic toolchain.
+- `greentic-pack` owns pack workflows.
+- `greentic-bundle` owns bundle workflows and `.gtbundle` generation.
+
+This matters for current and future GX work: the design target is a clean
+composition engine with downstream handoff contracts, not a duplicate pack or
+bundle executor inside this repo.
+
 ## Main Building Blocks
 
 ### Shared types

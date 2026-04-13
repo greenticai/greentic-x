@@ -1,0 +1,33 @@
+{
+  "schema_id": "gx.bundle.plan",
+  "schema_version": "1.0.0",
+  "solution_id": "network-assistant",
+  "bundle_output_path": "dist/dist/network-assistant.gtbundle",
+  "bundle_answers_path": "dist/network-assistant.bundle.answers.json",
+  "steps": [
+    {
+      "kind": "emit_solution_intent",
+      "path": "dist/network-assistant.solution.json"
+    },
+    {
+      "kind": "emit_bundle_plan",
+      "path": "dist/network-assistant.bundle-plan.json"
+    },
+    {
+      "kind": "emit_bundle_answers",
+      "path": "dist/network-assistant.bundle.answers.json"
+    },
+    {
+      "kind": "emit_setup_answers",
+      "path": "dist/network-assistant.setup.answers.json"
+    },
+    {
+      "kind": "emit_readme",
+      "path": "dist/network-assistant.README.generated.md"
+    },
+    {
+      "kind": "bundle_handoff",
+      "path": "dist/dist/network-assistant.gtbundle"
+    }
+  ]
+}

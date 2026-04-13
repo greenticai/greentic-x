@@ -4,7 +4,7 @@
   "solution_id": "gx-solution",
   "setup_mode": "minimal",
   "provider_refs": [
-    "ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+    "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
   ],
   "overlay": null
 }

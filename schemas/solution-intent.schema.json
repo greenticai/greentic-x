@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/schemas/gx/solution-intent.schema.json",
+  "title": "gx solution intent",
+  "type": "object",
+  "required": [
+    "schema_id",
+    "schema_version",
+    "solution_id",
+    "solution_name",
+    "description",
+    "output_dir",
+    "solution_kind",
+    "template",
+    "provider_presets",
+    "required_capabilities",
+    "required_contracts",
+    "suggested_flows",
+    "catalog_refs",
+    "defaults",
+    "notes"
+  ],
+  "properties": {
+    "schema_id": { "const": "gx.solution.intent" },
+    "schema_version": { "type": "string" },
+    "solution_id": { "type": "string" },
+    "solution_name": { "type": "string" },
+    "description": { "type": "string" },
+    "output_dir": { "type": "string" },
+    "solution_kind": { "type": "string" },
+    "template": { "type": "object" },
+    "provider_presets": { "type": "array", "items": { "type": "object" } },
+    "overlay": { "type": ["object", "null"] },
+    "catalog_refs": { "type": "array", "items": { "type": "string" } },
+    "catalog_sources": { "type": "array", "items": { "type": "string" } },
+    "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "required_contracts": { "type": "array", "items": { "type": "string" } },
+    "suggested_flows": { "type": "array", "items": { "type": "string" } },
+    "defaults": {},
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

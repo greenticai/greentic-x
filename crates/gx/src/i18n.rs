@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
+use greentic_qa_lib::ResolvedI18nMap;
+
 #[allow(dead_code)]
 type Catalog = BTreeMap<String, String>;
 #[allow(dead_code)]
@@ -90,6 +92,17 @@ pub fn tr(locale: &str, key: &str) -> String {
         .unwrap_or_else(|| key.to_owned())
 }
 
+pub fn resolved_wizard_i18n(locale: &str) -> ResolvedI18nMap {
+    let normalized = normalize_locale(locale);
+    let mut resolved = catalogs().get("en").cloned().unwrap_or_default();
+    if normalized != "en"
+        && let Some(locale_catalog) = catalogs().get(&normalized)
+    {
+        resolved.extend(locale_catalog.clone());
+    }
+    resolved
+}
+
 fn normalize_env_locale_candidate(raw: &str) -> Option<String> {
     let trimmed = raw.trim();
     if trimmed.is_empty() {
@@ -104,7 +117,9 @@ fn normalize_env_locale_candidate(raw: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{normalize_env_locale_candidate, normalize_locale, resolve_locale, tr};
+    use super::{
+        normalize_env_locale_candidate, normalize_locale, resolve_locale, resolved_wizard_i18n, tr,
+    };
 
     #[test]
     fn normalize_locale_maps_supported_prefixes() {
@@ -153,5 +168,18 @@ mod tests {
             "template_output_path must end with .json"
         );
         assert_eq!(tr("nl", "missing.key"), "missing.key");
+    }
+
+    #[test]
+    fn resolved_wizard_i18n_merges_english_fallback_with_locale_override() {
+        let resolved = resolved_wizard_i18n("nl");
+        assert_eq!(
+            resolved.get("wizard.qa.title"),
+            Some(&"GX Wizard".to_owned())
+        );
+        assert_eq!(
+            resolved.get("wizard.field.solution_name"),
+            Some(&"Naam van oplossing".to_owned())
+        );
     }
 }

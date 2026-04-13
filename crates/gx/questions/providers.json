@@ -1,0 +1,61 @@
+{
+  "id": "gx.questions.providers",
+  "title": "GX Provider Questions",
+  "version": "1.0.0",
+  "description": "Provider and channel composition questions.",
+  "progress_policy": {
+    "skip_answered": true,
+    "autofill_defaults": false,
+    "treat_default_as_answered": false
+  },
+  "validations": [],
+  "store": [],
+  "includes": [],
+  "questions": [
+    {
+      "id": "provider_selection",
+      "type": "enum",
+      "title": "Provider selection",
+      "title_i18n": { "key": "wizard.qa.gx.provider_selection.title" },
+      "description": "Choose the provider preset or selection mode for this solution.",
+      "description_i18n": { "key": "wizard.qa.gx.provider_selection.description" },
+      "required": true,
+      "choices": ["webchat", "teams", "webex", "slack", "all", "catalog", "manual"],
+      "default_value": "webchat"
+    },
+    {
+      "id": "provider_preset_entry_id",
+      "type": "string",
+      "title": "Catalog provider preset id",
+      "title_i18n": { "key": "wizard.qa.gx.provider_preset_entry_id.title" },
+      "description": "Provider preset entry id to resolve through loaded catalogs.",
+      "description_i18n": { "key": "wizard.qa.gx.provider_preset_entry_id.description" },
+      "required": true,
+      "visible_if": {
+        "op": "eq",
+        "left": { "op": "answer", "path": "provider_selection" },
+        "right": { "op": "literal", "value": "catalog" }
+      },
+      "constraint": {
+        "min_len": 1
+      }
+    },
+    {
+      "id": "provider_refs",
+      "type": "string",
+      "title": "Manual provider refs",
+      "title_i18n": { "key": "wizard.qa.gx.provider_refs.title" },
+      "description": "Comma-separated provider refs when using manual provider selection.",
+      "description_i18n": { "key": "wizard.qa.gx.provider_refs.description" },
+      "required": true,
+      "visible_if": {
+        "op": "eq",
+        "left": { "op": "answer", "path": "provider_selection" },
+        "right": { "op": "literal", "value": "manual" }
+      },
+      "constraint": {
+        "min_len": 1
+      }
+    }
+  ]
+}

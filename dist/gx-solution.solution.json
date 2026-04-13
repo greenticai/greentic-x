@@ -1,10 +1,11 @@
 {
-  "schema_id": "gx.solution.manifest",
+  "schema_id": "gx.solution.intent",
   "schema_version": "1.0.0",
   "solution_id": "gx-solution",
   "solution_name": "GX Solution",
   "description": "",
   "output_dir": "dist",
+  "solution_kind": "assistant",
   "template": {
     "assistant_template_ref": "templates/assistant/basic-empty.json",
     "display_name": "Basic empty solution",
@@ -24,11 +25,24 @@
       "entry_id": "builtin.webchat",
       "kind": "provider-preset",
       "provider_refs": [
-        "ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+        "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
       ],
       "version": "1.0.0"
     }
   ],
   "overlay": null,
-  "catalog_sources": []
+  "catalog_refs": [],
+  "catalog_sources": [],
+  "required_capabilities": [],
+  "required_contracts": [],
+  "suggested_flows": [],
+  "defaults": {
+    "catalog_resolution_policy": "update_then_pin",
+    "provider_selection": "webchat",
+    "template_mode": "basic_empty"
+  },
+  "notes": [
+    "GX owns solution composition in this repo.",
+    "Pack and bundle execution remain downstream Greentic tool responsibilities."
+  ]
 }

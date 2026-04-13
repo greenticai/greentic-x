@@ -4,8 +4,8 @@ use std::path::Path;
 use serde_json::Value;
 
 use crate::{
-    CompositionRequest, GX_WIZARD_ID, GX_WIZARD_SCHEMA_ID, SolutionManifest, WizardAnswerDocument,
-    WizardCommonArgs, WizardNormalizedAnswers,
+    CompositionRequest, GX_WIZARD_ID, GX_WIZARD_SCHEMA_ID, ResolvedSolutionIntent,
+    WizardAnswerDocument, WizardCommonArgs, WizardNormalizedAnswers,
 };
 
 pub(crate) fn load_wizard_answers(
@@ -115,6 +115,9 @@ fn normalize_composition_request(document: &mut WizardAnswerDocument) -> Composi
         ),
         bundle_output_path: bundle_output_path.clone(),
         solution_manifest_path: format!("{output_dir}/{solution_id}.solution.json"),
+        toolchain_handoff_path: format!("{output_dir}/{solution_id}.toolchain-handoff.json"),
+        launcher_answers_path: format!("{output_dir}/{solution_id}.launcher.answers.json"),
+        pack_input_path: format!("{output_dir}/{solution_id}.pack.input.json"),
         bundle_plan_path: format!("{output_dir}/{solution_id}.bundle-plan.json"),
         bundle_answers_path: format!("{output_dir}/{solution_id}.bundle.answers.json"),
         setup_answers_path: format!("{output_dir}/{solution_id}.setup.answers.json"),
@@ -146,7 +149,7 @@ fn prefill_from_existing_solution(
             resolved.display()
         )
     })?;
-    let manifest: SolutionManifest = serde_json::from_str(&raw).map_err(|err| {
+    let manifest: ResolvedSolutionIntent = serde_json::from_str(&raw).map_err(|err| {
         format!(
             "failed to parse existing solution {}: {err}",
             resolved.display()
@@ -160,6 +163,18 @@ fn prefill_from_existing_solution(
     request.bundle_output_path = bundle_output_path(&request.output_dir, &request.solution_id);
     request.solution_manifest_path = format!(
         "{}/{}.solution.json",
+        request.output_dir, request.solution_id
+    );
+    request.toolchain_handoff_path = format!(
+        "{}/{}.toolchain-handoff.json",
+        request.output_dir, request.solution_id
+    );
+    request.launcher_answers_path = format!(
+        "{}/{}.launcher.answers.json",
+        request.output_dir, request.solution_id
+    );
+    request.pack_input_path = format!(
+        "{}/{}.pack.input.json",
         request.output_dir, request.solution_id
     );
     request.bundle_plan_path = format!(
@@ -268,6 +283,18 @@ fn upsert_computed_answers(document: &mut WizardAnswerDocument, request: &Compos
     document.answers.insert(
         "solution_manifest_path".to_owned(),
         Value::String(request.solution_manifest_path.clone()),
+    );
+    document.answers.insert(
+        "toolchain_handoff_path".to_owned(),
+        Value::String(request.toolchain_handoff_path.clone()),
+    );
+    document.answers.insert(
+        "launcher_answers_path".to_owned(),
+        Value::String(request.launcher_answers_path.clone()),
+    );
+    document.answers.insert(
+        "pack_input_path".to_owned(),
+        Value::String(request.pack_input_path.clone()),
     );
     document.answers.insert(
         "bundle_plan_path".to_owned(),
@@ -386,7 +413,7 @@ mod tests {
         fs::write(
             cwd.join("dist/demo.solution.json"),
             serde_json::to_string_pretty(&json!({
-                "schema_id": "gx.solution.manifest",
+                "schema_id": "gx.solution.intent",
                 "schema_version": "1.0.0",
                 "solution_id": "demo",
                 "solution_name": "Demo Solution",
@@ -426,6 +453,15 @@ mod tests {
         assert_eq!(request.solution_name, "Demo Solution");
         assert_eq!(request.description, "Existing description");
         assert_eq!(request.provider_selection, "teams");
+        assert_eq!(
+            request.toolchain_handoff_path,
+            "dist/demo.toolchain-handoff.json"
+        );
+        assert_eq!(
+            request.launcher_answers_path,
+            "dist/demo.launcher.answers.json"
+        );
+        assert_eq!(request.pack_input_path, "dist/demo.pack.input.json");
         assert_eq!(
             request.provider_preset_entry_id.as_deref(),
             Some("builtin.teams")
