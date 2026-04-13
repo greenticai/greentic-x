@@ -6,7 +6,7 @@
   "bundle_answers_path": "dist/gx-solution.bundle.answers.json",
   "steps": [
     {
-      "kind": "emit_solution_manifest",
+      "kind": "emit_solution_intent",
       "path": "dist/gx-solution.solution.json"
     },
     {
@@ -26,7 +26,7 @@
       "path": "dist/gx-solution.README.generated.md"
     },
     {
-      "kind": "delegate_bundle_generation",
+      "kind": "bundle_handoff",
       "path": "dist/dist/gx-solution.gtbundle"
     }
   ]

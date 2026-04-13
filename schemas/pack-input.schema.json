@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/schemas/gx/pack-input.schema.json",
+  "title": "gx pack input",
+  "type": "object",
+  "required": [
+    "schema_id",
+    "schema_version",
+    "solution_id",
+    "solution_intent_ref",
+    "provider_refs",
+    "required_capability_offers",
+    "required_contracts",
+    "suggested_flows",
+    "provider_hints",
+    "template_selection",
+    "defaults",
+    "unresolved_downstream_work",
+    "greentic_cap_mapping",
+    "notes"
+  ],
+  "properties": {
+    "schema_id": { "const": "gx.pack.input" },
+    "schema_version": { "type": "string" },
+    "solution_id": { "type": "string" },
+    "solution_intent_ref": { "type": "string" },
+    "provider_refs": { "type": "array", "items": { "type": "string" } },
+    "required_capability_offers": { "type": "array", "items": { "type": "string" } },
+    "required_contracts": { "type": "array", "items": { "type": "string" } },
+    "suggested_flows": { "type": "array", "items": { "type": "string" } },
+    "provider_hints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entry_id": { "type": ["string", "null"] },
+          "display_name": { "type": ["string", "null"] },
+          "provider_refs": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "template_selection": {
+      "type": "object",
+      "properties": {
+        "entry_id": { "type": ["string", "null"] },
+        "display_name": { "type": ["string", "null"] },
+        "assistant_template_ref": { "type": ["string", "null"] },
+        "domain_template_ref": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "defaults": {},
+    "unresolved_downstream_work": { "type": "array", "items": { "type": "string" } },
+    "greentic_cap_mapping": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["gx_requirement", "greentic_cap_concept", "status"],
+        "properties": {
+          "gx_requirement": { "type": "string" },
+          "greentic_cap_concept": { "type": "string" },
+          "status": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

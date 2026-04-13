@@ -1,0 +1,113 @@
+{
+  "id": "gx.questions.composition",
+  "title": "GX Composition Questions",
+  "version": "1.0.0",
+  "description": "Template and composition questions.",
+  "progress_policy": {
+    "skip_answered": true,
+    "autofill_defaults": false,
+    "treat_default_as_answered": false
+  },
+  "validations": [],
+  "store": [],
+  "includes": [],
+  "questions": [
+    {
+      "id": "template_mode",
+      "type": "enum",
+      "title": "Template mode",
+      "title_i18n": { "key": "wizard.qa.gx.template_mode.title" },
+      "description": "How GX should resolve the assistant template during create flows.",
+      "description_i18n": { "key": "wizard.qa.gx.template_mode.description" },
+      "required": true,
+      "choices": ["basic_empty", "catalog", "manual"],
+      "default_value": "basic_empty",
+      "visible_if": {
+        "op": "eq",
+        "left": { "op": "answer", "path": "mode" },
+        "right": { "op": "literal", "value": "create" }
+      }
+    },
+    {
+      "id": "template_entry_id",
+      "type": "string",
+      "title": "Catalog template id",
+      "title_i18n": { "key": "wizard.qa.gx.template_entry_id.title" },
+      "description": "Catalog template entry id to use for solution composition.",
+      "description_i18n": { "key": "wizard.qa.gx.template_entry_id.description" },
+      "required": true,
+      "visible_if": {
+        "op": "and",
+        "expressions": [
+          {
+            "op": "eq",
+            "left": { "op": "answer", "path": "mode" },
+            "right": { "op": "literal", "value": "create" }
+          },
+          {
+            "op": "eq",
+            "left": { "op": "answer", "path": "template_mode" },
+            "right": { "op": "literal", "value": "catalog" }
+          }
+        ]
+      },
+      "constraint": {
+        "min_len": 1
+      }
+    },
+    {
+      "id": "assistant_template_ref",
+      "type": "string",
+      "title": "Assistant template ref",
+      "title_i18n": { "key": "wizard.qa.gx.assistant_template_ref.title" },
+      "description": "Assistant template reference when manually specifying template sources.",
+      "description_i18n": { "key": "wizard.qa.gx.assistant_template_ref.description" },
+      "required": true,
+      "visible_if": {
+        "op": "and",
+        "expressions": [
+          {
+            "op": "eq",
+            "left": { "op": "answer", "path": "mode" },
+            "right": { "op": "literal", "value": "create" }
+          },
+          {
+            "op": "eq",
+            "left": { "op": "answer", "path": "template_mode" },
+            "right": { "op": "literal", "value": "manual" }
+          }
+        ]
+      },
+      "constraint": {
+        "min_len": 1
+      }
+    },
+    {
+      "id": "domain_template_ref",
+      "type": "string",
+      "title": "Domain template ref",
+      "title_i18n": { "key": "wizard.qa.gx.domain_template_ref.title" },
+      "description": "Optional domain template reference paired with the assistant template.",
+      "description_i18n": { "key": "wizard.qa.gx.domain_template_ref.description" },
+      "required": true,
+      "visible_if": {
+        "op": "and",
+        "expressions": [
+          {
+            "op": "eq",
+            "left": { "op": "answer", "path": "mode" },
+            "right": { "op": "literal", "value": "create" }
+          },
+          {
+            "op": "eq",
+            "left": { "op": "answer", "path": "template_mode" },
+            "right": { "op": "literal", "value": "manual" }
+          }
+        ]
+      },
+      "constraint": {
+        "min_len": 1
+      }
+    }
+  ]
+}

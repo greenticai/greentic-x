@@ -8,7 +8,7 @@ use crate::{
     WizardNormalizedAnswers,
 };
 
-use super::compose::generated_output_paths;
+use super::compose::{downstream_output_paths, generated_output_paths};
 use super::handoff::default_handoff_answers_path;
 use super::resolve_wizard_path;
 
@@ -35,17 +35,16 @@ pub(crate) fn wizard_plan_steps(
             description: "Load local and OCI catalogs".to_owned(),
         },
         crate::WizardPlanStep {
-            kind: "build_artifacts".to_owned(),
-            description: "Build solution, bundle-plan, setup, and bundle handoff artifacts"
-                .to_owned(),
+            kind: "build_outputs".to_owned(),
+            description: "Build GX composition outputs and downstream handoff artifacts".to_owned(),
         },
     ];
     if matches!(action, WizardAction::Run | WizardAction::Apply)
         && matches!(execution, WizardExecutionMode::Execute)
     {
         steps.push(crate::WizardPlanStep {
-            kind: "delegate_bundle".to_owned(),
-            description: "Delegate bundle generation to greentic-bundle".to_owned(),
+            kind: "bundle_handoff".to_owned(),
+            description: "Invoke downstream bundle generation through greentic-bundle".to_owned(),
         });
     }
     steps
@@ -113,6 +112,15 @@ pub(crate) fn wizard_expected_writes(
                         .to_string(),
                 );
             }
+            if should_delegate_bundle_handoff(action, execution, args, normalized_answers) {
+                for path in downstream_output_paths(request) {
+                    writes.push(
+                        resolve_wizard_path(cwd, Path::new(&path))
+                            .display()
+                            .to_string(),
+                    );
+                }
+            }
             if should_delegate_bundle_handoff(action, execution, args, normalized_answers)
                 && args.emit_answers.is_none()
             {
@@ -130,6 +138,9 @@ pub(crate) fn wizard_expected_writes(
 }
 
 pub(crate) fn wizard_warnings(
+    action: WizardAction,
+    execution: WizardExecutionMode,
+    args: &WizardCommonArgs,
     normalized_answers: &WizardNormalizedAnswers,
     _locale: &str,
 ) -> Vec<String> {
@@ -142,6 +153,18 @@ pub(crate) fn wizard_warnings(
                     request.catalog_oci_refs.join(", ")
                 ));
             }
+            if matches!(action, WizardAction::Apply) {
+                warnings.push(
+                    "`gx wizard apply` is a compatibility bridge for downstream replay. Prefer `gx wizard run` and consume emitted handoff artifacts.".to_owned(),
+                );
+            }
+            if matches!(execution, WizardExecutionMode::Execute)
+                && (args.bundle_handoff || matches!(action, WizardAction::Apply))
+            {
+                warnings.push(
+                    "Direct `greentic-bundle` invocation from GX is deprecated compatibility behavior; long-term integration should happen through `greentic-dev` and downstream tools.".to_owned(),
+                );
+            }
             warnings
         }
     }
@@ -151,6 +174,10 @@ fn add_composition_summary(summary: &mut BTreeMap<String, Value>, request: &Comp
     summary.insert(
         "workflow".to_owned(),
         Value::String("compose_solution".to_owned()),
+    );
+    summary.insert(
+        "ownership_boundary".to_owned(),
+        Value::String("gx_composition_only".to_owned()),
     );
     summary.insert(
         "compose_mode".to_owned(),
@@ -183,6 +210,22 @@ fn add_composition_summary(summary: &mut BTreeMap<String, Value>, request: &Comp
     summary.insert(
         "bundle_output_path".to_owned(),
         Value::String(request.bundle_output_path.clone()),
+    );
+    summary.insert(
+        "solution_manifest_path".to_owned(),
+        Value::String(request.solution_manifest_path.clone()),
+    );
+    summary.insert(
+        "toolchain_handoff_path".to_owned(),
+        Value::String(request.toolchain_handoff_path.clone()),
+    );
+    summary.insert(
+        "launcher_answers_path".to_owned(),
+        Value::String(request.launcher_answers_path.clone()),
+    );
+    summary.insert(
+        "pack_input_path".to_owned(),
+        Value::String(request.pack_input_path.clone()),
     );
     summary.insert(
         "catalog_oci_sources_count".to_owned(),

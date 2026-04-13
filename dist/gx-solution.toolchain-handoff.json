@@ -1,0 +1,34 @@
+{
+  "schema_id": "gx.toolchain.handoff",
+  "schema_version": "1.0.0",
+  "solution_id": "gx-solution",
+  "solution_intent_ref": "dist/gx-solution.solution.json",
+  "bundle_handoff": {
+    "tool": "greentic-bundle",
+    "bundle_output_path": "dist/dist/gx-solution.gtbundle",
+    "bundle_plan_path": "dist/gx-solution.bundle-plan.json",
+    "bundle_answers_path": "dist/gx-solution.bundle.answers.json",
+    "setup_answers_path": "dist/gx-solution.setup.answers.json"
+  },
+  "launcher_handoff": {
+    "tool": "greentic-dev",
+    "launcher_answers_path": "dist/gx-solution.launcher.answers.json",
+    "selected_action": "bundle",
+    "delegated_schema_id": "greentic-bundle.wizard.answers",
+    "delegated_wizard_id": "greentic-bundle.wizard.run"
+  },
+  "pack_handoff": {
+    "tool": "greentic-pack",
+    "pack_input_path": "dist/gx-solution.pack.input.json"
+  },
+  "provenance": {
+    "producer": "gx",
+    "produced_by": "greentic-x",
+    "ownership_boundary": "composition_only"
+  },
+  "locks": {
+    "catalog_resolution_policy": "update_then_pin",
+    "provider_selection": "webchat",
+    "template_mode": "basic_empty"
+  }
+}

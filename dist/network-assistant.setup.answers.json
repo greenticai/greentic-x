@@ -1,0 +1,10 @@
+{
+  "schema_id": "gx.setup.answers",
+  "schema_version": "1.0.0",
+  "solution_id": "network-assistant",
+  "setup_mode": "minimal",
+  "provider_refs": [
+    "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+  ],
+  "overlay": null
+}

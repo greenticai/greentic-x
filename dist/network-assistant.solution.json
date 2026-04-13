@@ -1,0 +1,48 @@
+{
+  "schema_id": "gx.solution.intent",
+  "schema_version": "1.0.0",
+  "solution_id": "network-assistant",
+  "solution_name": "Network Assistant",
+  "description": "A network support assistant",
+  "output_dir": "dist",
+  "solution_kind": "assistant",
+  "template": {
+    "assistant_template_ref": "templates/assistant/basic-empty.json",
+    "display_name": "Basic empty solution",
+    "domain_template_ref": "templates/domain/basic-empty.json",
+    "entry_id": "builtin.basic-empty",
+    "kind": "assistant-template",
+    "provenance": {
+      "resolved_digest": null,
+      "source_ref": "builtin:basic-empty",
+      "source_type": "local"
+    },
+    "version": "1.0.0"
+  },
+  "provider_presets": [
+    {
+      "display_name": "Webchat",
+      "entry_id": "builtin.webchat",
+      "kind": "provider-preset",
+      "provider_refs": [
+        "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+      ],
+      "version": "1.0.0"
+    }
+  ],
+  "overlay": null,
+  "catalog_refs": [],
+  "catalog_sources": [],
+  "required_capabilities": [],
+  "required_contracts": [],
+  "suggested_flows": [],
+  "defaults": {
+    "catalog_resolution_policy": "update_then_pin",
+    "provider_selection": "webchat",
+    "template_mode": "basic_empty"
+  },
+  "notes": [
+    "GX owns solution composition in this repo.",
+    "Pack and bundle execution remain downstream Greentic tool responsibilities."
+  ]
+}

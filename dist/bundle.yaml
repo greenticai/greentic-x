@@ -1,0 +1,16 @@
+schema_version: 1
+bundle_id: network-assistant
+bundle_name: Network Assistant
+locale: en
+mode: create
+advanced_setup: false
+app_packs: []
+app_pack_mappings: []
+extension_providers:
+  - oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest
+remote_catalogs: []
+hooks: []
+subscriptions: []
+capabilities: []
+setup_execution_intent: false
+export_intent: false

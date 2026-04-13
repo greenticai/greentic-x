@@ -1,0 +1,103 @@
+{
+  "id": "gx.questions.core",
+  "title": "GX Core Questions",
+  "version": "1.0.0",
+  "description": "Core GX composition questions.",
+  "progress_policy": {
+    "skip_answered": true,
+    "autofill_defaults": false,
+    "treat_default_as_answered": false
+  },
+  "validations": [],
+  "store": [],
+  "includes": [],
+  "questions": [
+    {
+      "id": "mode",
+      "type": "enum",
+      "title": "Composition mode",
+      "title_i18n": { "key": "wizard.qa.gx.mode.title" },
+      "description": "Choose whether to create a new solution or update an existing one.",
+      "description_i18n": { "key": "wizard.qa.gx.mode.description" },
+      "required": true,
+      "choices": ["create", "update"],
+      "default_value": "create"
+    },
+    {
+      "id": "existing_solution_path",
+      "type": "string",
+      "title": "Existing solution path",
+      "title_i18n": { "key": "wizard.qa.gx.existing_solution_path.title" },
+      "description": "Path to an existing .solution.json file when updating.",
+      "description_i18n": { "key": "wizard.qa.gx.existing_solution_path.description" },
+      "required": true,
+      "visible_if": {
+        "op": "eq",
+        "left": { "op": "answer", "path": "mode" },
+        "right": { "op": "literal", "value": "update" }
+      },
+      "constraint": {
+        "min_len": 1
+      }
+    },
+    {
+      "id": "solution_name",
+      "type": "string",
+      "title": "Solution name",
+      "title_i18n": { "key": "wizard.qa.gx.solution_name.title" },
+      "description": "Human-readable name for the solution intent.",
+      "description_i18n": { "key": "wizard.qa.gx.solution_name.description" },
+      "required": true,
+      "default_value": "GX Solution",
+      "constraint": {
+        "min_len": 2
+      }
+    },
+    {
+      "id": "solution_id",
+      "type": "string",
+      "title": "Solution id",
+      "title_i18n": { "key": "wizard.qa.gx.solution_id.title" },
+      "description": "Stable slug used for generated artifact file names.",
+      "description_i18n": { "key": "wizard.qa.gx.solution_id.description" },
+      "required": true,
+      "default_value": "gx-solution",
+      "constraint": {
+        "min_len": 2
+      }
+    },
+    {
+      "id": "description",
+      "type": "string",
+      "title": "Short description",
+      "title_i18n": { "key": "wizard.qa.gx.description.title" },
+      "description": "Brief description of the composed solution.",
+      "description_i18n": { "key": "wizard.qa.gx.description.description" },
+      "required": false,
+      "default_value": ""
+    },
+    {
+      "id": "output_dir",
+      "type": "string",
+      "title": "Output directory",
+      "title_i18n": { "key": "wizard.qa.gx.output_dir.title" },
+      "description": "Directory where GX writes solution and handoff artifacts.",
+      "description_i18n": { "key": "wizard.qa.gx.output_dir.description" },
+      "required": true,
+      "default_value": "dist",
+      "constraint": {
+        "min_len": 1
+      }
+    },
+    {
+      "id": "catalog_oci_refs",
+      "type": "string",
+      "title": "Catalog OCI refs",
+      "title_i18n": { "key": "wizard.qa.gx.catalog_oci_refs.title" },
+      "description": "Optional comma-separated OCI catalog refs for extra templates and provider presets.",
+      "description_i18n": { "key": "wizard.qa.gx.catalog_oci_refs.description" },
+      "required": false,
+      "default_value": ""
+    }
+  ]
+}

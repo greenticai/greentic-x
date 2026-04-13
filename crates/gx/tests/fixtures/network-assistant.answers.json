@@ -1,0 +1,17 @@
+{
+  "wizard_id": "greentic-bundle.wizard.run",
+  "schema_id": "greentic-bundle.wizard.answers",
+  "schema_version": "1.0.0",
+  "locale": "en",
+  "answers": {
+    "mode": "create",
+    "template_mode": "basic_empty",
+    "solution_name": "Network Assistant",
+    "solution_id": "network-assistant",
+    "description": "Automates network diagnostics",
+    "output_dir": "dist",
+    "provider_selection": "teams",
+    "catalog_resolution_policy": "update_then_pin"
+  },
+  "locks": {}
+}

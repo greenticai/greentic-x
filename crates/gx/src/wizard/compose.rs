@@ -4,7 +4,8 @@ use std::path::Path;
 use serde_json::{Value, json};
 
 use crate::{
-    BundlePlan, CompositionRequest, SetupAnswers, SolutionManifest, WizardAnswerDocument,
+    BundleHandoff, BundlePlan, CompositionRequest, DownstreamHandoffArtifacts, HandoffProvenance,
+    LauncherHandoff, ResolvedSolutionIntent, SetupAnswers, ToolchainHandoff, WizardAnswerDocument,
     WizardCatalogSet,
 };
 
@@ -14,16 +15,28 @@ use super::catalog::{
     find_template_by_id, pin_reference, value_from_overlay, value_from_provider,
     value_from_template,
 };
+use super::intent_to_pack::map_solution_intent_to_pack_input;
+use super::launcher::{
+    GREENTIC_DEV_LAUNCHER_SCHEMA_ID, GREENTIC_DEV_LAUNCHER_SELECTED_ACTION_BUNDLE,
+    GREENTIC_DEV_LAUNCHER_WIZARD_ID, build_bundle_launcher_document,
+};
 
 const BUNDLE_WIZARD_ID: &str = "greentic-bundle.wizard.run";
 const BUNDLE_SCHEMA_ID: &str = "greentic-bundle.wizard.answers";
 const SCHEMA_VERSION: &str = "1.0.0";
+#[cfg(test)]
+const SOLUTION_INTENT_SCHEMA: &str =
+    include_str!("../../../../schemas/solution-intent.schema.json");
+#[cfg(test)]
+const TOOLCHAIN_HANDOFF_SCHEMA: &str =
+    include_str!("../../../../schemas/toolchain-handoff.schema.json");
+#[cfg(test)]
+const PACK_INPUT_SCHEMA: &str = include_str!("../../../../schemas/pack-input.schema.json");
 
-pub(crate) struct GeneratedArtifacts {
-    pub(crate) solution_manifest: SolutionManifest,
-    pub(crate) bundle_plan: BundlePlan,
-    pub(crate) bundle_answers: WizardAnswerDocument,
-    pub(crate) setup_answers: SetupAnswers,
+pub(crate) struct GeneratedComposition {
+    pub(crate) solution_intent: ResolvedSolutionIntent,
+    pub(crate) handoff: DownstreamHandoffArtifacts,
+    pub(crate) launcher_answers: WizardAnswerDocument,
     pub(crate) readme: String,
 }
 
@@ -34,22 +47,37 @@ pub(crate) fn generate_artifacts(
     locale: &str,
     execution_resolves_remote: bool,
     fetcher: &dyn RemoteCatalogFetcher,
-) -> Result<GeneratedArtifacts, String> {
+) -> Result<GeneratedComposition, String> {
     let template = resolve_template(cwd, request, catalogs, execution_resolves_remote, fetcher)?;
     let providers =
         resolve_provider_presets(cwd, request, catalogs, execution_resolves_remote, fetcher)?;
     let overlay = resolve_overlay(request, catalogs);
-    let solution_manifest = SolutionManifest {
-        schema_id: "gx.solution.manifest".to_owned(),
+    let solution_intent = ResolvedSolutionIntent {
+        schema_id: "gx.solution.intent".to_owned(),
         schema_version: SCHEMA_VERSION.to_owned(),
         solution_id: request.solution_id.clone(),
         solution_name: request.solution_name.clone(),
         description: request.description.clone(),
         output_dir: request.output_dir.clone(),
+        solution_kind: "assistant".to_owned(),
         template: template.clone(),
         provider_presets: providers.clone(),
         overlay: overlay.clone(),
+        catalog_refs: request.catalog_oci_refs.clone(),
         catalog_sources: request.catalog_oci_refs.clone(),
+        required_capabilities: Vec::new(),
+        required_contracts: Vec::new(),
+        suggested_flows: Vec::new(),
+        defaults: json!({
+            "catalog_resolution_policy": request.catalog_resolution_policy,
+            "provider_selection": request.provider_selection,
+            "template_mode": request.template_mode
+        }),
+        notes: vec![
+            "GX owns solution composition in this repo.".to_owned(),
+            "Pack and bundle execution remain downstream Greentic tool responsibilities."
+                .to_owned(),
+        ],
     };
     let bundle_plan = BundlePlan {
         schema_id: "gx.bundle.plan".to_owned(),
@@ -58,12 +86,12 @@ pub(crate) fn generate_artifacts(
         bundle_output_path: request.bundle_output_path.clone(),
         bundle_answers_path: request.bundle_answers_path.clone(),
         steps: vec![
-            json!({"kind": "emit_solution_manifest", "path": request.solution_manifest_path}),
+            json!({"kind": "emit_solution_intent", "path": request.solution_manifest_path}),
             json!({"kind": "emit_bundle_plan", "path": request.bundle_plan_path}),
             json!({"kind": "emit_bundle_answers", "path": request.bundle_answers_path}),
             json!({"kind": "emit_setup_answers", "path": request.setup_answers_path}),
             json!({"kind": "emit_readme", "path": request.readme_path}),
-            json!({"kind": "delegate_bundle_generation", "path": request.bundle_output_path}),
+            json!({"kind": "bundle_handoff", "path": request.bundle_output_path}),
         ],
     };
     let provider_refs = providers
@@ -91,12 +119,64 @@ pub(crate) fn generate_artifacts(
         provider_refs,
         overlay,
     };
-    let readme = render_readme(request, &solution_manifest, &bundle_plan);
-    Ok(GeneratedArtifacts {
-        solution_manifest,
+    let launcher_answers = build_bundle_launcher_document(locale, SCHEMA_VERSION, &bundle_answers)?;
+    let pack_input =
+        map_solution_intent_to_pack_input(&solution_intent, &request.solution_manifest_path);
+    let toolchain_handoff = ToolchainHandoff {
+        schema_id: "gx.toolchain.handoff".to_owned(),
+        schema_version: SCHEMA_VERSION.to_owned(),
+        solution_id: request.solution_id.clone(),
+        solution_intent_ref: request.solution_manifest_path.clone(),
+        bundle_handoff: BundleHandoff {
+            tool: "greentic-bundle".to_owned(),
+            bundle_output_path: request.bundle_output_path.clone(),
+            bundle_plan_path: request.bundle_plan_path.clone(),
+            bundle_answers_path: request.bundle_answers_path.clone(),
+            setup_answers_path: request.setup_answers_path.clone(),
+        },
+        launcher_handoff: Some(LauncherHandoff {
+            tool: "greentic-dev".to_owned(),
+            launcher_answers_path: request.launcher_answers_path.clone(),
+            selected_action: GREENTIC_DEV_LAUNCHER_SELECTED_ACTION_BUNDLE.to_owned(),
+            delegated_schema_id: BUNDLE_SCHEMA_ID.to_owned(),
+            delegated_wizard_id: BUNDLE_WIZARD_ID.to_owned(),
+        }),
+        pack_handoff: Some(crate::PackHandoff {
+            tool: "greentic-pack".to_owned(),
+            pack_input_path: request.pack_input_path.clone(),
+        }),
+        provenance: HandoffProvenance {
+            producer: "gx".to_owned(),
+            produced_by: "greentic-x".to_owned(),
+            ownership_boundary: "composition_only".to_owned(),
+        },
+        locks: serde_json::Map::from_iter([
+            (
+                "catalog_resolution_policy".to_owned(),
+                Value::String(request.catalog_resolution_policy.clone()),
+            ),
+            (
+                "provider_selection".to_owned(),
+                Value::String(request.provider_selection.clone()),
+            ),
+            (
+                "template_mode".to_owned(),
+                Value::String(request.template_mode.clone()),
+            ),
+        ]),
+    };
+    let handoff = DownstreamHandoffArtifacts {
+        toolchain_handoff,
+        pack_input,
         bundle_plan,
         bundle_answers,
         setup_answers,
+    };
+    let readme = render_readme(request, &solution_intent, &handoff);
+    Ok(GeneratedComposition {
+        solution_intent,
+        handoff,
+        launcher_answers,
         readme,
     })
 }
@@ -104,16 +184,39 @@ pub(crate) fn generate_artifacts(
 pub(crate) fn write_generated_artifacts(
     cwd: &Path,
     request: &CompositionRequest,
-    generated: &GeneratedArtifacts,
+    generated: &GeneratedComposition,
 ) -> Result<(), String> {
     write_json_file(
         cwd,
         &request.solution_manifest_path,
-        &generated.solution_manifest,
+        &generated.solution_intent,
     )?;
-    write_json_file(cwd, &request.bundle_plan_path, &generated.bundle_plan)?;
-    write_json_file(cwd, &request.bundle_answers_path, &generated.bundle_answers)?;
-    write_json_file(cwd, &request.setup_answers_path, &generated.setup_answers)?;
+    write_json_file(
+        cwd,
+        &request.toolchain_handoff_path,
+        &generated.handoff.toolchain_handoff,
+    )?;
+    write_json_file(
+        cwd,
+        &request.launcher_answers_path,
+        &generated.launcher_answers,
+    )?;
+    write_json_file(cwd, &request.pack_input_path, &generated.handoff.pack_input)?;
+    write_json_file(
+        cwd,
+        &request.bundle_plan_path,
+        &generated.handoff.bundle_plan,
+    )?;
+    write_json_file(
+        cwd,
+        &request.bundle_answers_path,
+        &generated.handoff.bundle_answers,
+    )?;
+    write_json_file(
+        cwd,
+        &request.setup_answers_path,
+        &generated.handoff.setup_answers,
+    )?;
     let readme_path = resolve_output_path(cwd, &request.readme_path);
     if let Some(parent) = readme_path.parent() {
         fs::create_dir_all(parent).map_err(|err| {
@@ -131,12 +234,18 @@ pub(crate) fn write_generated_artifacts(
 pub(crate) fn generated_output_paths(request: &CompositionRequest) -> Vec<String> {
     vec![
         request.solution_manifest_path.clone(),
+        request.toolchain_handoff_path.clone(),
+        request.launcher_answers_path.clone(),
+        request.pack_input_path.clone(),
         request.bundle_plan_path.clone(),
         request.bundle_answers_path.clone(),
         request.setup_answers_path.clone(),
         request.readme_path.clone(),
-        request.bundle_output_path.clone(),
     ]
+}
+
+pub(crate) fn downstream_output_paths(request: &CompositionRequest) -> Vec<String> {
+    vec![request.bundle_output_path.clone()]
 }
 
 fn resolve_template(
@@ -427,24 +536,31 @@ fn build_bundle_answers(
 
 fn render_readme(
     request: &CompositionRequest,
-    solution_manifest: &SolutionManifest,
-    bundle_plan: &BundlePlan,
+    solution_intent: &ResolvedSolutionIntent,
+    handoff: &DownstreamHandoffArtifacts,
 ) -> String {
     format!(
-        "# {}\n\n{}\n\n## Generated Files\n\n- `{}`\n- `{}`\n- `{}`\n- `{}`\n- `{}`\n- `{}`\n\n## Delegated Bundle Generation\n\n`greentic-bundle wizard apply --answers {}`\n",
-        solution_manifest.solution_name,
-        if solution_manifest.description.is_empty() {
+        "# {}\n\n{}\n\n## GX Outputs\n\n- `{}`\n- `{}`\n- `{}`\n- `{}`\n- `{}`\n- `{}`\n- `{}`\n- `{}`\n\n## Downstream Toolchain Handoff\n\n- pack compatibility input: `{}`\n- expected downstream bundle output: `{}`\n- direct bundle handoff command: `greentic-bundle wizard apply --answers {}`\n- launcher compatibility file: `{}`\n- launcher target: `{}` / `{}`\n",
+        solution_intent.solution_name,
+        if solution_intent.description.is_empty() {
             "Generated by gx wizard.".to_owned()
         } else {
-            solution_manifest.description.clone()
+            solution_intent.description.clone()
         },
         request.solution_manifest_path,
+        request.toolchain_handoff_path,
+        request.launcher_answers_path,
+        request.pack_input_path,
         request.bundle_plan_path,
         request.bundle_answers_path,
         request.setup_answers_path,
         request.readme_path,
-        bundle_plan.bundle_output_path,
-        request.bundle_answers_path
+        request.pack_input_path,
+        handoff.bundle_plan.bundle_output_path,
+        request.bundle_answers_path,
+        request.launcher_answers_path,
+        GREENTIC_DEV_LAUNCHER_WIZARD_ID,
+        GREENTIC_DEV_LAUNCHER_SCHEMA_ID
     )
 }
 
@@ -496,6 +612,7 @@ mod tests {
     use super::*;
     use crate::wizard::catalog::ResolvedPackArtifact;
     use crate::{CatalogProvenance, WizardCatalogSet};
+    use jsonschema::validator_for;
     use std::cell::RefCell;
     use std::path::PathBuf;
     use tempfile::TempDir;
@@ -531,6 +648,13 @@ mod tests {
         }
     }
 
+    fn assert_matches_schema(schema_raw: &str, value: &impl serde::Serialize) {
+        let schema: Value = serde_json::from_str(schema_raw).expect("schema json");
+        let validator = validator_for(&schema).expect("validator");
+        let instance = serde_json::to_value(value).expect("instance");
+        validator.validate(&instance).expect("schema validation");
+    }
+
     #[test]
     fn provider_mapping_supports_all_of_the_above() {
         let request = CompositionRequest {
@@ -556,6 +680,9 @@ mod tests {
             catalog_resolution_policy: "update_then_pin".to_owned(),
             bundle_output_path: "dist/demo.gtbundle".to_owned(),
             solution_manifest_path: "dist/demo.solution.json".to_owned(),
+            toolchain_handoff_path: "dist/demo.toolchain-handoff.json".to_owned(),
+            launcher_answers_path: "dist/demo.launcher.answers.json".to_owned(),
+            pack_input_path: "dist/demo.pack.input.json".to_owned(),
             bundle_plan_path: "dist/demo.bundle-plan.json".to_owned(),
             bundle_answers_path: "dist/demo.bundle.answers.json".to_owned(),
             setup_answers_path: "dist/demo.setup.answers.json".to_owned(),
@@ -610,6 +737,9 @@ mod tests {
             catalog_resolution_policy: "update_then_pin".to_owned(),
             bundle_output_path: "dist/demo.gtbundle".to_owned(),
             solution_manifest_path: "dist/demo.solution.json".to_owned(),
+            toolchain_handoff_path: "dist/demo.toolchain-handoff.json".to_owned(),
+            launcher_answers_path: "dist/demo.launcher.answers.json".to_owned(),
+            pack_input_path: "dist/demo.pack.input.json".to_owned(),
             bundle_plan_path: "dist/demo.bundle-plan.json".to_owned(),
             bundle_answers_path: "dist/demo.bundle.answers.json".to_owned(),
             setup_answers_path: "dist/demo.setup.answers.json".to_owned(),
@@ -651,15 +781,27 @@ mod tests {
         )
         .expect("artifacts");
         assert_eq!(
-            generated.solution_manifest.template["entry_id"],
+            generated.solution_intent.template["entry_id"],
             "assistant.network.phase1"
         );
         assert_eq!(
-            generated.bundle_answers.answers["assistant_template_source"],
+            generated.handoff.bundle_answers.answers["assistant_template_source"],
             "oci://ghcr.io/greenticai/greentic-x/templates/assistant/network-phase1:latest"
         );
-        assert_eq!(generated.bundle_answers.answers["export_intent"], true);
-        assert_eq!(generated.bundle_answers.locks["execution"], "execute");
+        assert_eq!(
+            generated.handoff.bundle_answers.answers["export_intent"],
+            true
+        );
+        assert_eq!(
+            generated.handoff.bundle_answers.locks["execution"],
+            "execute"
+        );
+        assert_matches_schema(SOLUTION_INTENT_SCHEMA, &generated.solution_intent);
+        assert_matches_schema(
+            TOOLCHAIN_HANDOFF_SCHEMA,
+            &generated.handoff.toolchain_handoff,
+        );
+        assert_matches_schema(PACK_INPUT_SCHEMA, &generated.handoff.pack_input);
     }
 
     #[test]
@@ -687,6 +829,9 @@ mod tests {
             catalog_resolution_policy: "update_then_pin".to_owned(),
             bundle_output_path: "dist/demo.gtbundle".to_owned(),
             solution_manifest_path: "dist/demo.solution.json".to_owned(),
+            toolchain_handoff_path: "dist/demo.toolchain-handoff.json".to_owned(),
+            launcher_answers_path: "dist/demo.launcher.answers.json".to_owned(),
+            pack_input_path: "dist/demo.pack.input.json".to_owned(),
             bundle_plan_path: "dist/demo.bundle-plan.json".to_owned(),
             bundle_answers_path: "dist/demo.bundle.answers.json".to_owned(),
             setup_answers_path: "dist/demo.setup.answers.json".to_owned(),
@@ -705,6 +850,7 @@ mod tests {
         )
         .expect("artifacts");
         let providers = generated
+            .handoff
             .bundle_answers
             .answers
             .get("extension_providers")
@@ -713,6 +859,7 @@ mod tests {
         assert_eq!(providers.len(), 4);
         assert!(
             generated
+                .handoff
                 .bundle_answers
                 .answers
                 .get("provider_preset_refs")
@@ -768,6 +915,9 @@ mod tests {
             catalog_resolution_policy: "update_then_pin".to_owned(),
             bundle_output_path: "dist/network-assistant.gtbundle".to_owned(),
             solution_manifest_path: "dist/network-assistant.solution.json".to_owned(),
+            toolchain_handoff_path: "dist/network-assistant.toolchain-handoff.json".to_owned(),
+            launcher_answers_path: "dist/network-assistant.launcher.answers.json".to_owned(),
+            pack_input_path: "dist/network-assistant.pack.input.json".to_owned(),
             bundle_plan_path: "dist/network-assistant.bundle-plan.json".to_owned(),
             bundle_answers_path: "dist/network-assistant.bundle.answers.json".to_owned(),
             setup_answers_path: "dist/network-assistant.setup.answers.json".to_owned(),
@@ -797,7 +947,22 @@ mod tests {
         );
         assert!(
             temp.path()
+                .join("dist/network-assistant.toolchain-handoff.json")
+                .exists()
+        );
+        assert!(
+            temp.path()
                 .join("dist/network-assistant.bundle.answers.json")
+                .exists()
+        );
+        assert!(
+            temp.path()
+                .join("dist/network-assistant.launcher.answers.json")
+                .exists()
+        );
+        assert!(
+            temp.path()
+                .join("dist/network-assistant.pack.input.json")
                 .exists()
         );
         assert!(
@@ -809,6 +974,38 @@ mod tests {
             temp.path()
                 .join("dist/network-assistant.README.generated.md")
                 .exists()
+        );
+        assert_matches_schema(SOLUTION_INTENT_SCHEMA, &generated.solution_intent);
+        assert_matches_schema(
+            TOOLCHAIN_HANDOFF_SCHEMA,
+            &generated.handoff.toolchain_handoff,
+        );
+        assert_matches_schema(PACK_INPUT_SCHEMA, &generated.handoff.pack_input);
+        assert_eq!(
+            generated.launcher_answers.wizard_id,
+            GREENTIC_DEV_LAUNCHER_WIZARD_ID
+        );
+        assert_eq!(
+            generated.launcher_answers.schema_id,
+            GREENTIC_DEV_LAUNCHER_SCHEMA_ID
+        );
+        assert_eq!(
+            generated.launcher_answers.answers["selected_action"],
+            "bundle"
+        );
+        assert_eq!(
+            generated.launcher_answers.answers["delegate_answer_document"]["wizard_id"],
+            BUNDLE_WIZARD_ID
+        );
+        assert_eq!(generated.handoff.pack_input.schema_id, "gx.pack.input");
+        assert_eq!(
+            generated
+                .handoff
+                .toolchain_handoff
+                .pack_handoff
+                .as_ref()
+                .map(|item| item.tool.as_str()),
+            Some("greentic-pack")
         );
         Ok(())
     }

@@ -1,0 +1,43 @@
+{
+  "schema_id": "gx.pack.input",
+  "schema_version": "1.0.0",
+  "solution_id": "network-assistant",
+  "solution_intent_ref": "dist/network-assistant.solution.json",
+  "provider_refs": [
+    "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+  ],
+  "required_capability_offers": [],
+  "required_contracts": [],
+  "suggested_flows": [],
+  "provider_hints": [
+    {
+      "entry_id": "builtin.webchat",
+      "display_name": "Webchat",
+      "provider_refs": [
+        "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+      ]
+    }
+  ],
+  "template_selection": {
+    "entry_id": "builtin.basic-empty",
+    "display_name": "Basic empty solution",
+    "assistant_template_ref": "templates/assistant/basic-empty.json",
+    "domain_template_ref": "templates/domain/basic-empty.json"
+  },
+  "defaults": {
+    "catalog_resolution_policy": "update_then_pin",
+    "provider_selection": "webchat",
+    "template_mode": "basic_empty"
+  },
+  "unresolved_downstream_work": [
+    "Choose or scaffold the target pack root and pack identifiers.",
+    "Translate pack input into greentic-pack wizard answers or pack.yaml state.",
+    "Resolve capability offers and extension/component authoring details through greentic-pack.",
+    "Run pack doctor, resolve, build, sign, and any manifest synchronization in greentic-pack."
+  ],
+  "greentic_cap_mapping": [],
+  "notes": [
+    "This document is a compatibility input for greentic-pack, not a pack manifest.",
+    "Capability requirements are carried as GX requirements mapped onto greentic-cap-style required capability offers."
+  ]
+}

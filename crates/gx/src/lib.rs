@@ -77,7 +77,7 @@ enum Command {
         #[command(subcommand)]
         command: CatalogCommand,
     },
-    /// Compose solutions and delegate bundle generation.
+    /// Compose solutions and emit downstream handoff artifacts.
     Wizard(WizardArgs),
 }
 
@@ -127,8 +127,11 @@ enum CatalogCommand {
 
 #[derive(Subcommand, Clone)]
 enum WizardCommand {
+    /// Compose solution artifacts without invoking downstream tools unless explicitly requested.
     Run(WizardCommonArgs),
+    /// Validate GX-controlled composition inputs and generated plans without side effects.
     Validate(WizardCommonArgs),
+    /// Compatibility bridge that can still invoke downstream bundle replay; prefer `run` plus emitted handoff artifacts.
     Apply(WizardCommonArgs),
 }
 
@@ -249,6 +252,8 @@ struct CatalogValidateArgs {
 
 #[derive(Args, Clone)]
 struct WizardArgs {
+    #[arg(long, default_value_t = false)]
+    schema: bool,
     #[command(subcommand)]
     command: Option<WizardCommand>,
     #[command(flatten)]
@@ -273,6 +278,7 @@ struct WizardCommonArgs {
     schema_version: Option<String>,
     #[arg(long, default_value_t = false)]
     migrate: bool,
+    /// Temporary compatibility bridge for downstream `greentic-bundle` replay; prefer emitted handoff artifacts when possible.
     #[arg(long, default_value_t = false)]
     bundle_handoff: bool,
 }
@@ -353,11 +359,44 @@ struct CompositionRequest {
     catalog_resolution_policy: String,
     bundle_output_path: String,
     solution_manifest_path: String,
+    toolchain_handoff_path: String,
+    launcher_answers_path: String,
+    pack_input_path: String,
     bundle_plan_path: String,
     bundle_answers_path: String,
     setup_answers_path: String,
     readme_path: String,
     existing_solution_path: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct ResolvedSolutionIntent {
+    schema_id: String,
+    schema_version: String,
+    solution_id: String,
+    solution_name: String,
+    description: String,
+    output_dir: String,
+    #[serde(default = "default_solution_kind")]
+    solution_kind: String,
+    template: Value,
+    provider_presets: Vec<Value>,
+    #[serde(default)]
+    overlay: Option<Value>,
+    #[serde(default)]
+    catalog_refs: Vec<String>,
+    #[serde(default)]
+    catalog_sources: Vec<String>,
+    #[serde(default)]
+    required_capabilities: Vec<String>,
+    #[serde(default)]
+    required_contracts: Vec<String>,
+    #[serde(default)]
+    suggested_flows: Vec<String>,
+    #[serde(default = "default_solution_defaults")]
+    defaults: Value,
+    #[serde(default)]
+    notes: Vec<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -426,22 +465,6 @@ struct WizardCatalogSet {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-struct SolutionManifest {
-    schema_id: String,
-    schema_version: String,
-    solution_id: String,
-    solution_name: String,
-    description: String,
-    output_dir: String,
-    template: Value,
-    provider_presets: Vec<Value>,
-    #[serde(default)]
-    overlay: Option<Value>,
-    #[serde(default)]
-    catalog_sources: Vec<String>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
 struct BundlePlan {
     schema_id: String,
     schema_version: String,
@@ -460,6 +483,117 @@ struct SetupAnswers {
     provider_refs: Vec<String>,
     #[serde(default)]
     overlay: Option<Value>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct DownstreamHandoffArtifacts {
+    toolchain_handoff: ToolchainHandoff,
+    pack_input: PackInputDocument,
+    bundle_plan: BundlePlan,
+    bundle_answers: WizardAnswerDocument,
+    setup_answers: SetupAnswers,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct ToolchainHandoff {
+    schema_id: String,
+    schema_version: String,
+    solution_id: String,
+    solution_intent_ref: String,
+    bundle_handoff: BundleHandoff,
+    #[serde(default)]
+    launcher_handoff: Option<LauncherHandoff>,
+    #[serde(default)]
+    pack_handoff: Option<PackHandoff>,
+    provenance: HandoffProvenance,
+    #[serde(default)]
+    locks: serde_json::Map<String, Value>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct BundleHandoff {
+    tool: String,
+    bundle_output_path: String,
+    bundle_plan_path: String,
+    bundle_answers_path: String,
+    setup_answers_path: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct LauncherHandoff {
+    tool: String,
+    launcher_answers_path: String,
+    selected_action: String,
+    delegated_schema_id: String,
+    delegated_wizard_id: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct PackHandoff {
+    tool: String,
+    pack_input_path: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct PackInputDocument {
+    schema_id: String,
+    schema_version: String,
+    solution_id: String,
+    solution_intent_ref: String,
+    provider_refs: Vec<String>,
+    required_capability_offers: Vec<String>,
+    required_contracts: Vec<String>,
+    suggested_flows: Vec<String>,
+    provider_hints: Vec<PackProviderHint>,
+    template_selection: PackTemplateSelection,
+    defaults: Value,
+    unresolved_downstream_work: Vec<String>,
+    greentic_cap_mapping: Vec<PackCapabilityMapping>,
+    notes: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct PackProviderHint {
+    #[serde(default)]
+    entry_id: Option<String>,
+    #[serde(default)]
+    display_name: Option<String>,
+    #[serde(default)]
+    provider_refs: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct PackTemplateSelection {
+    #[serde(default)]
+    entry_id: Option<String>,
+    #[serde(default)]
+    display_name: Option<String>,
+    #[serde(default)]
+    assistant_template_ref: Option<String>,
+    #[serde(default)]
+    domain_template_ref: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct PackCapabilityMapping {
+    gx_requirement: String,
+    greentic_cap_concept: String,
+    status: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct HandoffProvenance {
+    producer: String,
+    produced_by: String,
+    ownership_boundary: String,
+}
+
+fn default_solution_kind() -> String {
+    "assistant".to_owned()
+}
+
+fn default_solution_defaults() -> Value {
+    Value::Object(serde_json::Map::new())
 }
 
 #[derive(Clone)]
@@ -886,16 +1020,24 @@ fn run_command(command: Command, cwd: &Path) -> Result<String, String> {
         Command::Catalog {
             command: CatalogCommand::List(args),
         } => list_catalog(cwd, args.kind),
-        Command::Wizard(args) => match args.command {
-            Some(WizardCommand::Run(common)) => wizard::run_wizard(cwd, WizardAction::Run, common),
-            Some(WizardCommand::Validate(common)) => {
-                wizard::run_wizard(cwd, WizardAction::Validate, common)
+        Command::Wizard(args) => {
+            if args.schema {
+                wizard::render_answer_schema(cwd, args.common)
+            } else {
+                match args.command {
+                    Some(WizardCommand::Run(common)) => {
+                        wizard::run_wizard(cwd, WizardAction::Run, common)
+                    }
+                    Some(WizardCommand::Validate(common)) => {
+                        wizard::run_wizard(cwd, WizardAction::Validate, common)
+                    }
+                    Some(WizardCommand::Apply(common)) => {
+                        wizard::run_wizard(cwd, WizardAction::Apply, common)
+                    }
+                    None => wizard::run_default_wizard(cwd, args.common),
+                }
             }
-            Some(WizardCommand::Apply(common)) => {
-                wizard::run_wizard(cwd, WizardAction::Apply, common)
-            }
-            None => wizard::run_default_wizard(cwd, args.common),
-        },
+        }
     }
 }
 
@@ -2425,6 +2567,40 @@ mod tests {
     }
 
     #[test]
+    fn wizard_help_mentions_schema_option() -> Result<(), Box<dyn Error>> {
+        let temp = TempDir::new()?;
+        let cwd = temp.path();
+        let output = run_ok(&["wizard", "--help"], cwd)?;
+        assert!(output.contains("--schema"));
+        Ok(())
+    }
+
+    #[test]
+    fn wizard_schema_outputs_answer_document_schema() -> Result<(), Box<dyn Error>> {
+        let temp = TempDir::new()?;
+        let cwd = temp.path();
+        let output = run_ok(&["wizard", "--schema"], cwd)?;
+        let value: Value = serde_json::from_str(&output)?;
+        assert_eq!(
+            value["properties"]["wizard_id"]["const"],
+            "greentic-bundle.wizard.run"
+        );
+        assert_eq!(
+            value["properties"]["schema_id"]["const"],
+            "greentic-bundle.wizard.answers"
+        );
+        assert_eq!(
+            value["$defs"]["gx_answers"]["properties"]["mode"]["enum"][0],
+            "create"
+        );
+        assert_eq!(
+            value["$defs"]["gx_runtime_form"]["id"],
+            "gx.wizard.composition"
+        );
+        Ok(())
+    }
+
+    #[test]
     fn wizard_plan_is_deterministic_for_dry_run() -> Result<(), Box<dyn Error>> {
         let temp = TempDir::new()?;
         let cwd = temp.path();
@@ -2442,6 +2618,23 @@ mod tests {
         let value: Value = serde_json::from_str(&output)?;
         assert_eq!(value["requested_action"], "validate");
         assert_eq!(value["metadata"]["execution"], "dry_run");
+        Ok(())
+    }
+
+    #[test]
+    fn wizard_apply_plan_reports_compatibility_bridge_warning() -> Result<(), Box<dyn Error>> {
+        let temp = TempDir::new()?;
+        let cwd = temp.path();
+        let output = run_ok(&["wizard", "apply", "--dry-run"], cwd)?;
+        let value: Value = serde_json::from_str(&output)?;
+        let warnings = value["warnings"].as_array().expect("warnings");
+        assert!(
+            warnings.iter().any(|item| {
+                item.as_str()
+                    .is_some_and(|text| text.contains("compatibility bridge"))
+            }),
+            "expected compatibility bridge warning in {warnings:?}"
+        );
         Ok(())
     }
 
@@ -2467,6 +2660,81 @@ mod tests {
         assert_eq!(emitted["answers"]["solution_id"], "gx-solution");
         let plan: Value = serde_json::from_str(&output)?;
         assert!(plan["expected_file_writes"].as_array().is_some());
+        Ok(())
+    }
+
+    #[test]
+    fn wizard_run_emits_launcher_compatibility_answers() -> Result<(), Box<dyn Error>> {
+        let temp = TempDir::new()?;
+        let cwd = temp.path();
+        write_json(
+            &cwd.join("input.answers.json"),
+            &json!({
+                "wizard_id": "greentic-bundle.wizard.run",
+                "schema_id": "greentic-bundle.wizard.answers",
+                "schema_version": "1.0.0",
+                "locale": "en",
+                "answers": {
+                    "solution_name": "Network Assistant"
+                },
+                "locks": {}
+            }),
+        )?;
+
+        run_ok(&["wizard", "run", "--answers", "input.answers.json"], cwd)?;
+
+        let emitted: Value = serde_json::from_str(&fs::read_to_string(
+            cwd.join("dist/network-assistant.launcher.answers.json"),
+        )?)?;
+        assert_eq!(emitted["wizard_id"], "greentic-dev.wizard.launcher.main");
+        assert_eq!(emitted["schema_id"], "greentic-dev.launcher.main");
+        assert_eq!(emitted["answers"]["selected_action"], "bundle");
+        assert_eq!(
+            emitted["answers"]["delegate_answer_document"]["wizard_id"],
+            "greentic-bundle.wizard.run"
+        );
+        assert_eq!(
+            emitted["answers"]["delegate_answer_document"]["schema_id"],
+            "greentic-bundle.wizard.answers"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn wizard_run_emits_pack_compatibility_input() -> Result<(), Box<dyn Error>> {
+        let temp = TempDir::new()?;
+        let cwd = temp.path();
+        write_json(
+            &cwd.join("input.answers.json"),
+            &json!({
+                "wizard_id": "greentic-bundle.wizard.run",
+                "schema_id": "greentic-bundle.wizard.answers",
+                "schema_version": "1.0.0",
+                "locale": "en",
+                "answers": {
+                    "solution_name": "Network Assistant"
+                },
+                "locks": {}
+            }),
+        )?;
+
+        run_ok(&["wizard", "run", "--answers", "input.answers.json"], cwd)?;
+
+        let pack_input: Value = serde_json::from_str(&fs::read_to_string(
+            cwd.join("dist/network-assistant.pack.input.json"),
+        )?)?;
+        assert_eq!(pack_input["schema_id"], "gx.pack.input");
+        assert_eq!(pack_input["solution_id"], "network-assistant");
+        assert!(pack_input["unresolved_downstream_work"].is_array());
+
+        let handoff: Value = serde_json::from_str(&fs::read_to_string(
+            cwd.join("dist/network-assistant.toolchain-handoff.json"),
+        )?)?;
+        assert_eq!(handoff["pack_handoff"]["tool"], "greentic-pack");
+        assert_eq!(
+            handoff["pack_handoff"]["pack_input_path"],
+            "dist/network-assistant.pack.input.json"
+        );
         Ok(())
     }
 

@@ -1,0 +1,22 @@
+{
+  "wizard_id": "greentic-bundle.wizard.run",
+  "schema_id": "greentic-bundle.wizard.answers",
+  "schema_version": "1.0.0",
+  "locale": "en",
+  "answers": {
+    "assistant_template_source": "templates/assistant/basic-empty.json",
+    "bundle_id": "network-assistant",
+    "bundle_name": "Network Assistant",
+    "bundle_output_path": "dist/dist/network-assistant.gtbundle",
+    "domain_template_source": "templates/domain/basic-empty.json",
+    "export_intent": true,
+    "extension_providers": [
+      "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+    ],
+    "mode": "create",
+    "output_dir": "dist"
+  },
+  "locks": {
+    "execution": "execute"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greentic.ai/schemas/gx/toolchain-handoff.schema.json",
+  "title": "gx toolchain handoff",
+  "type": "object",
+  "required": [
+    "schema_id",
+    "schema_version",
+    "solution_id",
+    "solution_intent_ref",
+    "bundle_handoff",
+    "provenance",
+    "locks"
+  ],
+  "properties": {
+    "schema_id": { "const": "gx.toolchain.handoff" },
+    "schema_version": { "type": "string" },
+    "solution_id": { "type": "string" },
+    "solution_intent_ref": { "type": "string" },
+    "bundle_handoff": {
+      "type": "object",
+      "required": [
+        "tool",
+        "bundle_output_path",
+        "bundle_plan_path",
+        "bundle_answers_path",
+        "setup_answers_path"
+      ],
+      "properties": {
+        "tool": { "const": "greentic-bundle" },
+        "bundle_output_path": { "type": "string" },
+        "bundle_plan_path": { "type": "string" },
+        "bundle_answers_path": { "type": "string" },
+        "setup_answers_path": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "launcher_handoff": {
+      "type": ["object", "null"],
+      "required": [
+        "tool",
+        "launcher_answers_path",
+        "selected_action",
+        "delegated_schema_id",
+        "delegated_wizard_id"
+      ],
+      "properties": {
+        "tool": { "const": "greentic-dev" },
+        "launcher_answers_path": { "type": "string" },
+        "selected_action": { "const": "bundle" },
+        "delegated_schema_id": { "type": "string" },
+        "delegated_wizard_id": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "pack_handoff": {
+      "type": ["object", "null"],
+      "required": [
+        "tool",
+        "pack_input_path"
+      ],
+      "properties": {
+        "tool": { "const": "greentic-pack" },
+        "pack_input_path": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "producer",
+        "produced_by",
+        "ownership_boundary"
+      ],
+      "properties": {
+        "producer": { "type": "string" },
+        "produced_by": { "type": "string" },
+        "ownership_boundary": { "const": "composition_only" }
+      },
+      "additionalProperties": true
+    },
+    "locks": { "type": "object" }
+  },
+  "additionalProperties": true
+}
