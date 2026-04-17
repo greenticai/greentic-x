@@ -15,10 +15,6 @@ fn repo_root() -> PathBuf {
         .to_path_buf()
 }
 
-fn workspace_root() -> PathBuf {
-    repo_root().parent().expect("workspace root").to_path_buf()
-}
-
 fn fixture_path(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
@@ -67,6 +63,12 @@ fn copy_fixture_answers(cwd: &Path) -> PathBuf {
 
 fn copy_fixture_named(cwd: &Path, fixture_name: &str) -> PathBuf {
     let path = cwd.join("answers.json");
+    fs::copy(fixture_path(fixture_name), &path).expect("copy fixture");
+    path
+}
+
+fn copy_fixture_to(cwd: &Path, fixture_name: &str, output_name: &str) -> PathBuf {
+    let path = cwd.join(output_name);
     fs::copy(fixture_path(fixture_name), &path).expect("copy fixture");
     path
 }
@@ -152,8 +154,7 @@ fn telco_catalog_fixture_emits_generic_gtc_handoffs() {
     let temp = TempDir::new().expect("tempdir");
     let cwd = temp.path();
     copy_fixture_named(cwd, "telco-network-assistant.answers.json");
-
-    let telco_catalog = workspace_root().join("telco-x/catalog.json");
+    copy_fixture_to(cwd, "telco-catalog.json", "catalog.json");
     let run_output = run_cli(
         &[
             "wizard",
@@ -161,7 +162,7 @@ fn telco_catalog_fixture_emits_generic_gtc_handoffs() {
             "--answers",
             "answers.json",
             "--catalog",
-            telco_catalog.to_str().expect("catalog path"),
+            "catalog.json",
         ],
         cwd,
     )
