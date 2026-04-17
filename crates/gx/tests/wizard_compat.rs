@@ -15,6 +15,10 @@ fn repo_root() -> PathBuf {
         .to_path_buf()
 }
 
+fn workspace_root() -> PathBuf {
+    repo_root().parent().expect("workspace root").to_path_buf()
+}
+
 fn fixture_path(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
@@ -58,6 +62,12 @@ fn assert_matches_schema(schema_path: &Path, value_path: &Path) {
 fn copy_fixture_answers(cwd: &Path) -> PathBuf {
     let path = cwd.join("answers.json");
     fs::copy(fixture_path("network-assistant.answers.json"), &path).expect("copy fixture");
+    path
+}
+
+fn copy_fixture_named(cwd: &Path, fixture_name: &str) -> PathBuf {
+    let path = cwd.join("answers.json");
+    fs::copy(fixture_path(fixture_name), &path).expect("copy fixture");
     path
 }
 
@@ -111,6 +121,99 @@ fn fixture_answers_validate_and_run_emit_compatible_outputs() {
     assert_eq!(pack_input["schema_id"], "gx.pack.input");
     assert_eq!(pack_input["solution_id"], "network-assistant");
     assert!(pack_input["unresolved_downstream_work"].is_array());
+
+    let gtc_setup_handoff = load_json(&cwd.join("dist/network-assistant.gtc.setup.handoff.json"));
+    assert_eq!(
+        gtc_setup_handoff["schema_id"],
+        "gtc.extension.setup.handoff"
+    );
+    assert_eq!(
+        gtc_setup_handoff["bundle_ref"],
+        "dist/dist/network-assistant.gtbundle"
+    );
+    assert_eq!(
+        gtc_setup_handoff["answers_path"],
+        "dist/network-assistant.setup.answers.json"
+    );
+
+    let gtc_start_handoff = load_json(&cwd.join("dist/network-assistant.gtc.start.handoff.json"));
+    assert_eq!(
+        gtc_start_handoff["schema_id"],
+        "gtc.extension.start.handoff"
+    );
+    assert_eq!(
+        gtc_start_handoff["bundle_ref"],
+        "dist/dist/network-assistant.gtbundle"
+    );
+}
+
+#[test]
+fn telco_catalog_fixture_emits_generic_gtc_handoffs() {
+    let temp = TempDir::new().expect("tempdir");
+    let cwd = temp.path();
+    copy_fixture_named(cwd, "telco-network-assistant.answers.json");
+
+    let telco_catalog = workspace_root().join("telco-x/catalog.json");
+    let run_output = run_cli(
+        &[
+            "wizard",
+            "run",
+            "--answers",
+            "answers.json",
+            "--catalog",
+            telco_catalog.to_str().expect("catalog path"),
+        ],
+        cwd,
+    )
+    .expect("run");
+    let run_plan: Value = serde_json::from_str(&run_output).expect("run plan");
+    assert_eq!(run_plan["requested_action"], "run");
+    assert_eq!(run_plan["metadata"]["execution"], "execute");
+
+    let solution = load_json(&cwd.join("dist/telco-network-assistant.solution.json"));
+    assert_eq!(solution["solution_id"], "telco-network-assistant");
+    assert_eq!(
+        solution["template"]["entry_id"],
+        "tx.assistant-template.network-assistant.phase1"
+    );
+
+    let toolchain_handoff =
+        load_json(&cwd.join("dist/telco-network-assistant.toolchain-handoff.json"));
+    assert_eq!(toolchain_handoff["gtc_handoff"]["tool"], "gtc");
+    assert_eq!(
+        toolchain_handoff["gtc_handoff"]["setup_handoff_path"],
+        "dist/telco-network-assistant.gtc.setup.handoff.json"
+    );
+    assert_eq!(
+        toolchain_handoff["gtc_handoff"]["start_handoff_path"],
+        "dist/telco-network-assistant.gtc.start.handoff.json"
+    );
+
+    let gtc_setup_handoff =
+        load_json(&cwd.join("dist/telco-network-assistant.gtc.setup.handoff.json"));
+    assert_eq!(
+        gtc_setup_handoff["schema_id"],
+        "gtc.extension.setup.handoff"
+    );
+    assert_eq!(
+        gtc_setup_handoff["bundle_ref"],
+        "dist/dist/telco-network-assistant.gtbundle"
+    );
+    assert_eq!(
+        gtc_setup_handoff["answers_path"],
+        "dist/telco-network-assistant.setup.answers.json"
+    );
+
+    let gtc_start_handoff =
+        load_json(&cwd.join("dist/telco-network-assistant.gtc.start.handoff.json"));
+    assert_eq!(
+        gtc_start_handoff["schema_id"],
+        "gtc.extension.start.handoff"
+    );
+    assert_eq!(
+        gtc_start_handoff["bundle_ref"],
+        "dist/dist/telco-network-assistant.gtbundle"
+    );
 }
 
 #[test]
