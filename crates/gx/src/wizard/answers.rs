@@ -121,6 +121,8 @@ fn normalize_composition_request(document: &mut WizardAnswerDocument) -> Composi
         bundle_plan_path: format!("{output_dir}/{solution_id}.bundle-plan.json"),
         bundle_answers_path: format!("{output_dir}/{solution_id}.bundle.answers.json"),
         setup_answers_path: format!("{output_dir}/{solution_id}.setup.answers.json"),
+        gtc_setup_handoff_path: format!("{output_dir}/{solution_id}.gtc.setup.handoff.json"),
+        gtc_start_handoff_path: format!("{output_dir}/{solution_id}.gtc.start.handoff.json"),
         readme_path: format!("{output_dir}/{solution_id}.README.generated.md"),
         existing_solution_path: optional_string_answer(document, "existing_solution_path"),
     }
@@ -187,6 +189,14 @@ fn prefill_from_existing_solution(
     );
     request.setup_answers_path = format!(
         "{}/{}.setup.answers.json",
+        request.output_dir, request.solution_id
+    );
+    request.gtc_setup_handoff_path = format!(
+        "{}/{}.gtc.setup.handoff.json",
+        request.output_dir, request.solution_id
+    );
+    request.gtc_start_handoff_path = format!(
+        "{}/{}.gtc.start.handoff.json",
         request.output_dir, request.solution_id
     );
     request.readme_path = format!(

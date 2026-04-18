@@ -68,6 +68,8 @@ GX-authored outputs include:
 - `<solution-id>.bundle-plan.json`
 - `<solution-id>.bundle.answers.json`
 - `<solution-id>.setup.answers.json`
+- `<solution-id>.gtc.setup.handoff.json`
+- `<solution-id>.gtc.start.handoff.json`
 - `<solution-id>.README.generated.md`
 
 The handoff contract is the stable bridge for downstream Greentic tools. It
@@ -79,6 +81,18 @@ The pack compatibility input is intentionally partial. It tells
 `greentic-pack` what GX knows about provider refs, capability offers,
 contracts, flows, and template/default selections, while leaving pack-owned
 workflow steps unresolved for the downstream tool.
+
+The generic `gtc` handoff outputs keep orchestration contract-driven:
+
+- `gtc setup --extension-setup-handoff dist/<solution-id>.gtc.setup.handoff.json`
+- `gtc start --extension-start-handoff dist/<solution-id>.gtc.start.handoff.json`
+
+This keeps `gtc` at the routing boundary without forcing it to understand GX
+composition internals.
+
+When `greentic-bundle` replay is used, the expected downstream bundle artifact
+path remains `dist/dist/<solution-id>.gtbundle` because bundle build output is
+still rooted under the bundle workspace `dist/` directory.
 
 ## Compatibility Test Gating
 

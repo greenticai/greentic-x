@@ -51,6 +51,7 @@ Greentic core should stay narrow and foundational. This repository is where the 
 - Specs and catalog: initial GX standards layer now exists under `specs/` and `catalog/`.
 - Tooling: `gx` now scaffolds contract/op/flow/resolver/view packages, validates contracts/ops/flows/resolvers/views, simulates flows, runs doctor checks, and lists catalog entries.
 - Catalog tooling: `gx` now also scaffolds solution catalog repos, builds canonical `catalog.json` indexes, validates them, publishes both catalog indexes and tar bundles, and lets `gx wizard` merge local or OCI-backed solution catalogs through repeated `--catalog` flags.
+- `gtc` integration: `gx wizard` now emits generic `gtc` setup/start handoff artifacts alongside the existing GX solution, pack, bundle, and launcher outputs so orchestration can stay contract-driven.
 - Profile/examples: `gx.observability.playbook.v1` now compiles into normal GX flows, and four generic reference example packages are checked in under `examples/`.
 - Remaining work: policy/migration execution, richer pack contents, designer UX, and publish decisions.
 
@@ -137,6 +138,8 @@ Required GitHub secret:
 - `docs/tooling-overview.md`
 - `docs/catalog-repos.md`
 - `docs/how-to-build-a-downstream-solution.md`
+- `docs/gtc-integration.md`
+- `docs/telco-gtc-e2e-smoke.md`
 - `docs/simulation-workflow.md`
 - `docs/reference-examples.md`
 - `docs/observability-profile-vs-raw-flows.md`

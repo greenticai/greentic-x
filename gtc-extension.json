@@ -1,0 +1,13 @@
+{
+  "schema_version": "1",
+  "extension_id": "greentic-x",
+  "family": "solution-x",
+  "summary": "Greentic-X composition and catalog wizard entrypoint.",
+  "wizard": {
+    "binary": "greentic-x",
+    "args": [
+      "wizard"
+    ],
+    "working_directory": "."
+  }
+}

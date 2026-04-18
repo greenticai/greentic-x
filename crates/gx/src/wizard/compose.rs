@@ -4,7 +4,8 @@ use std::path::Path;
 use serde_json::{Value, json};
 
 use crate::{
-    BundleHandoff, BundlePlan, CompositionRequest, DownstreamHandoffArtifacts, HandoffProvenance,
+    BundleHandoff, BundlePlan, CompositionRequest, DownstreamHandoffArtifacts,
+    GtcExtensionSetupHandoff, GtcExtensionStartHandoff, GtcHandoff, HandoffProvenance,
     LauncherHandoff, ResolvedSolutionIntent, SetupAnswers, ToolchainHandoff, WizardAnswerDocument,
     WizardCatalogSet,
 };
@@ -122,6 +123,22 @@ pub(crate) fn generate_artifacts(
     let launcher_answers = build_bundle_launcher_document(locale, SCHEMA_VERSION, &bundle_answers)?;
     let pack_input =
         map_solution_intent_to_pack_input(&solution_intent, &request.solution_manifest_path);
+    let gtc_setup_handoff = GtcExtensionSetupHandoff {
+        schema_id: "gtc.extension.setup.handoff".to_owned(),
+        schema_version: SCHEMA_VERSION.to_owned(),
+        bundle_ref: request.bundle_output_path.clone(),
+        answers_path: Some(request.setup_answers_path.clone()),
+        tenant: request.overlay_tenant_id.clone(),
+        team: None,
+        env: None,
+        setup_args: Vec::new(),
+    };
+    let gtc_start_handoff = GtcExtensionStartHandoff {
+        schema_id: "gtc.extension.start.handoff".to_owned(),
+        schema_version: SCHEMA_VERSION.to_owned(),
+        bundle_ref: request.bundle_output_path.clone(),
+        start_args: Vec::new(),
+    };
     let toolchain_handoff = ToolchainHandoff {
         schema_id: "gx.toolchain.handoff".to_owned(),
         schema_version: SCHEMA_VERSION.to_owned(),
@@ -144,6 +161,11 @@ pub(crate) fn generate_artifacts(
         pack_handoff: Some(crate::PackHandoff {
             tool: "greentic-pack".to_owned(),
             pack_input_path: request.pack_input_path.clone(),
+        }),
+        gtc_handoff: Some(GtcHandoff {
+            tool: "gtc".to_owned(),
+            setup_handoff_path: request.gtc_setup_handoff_path.clone(),
+            start_handoff_path: request.gtc_start_handoff_path.clone(),
         }),
         provenance: HandoffProvenance {
             producer: "gx".to_owned(),
@@ -171,6 +193,8 @@ pub(crate) fn generate_artifacts(
         bundle_plan,
         bundle_answers,
         setup_answers,
+        gtc_setup_handoff,
+        gtc_start_handoff,
     };
     let readme = render_readme(request, &solution_intent, &handoff);
     Ok(GeneratedComposition {
@@ -217,6 +241,16 @@ pub(crate) fn write_generated_artifacts(
         &request.setup_answers_path,
         &generated.handoff.setup_answers,
     )?;
+    write_json_file(
+        cwd,
+        &request.gtc_setup_handoff_path,
+        &generated.handoff.gtc_setup_handoff,
+    )?;
+    write_json_file(
+        cwd,
+        &request.gtc_start_handoff_path,
+        &generated.handoff.gtc_start_handoff,
+    )?;
     let readme_path = resolve_output_path(cwd, &request.readme_path);
     if let Some(parent) = readme_path.parent() {
         fs::create_dir_all(parent).map_err(|err| {
@@ -240,6 +274,8 @@ pub(crate) fn generated_output_paths(request: &CompositionRequest) -> Vec<String
         request.bundle_plan_path.clone(),
         request.bundle_answers_path.clone(),
         request.setup_answers_path.clone(),
+        request.gtc_setup_handoff_path.clone(),
+        request.gtc_start_handoff_path.clone(),
         request.readme_path.clone(),
     ]
 }
@@ -686,6 +722,8 @@ mod tests {
             bundle_plan_path: "dist/demo.bundle-plan.json".to_owned(),
             bundle_answers_path: "dist/demo.bundle.answers.json".to_owned(),
             setup_answers_path: "dist/demo.setup.answers.json".to_owned(),
+            gtc_setup_handoff_path: "dist/demo.gtc.setup.handoff.json".to_owned(),
+            gtc_start_handoff_path: "dist/demo.gtc.start.handoff.json".to_owned(),
             readme_path: "dist/demo.README.generated.md".to_owned(),
             existing_solution_path: None,
         };
@@ -743,6 +781,8 @@ mod tests {
             bundle_plan_path: "dist/demo.bundle-plan.json".to_owned(),
             bundle_answers_path: "dist/demo.bundle.answers.json".to_owned(),
             setup_answers_path: "dist/demo.setup.answers.json".to_owned(),
+            gtc_setup_handoff_path: "dist/demo.gtc.setup.handoff.json".to_owned(),
+            gtc_start_handoff_path: "dist/demo.gtc.start.handoff.json".to_owned(),
             readme_path: "dist/demo.README.generated.md".to_owned(),
             existing_solution_path: None,
         };
@@ -835,6 +875,8 @@ mod tests {
             bundle_plan_path: "dist/demo.bundle-plan.json".to_owned(),
             bundle_answers_path: "dist/demo.bundle.answers.json".to_owned(),
             setup_answers_path: "dist/demo.setup.answers.json".to_owned(),
+            gtc_setup_handoff_path: "dist/demo.gtc.setup.handoff.json".to_owned(),
+            gtc_start_handoff_path: "dist/demo.gtc.start.handoff.json".to_owned(),
             readme_path: "dist/demo.README.generated.md".to_owned(),
             existing_solution_path: None,
         };
@@ -921,6 +963,8 @@ mod tests {
             bundle_plan_path: "dist/network-assistant.bundle-plan.json".to_owned(),
             bundle_answers_path: "dist/network-assistant.bundle.answers.json".to_owned(),
             setup_answers_path: "dist/network-assistant.setup.answers.json".to_owned(),
+            gtc_setup_handoff_path: "dist/network-assistant.gtc.setup.handoff.json".to_owned(),
+            gtc_start_handoff_path: "dist/network-assistant.gtc.start.handoff.json".to_owned(),
             readme_path: "dist/network-assistant.README.generated.md".to_owned(),
             existing_solution_path: None,
         };
