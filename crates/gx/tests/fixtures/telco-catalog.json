@@ -1,0 +1,45 @@
+{
+  "schema": "gx.catalog.index.v1",
+  "id": "telco-x.catalog",
+  "version": "1.0.0",
+  "title": "telco-x",
+  "description": "Fixture Telco catalog index for GX compatibility tests.",
+  "entries": [
+    {
+      "id": "tx.assistant-template.network-assistant.phase1",
+      "kind": "assistant_template",
+      "ref": "assistant_templates/network-assistant.phase1.json",
+      "title": "Network Assistant Phase 1",
+      "description": "Fixture network assistant template.",
+      "tags": [],
+      "version": "1.0.0",
+      "source": "",
+      "metadata": {
+        "assistant_template_ref": "assistant_templates/network-assistant.phase1.json",
+        "bundle_ref": null,
+        "domain_template_ref": null
+      }
+    },
+    {
+      "id": "tx.overlay.default",
+      "kind": "overlay",
+      "ref": "overlays/default.json",
+      "title": "Default Telco Overlay",
+      "description": "",
+      "tags": [],
+      "version": "1.0.0",
+      "source": "",
+      "metadata": {
+        "branding": {
+          "brand_id": "telco-default",
+          "branding_ref": "branding/telco-default.json",
+          "locale_refs": [
+            "locales/en/common.json"
+          ]
+        },
+        "default_locale": "en-ZA",
+        "tenant_id": "telco-default"
+      }
+    }
+  ]
+}

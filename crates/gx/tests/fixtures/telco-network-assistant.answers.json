@@ -1,0 +1,19 @@
+{
+  "wizard_id": "greentic-bundle.wizard.run",
+  "schema_id": "greentic-bundle.wizard.answers",
+  "schema_version": "1.0.0",
+  "locale": "en",
+  "answers": {
+    "mode": "create",
+    "template_mode": "catalog",
+    "template_entry_id": "tx.assistant-template.network-assistant.phase1",
+    "solution_name": "Telco Network Assistant",
+    "solution_id": "telco-network-assistant",
+    "description": "Composes the Telco network assistant through the Telco catalog.",
+    "output_dir": "dist",
+    "provider_selection": "teams",
+    "overlay_entry_id": "tx.overlay.default",
+    "catalog_resolution_policy": "update_then_pin"
+  },
+  "locks": {}
+}

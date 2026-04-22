@@ -365,6 +365,8 @@ struct CompositionRequest {
     bundle_plan_path: String,
     bundle_answers_path: String,
     setup_answers_path: String,
+    gtc_setup_handoff_path: String,
+    gtc_start_handoff_path: String,
     readme_path: String,
     existing_solution_path: Option<String>,
 }
@@ -492,6 +494,8 @@ struct DownstreamHandoffArtifacts {
     bundle_plan: BundlePlan,
     bundle_answers: WizardAnswerDocument,
     setup_answers: SetupAnswers,
+    gtc_setup_handoff: GtcExtensionSetupHandoff,
+    gtc_start_handoff: GtcExtensionStartHandoff,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -505,6 +509,8 @@ struct ToolchainHandoff {
     launcher_handoff: Option<LauncherHandoff>,
     #[serde(default)]
     pack_handoff: Option<PackHandoff>,
+    #[serde(default)]
+    gtc_handoff: Option<GtcHandoff>,
     provenance: HandoffProvenance,
     #[serde(default)]
     locks: serde_json::Map<String, Value>,
@@ -532,6 +538,39 @@ struct LauncherHandoff {
 struct PackHandoff {
     tool: String,
     pack_input_path: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct GtcHandoff {
+    tool: String,
+    setup_handoff_path: String,
+    start_handoff_path: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct GtcExtensionSetupHandoff {
+    schema_id: String,
+    schema_version: String,
+    bundle_ref: String,
+    #[serde(default)]
+    answers_path: Option<String>,
+    #[serde(default)]
+    tenant: Option<String>,
+    #[serde(default)]
+    team: Option<String>,
+    #[serde(default)]
+    env: Option<String>,
+    #[serde(default)]
+    setup_args: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct GtcExtensionStartHandoff {
+    schema_id: String,
+    schema_version: String,
+    bundle_ref: String,
+    #[serde(default)]
+    start_args: Vec<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
