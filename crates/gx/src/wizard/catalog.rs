@@ -15,10 +15,10 @@ use crate::{
 };
 
 const BUILTIN_WEBCHAT_REF: &str =
-    "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest";
-const BUILTIN_TEAMS_REF: &str = "oci://ghcr.io/greenticai/packs/messaging/messaging-teams:latest";
-const BUILTIN_WEBEX_REF: &str = "oci://ghcr.io/greenticai/packs/messaging/messaging-webex:latest";
-const BUILTIN_SLACK_REF: &str = "oci://ghcr.io/greenticai/packs/messaging/messaging-slack:latest";
+    "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:stable";
+const BUILTIN_TEAMS_REF: &str = "oci://ghcr.io/greenticai/packs/messaging/messaging-teams:stable";
+const BUILTIN_WEBEX_REF: &str = "oci://ghcr.io/greenticai/packs/messaging/messaging-webex:stable";
+const BUILTIN_SLACK_REF: &str = "oci://ghcr.io/greenticai/packs/messaging/messaging-slack:stable";
 
 #[derive(Clone, Debug)]
 pub(crate) struct FetchResult {

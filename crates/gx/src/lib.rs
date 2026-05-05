@@ -2800,7 +2800,7 @@ mod tests {
                 "--answers",
                 "input.answers.json",
                 "--catalog",
-                "oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:latest",
+                "oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:stable",
                 "--emit-answers",
                 "output.answers.json",
             ],
@@ -2810,7 +2810,7 @@ mod tests {
             serde_json::from_str(&fs::read_to_string(cwd.join("output.answers.json"))?)?;
         assert_eq!(
             emitted["answers"]["catalog_oci_refs"][0],
-            "oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:latest"
+            "oci://ghcr.io/greenticai/catalogs/zain-x/catalog.json:stable"
         );
         Ok(())
     }
@@ -2931,7 +2931,7 @@ mod tests {
                 "provider_presets": [{
                     "entry_id": "builtin.teams",
                     "display_name": "Teams",
-                    "provider_refs": ["oci://ghcr.io/greenticai/packs/messaging/messaging-teams:latest"]
+                    "provider_refs": ["oci://ghcr.io/greenticai/packs/messaging/messaging-teams:stable"]
                 }]
             }),
         )?;

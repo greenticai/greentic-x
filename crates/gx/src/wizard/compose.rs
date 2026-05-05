@@ -794,10 +794,10 @@ mod tests {
                 display_name: "Network Assistant".to_owned(),
                 description: "Network Assistant template".to_owned(),
                 assistant_template_ref:
-                    "oci://ghcr.io/greenticai/greentic-x/templates/assistant/network-phase1:latest"
+                    "oci://ghcr.io/greenticai/greentic-x/templates/assistant/network-phase1:stable"
                         .to_owned(),
                 domain_template_ref: Some(
-                    "oci://ghcr.io/greenticai/greentic-x/templates/domain/network-phase1:latest"
+                    "oci://ghcr.io/greenticai/greentic-x/templates/domain/network-phase1:stable"
                         .to_owned(),
                 ),
                 bundle_ref: None,
@@ -826,7 +826,7 @@ mod tests {
         );
         assert_eq!(
             generated.handoff.bundle_answers.answers["assistant_template_source"],
-            "oci://ghcr.io/greenticai/greentic-x/templates/assistant/network-phase1:latest"
+            "oci://ghcr.io/greenticai/greentic-x/templates/assistant/network-phase1:stable"
         );
         assert_eq!(
             generated.handoff.bundle_answers.answers["export_intent"],
@@ -915,19 +915,19 @@ mod tests {
             "entry_id": "zx.network.phase1",
             "assistant_template_ref": "assistant_templates/network-assistant.phase1.json",
             "domain_template_ref": "assistant_templates/network-assistant.phase1.json",
-            "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:latest",
+            "bundle_ref": "oci://ghcr.io/greentic-biz/zain-x-bundle:stable",
             "provenance": {
                 "source_type": "store",
-                "source_ref": "store://greentic-biz/3point/catalogs/zain-x/catalog.json:latest"
+                "source_ref": "store://greentic-biz/3point/catalogs/zain-x/catalog.json:stable"
             }
         });
 
         assert_eq!(
             inherited_bundle_fetch_ref(
                 &template,
-                "oci://ghcr.io/greentic-biz/zain-x-bundle:latest"
+                "oci://ghcr.io/greentic-biz/zain-x-bundle:stable"
             ),
-            "store://greentic-biz/3point/zain-x-bundle:latest"
+            "store://greentic-biz/3point/zain-x-bundle:stable"
         );
     }
 

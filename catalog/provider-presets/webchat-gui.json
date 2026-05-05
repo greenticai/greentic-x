@@ -5,6 +5,6 @@
   "display_name": "Webchat",
   "description": "Webchat messaging provider preset.",
   "provider_refs": [
-    "ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+    "ghcr.io/greenticai/packs/messaging/messaging-webchat:stable"
   ]
 }
