@@ -254,92 +254,86 @@ fn inject_runtime_defaults(
             continue;
         };
         match id.as_str() {
-            "existing_solution_path" => {
-                if !manifests.is_empty() {
-                    question["type"] = Value::String("enum".to_owned());
-                    question["choices"] = Value::Array(
+            "existing_solution_path" if !manifests.is_empty() => {
+                question["type"] = Value::String("enum".to_owned());
+                question["choices"] = Value::Array(
+                    manifests
+                        .iter()
+                        .map(|path| Value::String(path.display().to_string()))
+                        .collect(),
+                );
+                if let Some(first) = manifests.first() {
+                    set_default_value(question, Some(first.display().to_string()));
+                }
+                append_description(
+                    question,
+                    &format!(
+                        "Discovered solutions: {}",
                         manifests
                             .iter()
-                            .map(|path| Value::String(path.display().to_string()))
-                            .collect(),
-                    );
-                    if let Some(first) = manifests.first() {
-                        set_default_value(question, Some(first.display().to_string()));
-                    }
-                    append_description(
-                        question,
-                        &format!(
-                            "Discovered solutions: {}",
-                            manifests
-                                .iter()
-                                .map(|path| path.display().to_string())
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        ),
-                    );
-                }
+                            .map(|path| path.display().to_string())
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ),
+                );
             }
-            "template_entry_id" => {
-                if !catalogs.templates.is_empty() {
-                    question["type"] = Value::String("enum".to_owned());
-                    question["choices"] = Value::Array(
+            "template_entry_id" if !catalogs.templates.is_empty() => {
+                question["type"] = Value::String("enum".to_owned());
+                question["choices"] = Value::Array(
+                    catalogs
+                        .templates
+                        .iter()
+                        .map(|entry| Value::String(entry.entry_id.clone()))
+                        .collect(),
+                );
+                set_default_value(
+                    question,
+                    catalogs
+                        .templates
+                        .first()
+                        .map(|entry| entry.entry_id.clone()),
+                );
+                append_description(
+                    question,
+                    &format!(
+                        "Available templates: {}",
                         catalogs
                             .templates
                             .iter()
-                            .map(|entry| Value::String(entry.entry_id.clone()))
-                            .collect(),
-                    );
-                    set_default_value(
-                        question,
-                        catalogs
-                            .templates
-                            .first()
-                            .map(|entry| entry.entry_id.clone()),
-                    );
-                    append_description(
-                        question,
-                        &format!(
-                            "Available templates: {}",
-                            catalogs
-                                .templates
-                                .iter()
-                                .map(|entry| format!("{} ({})", entry.entry_id, entry.display_name))
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        ),
-                    );
-                }
+                            .map(|entry| format!("{} ({})", entry.entry_id, entry.display_name))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ),
+                );
             }
-            "provider_preset_entry_id" => {
-                if !catalogs.provider_presets.is_empty() {
-                    question["type"] = Value::String("enum".to_owned());
-                    question["choices"] = Value::Array(
+            "provider_preset_entry_id" if !catalogs.provider_presets.is_empty() => {
+                question["type"] = Value::String("enum".to_owned());
+                question["choices"] = Value::Array(
+                    catalogs
+                        .provider_presets
+                        .iter()
+                        .map(|entry| Value::String(entry.entry_id.clone()))
+                        .collect(),
+                );
+                set_default_value(
+                    question,
+                    catalogs
+                        .provider_presets
+                        .first()
+                        .map(|entry| entry.entry_id.clone()),
+                );
+                append_description(
+                    question,
+                    &format!(
+                        "Available provider presets: {}",
                         catalogs
                             .provider_presets
                             .iter()
-                            .map(|entry| Value::String(entry.entry_id.clone()))
-                            .collect(),
-                    );
-                    set_default_value(
-                        question,
-                        catalogs
-                            .provider_presets
-                            .first()
-                            .map(|entry| entry.entry_id.clone()),
-                    );
-                    append_description(
-                        question,
-                        &format!(
-                            "Available provider presets: {}",
-                            catalogs
-                                .provider_presets
-                                .iter()
-                                .map(|entry| format!("{} ({})", entry.entry_id, entry.display_name))
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        ),
-                    );
-                }
+                            .map(|entry| format!("{} ({})", entry.entry_id, entry.display_name))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ),
+                );
             }
             _ => {}
         }

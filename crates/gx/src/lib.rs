@@ -1692,15 +1692,13 @@ fn validate_flow_definition(flow: &FlowDefinition, flow_path: &Path) -> Diagnost
                     }
                 }
             }
-            greentic_x_flow::StepKind::Join(join) => {
-                if !split_ids.contains(&join.split_step_id) {
-                    diagnostics.error(format!(
-                        "{}: join {} references missing or later split {}",
-                        flow_path.display(),
-                        step.id,
-                        join.split_step_id
-                    ));
-                }
+            greentic_x_flow::StepKind::Join(join) if !split_ids.contains(&join.split_step_id) => {
+                diagnostics.error(format!(
+                    "{}: join {} references missing or later split {}",
+                    flow_path.display(),
+                    step.id,
+                    join.split_step_id
+                ));
             }
             greentic_x_flow::StepKind::Return(return_step) => {
                 has_return = true;
@@ -1910,25 +1908,25 @@ fn doctor(path: &Path) -> Result<String, String> {
             if let Ok(flow) = read_json::<FlowDefinition>(&flow_path) {
                 for step in &flow.steps {
                     match &step.kind {
-                        greentic_x_flow::StepKind::Resolve(resolve) => {
-                            if !known_resolvers.contains(&resolve.resolver_id.to_string()) {
-                                diagnostics.error(format!(
-                                    "{}: step {} references unknown resolver {}",
-                                    flow_path.display(),
-                                    step.id,
-                                    resolve.resolver_id
-                                ));
-                            }
+                        greentic_x_flow::StepKind::Resolve(resolve)
+                            if !known_resolvers.contains(&resolve.resolver_id.to_string()) =>
+                        {
+                            diagnostics.error(format!(
+                                "{}: step {} references unknown resolver {}",
+                                flow_path.display(),
+                                step.id,
+                                resolve.resolver_id
+                            ));
                         }
-                        greentic_x_flow::StepKind::Call(call) => {
-                            if !known_ops.contains(&call.operation_id.to_string()) {
-                                diagnostics.error(format!(
-                                    "{}: step {} references unknown operation {}",
-                                    flow_path.display(),
-                                    step.id,
-                                    call.operation_id
-                                ));
-                            }
+                        greentic_x_flow::StepKind::Call(call)
+                            if !known_ops.contains(&call.operation_id.to_string()) =>
+                        {
+                            diagnostics.error(format!(
+                                "{}: step {} references unknown operation {}",
+                                flow_path.display(),
+                                step.id,
+                                call.operation_id
+                            ));
                         }
                         greentic_x_flow::StepKind::Return(return_step) => {
                             if let Some(render) = &return_step.render
