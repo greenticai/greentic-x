@@ -4,7 +4,7 @@
   "solution_id": "network-assistant",
   "solution_intent_ref": "dist/network-assistant.solution.json",
   "provider_refs": [
-    "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+    "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:stable"
   ],
   "required_capability_offers": [],
   "required_contracts": [],
@@ -14,7 +14,7 @@
       "entry_id": "builtin.webchat",
       "display_name": "Webchat",
       "provider_refs": [
-        "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+        "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:stable"
       ]
     }
   ],

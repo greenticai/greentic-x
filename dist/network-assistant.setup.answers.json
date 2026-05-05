@@ -4,7 +4,7 @@
   "solution_id": "network-assistant",
   "setup_mode": "minimal",
   "provider_refs": [
-    "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+    "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:stable"
   ],
   "overlay": null
 }

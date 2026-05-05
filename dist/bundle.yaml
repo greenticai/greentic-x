@@ -7,7 +7,7 @@ advanced_setup: false
 app_packs: []
 app_pack_mappings: []
 extension_providers:
-  - oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest
+  - oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:stable
 remote_catalogs: []
 hooks: []
 subscriptions: []
