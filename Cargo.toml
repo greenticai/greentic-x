@@ -14,36 +14,78 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.4.12"
+version = "1.1.0-dev.0"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/greenticai/greentic-x"
 homepage = "https://github.com/greenticai/greentic-x"
 documentation = "https://docs.rs/greentic-x-types"
 readme = "README.md"
-authors = ["Greentic"]
+authors = [
+    "Greentic",
+]
 
 [workspace.dependencies]
 async-trait = "0.1"
-clap = { version = "4.5", features = ["derive"] }
 flate2 = "1"
-greentic-distributor-client = { version = "0.4", default-features = false, features = ["dist-client", "pack-fetch"] }
-greentic-qa-lib = "0.4"
-greentic-x-contracts = { version = "0.4", path = "crates/greentic-x-contracts" }
-greentic-x-events = { version = "0.4", path = "crates/greentic-x-events" }
-greentic-x-flow = { version = "0.4", path = "crates/greentic-x-flow" }
-greentic-x-ops = { version = "0.4", path = "crates/greentic-x-ops" }
-greentic-x-runtime = { version = "0.4", path = "crates/greentic-x-runtime" }
-greentic-x-types = { version = "0.4", path = "crates/greentic-x-types" }
+greentic-qa-lib = ">=1.1.0-dev, <1.2.0-0"
 jsonschema = "0.46"
 oci-distribution = "0.11"
 rpassword = "7"
-serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.11"
 tar = "0.4"
 tempfile = "3"
-tokio = { version = "1", features = ["rt-multi-thread"] }
+
+[workspace.dependencies.clap]
+version = "4.5"
+features = [
+    "derive",
+]
+
+[workspace.dependencies.greentic-distributor-client]
+version = ">=1.1.0-dev, <1.2.0-0"
+default-features = false
+features = [
+    "dist-client",
+    "pack-fetch",
+]
+
+[workspace.dependencies.greentic-x-contracts]
+version = ">=1.1.0-dev, <1.2.0-0"
+path = "crates/greentic-x-contracts"
+
+[workspace.dependencies.greentic-x-events]
+version = ">=1.1.0-dev, <1.2.0-0"
+path = "crates/greentic-x-events"
+
+[workspace.dependencies.greentic-x-flow]
+version = ">=1.1.0-dev, <1.2.0-0"
+path = "crates/greentic-x-flow"
+
+[workspace.dependencies.greentic-x-ops]
+version = ">=1.1.0-dev, <1.2.0-0"
+path = "crates/greentic-x-ops"
+
+[workspace.dependencies.greentic-x-runtime]
+version = ">=1.1.0-dev, <1.2.0-0"
+path = "crates/greentic-x-runtime"
+
+[workspace.dependencies.greentic-x-types]
+version = ">=1.1.0-dev, <1.2.0-0"
+path = "crates/greentic-x-types"
+
+[workspace.dependencies.serde]
+version = "1"
+features = [
+    "derive",
+]
+
+[workspace.dependencies.tokio]
+version = "1"
+features = [
+    "rt-multi-thread",
+]
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
