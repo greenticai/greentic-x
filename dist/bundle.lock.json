@@ -12,7 +12,7 @@
   "app_packs": [],
   "extension_providers": [
     {
-      "reference": "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+      "reference": "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:stable"
     }
   ],
   "setup_state_files": []

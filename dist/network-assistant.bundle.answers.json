@@ -11,7 +11,7 @@
     "domain_template_source": "templates/domain/basic-empty.json",
     "export_intent": true,
     "extension_providers": [
-      "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:latest"
+      "oci://ghcr.io/greenticai/packs/messaging/messaging-webchat:stable"
     ],
     "mode": "create",
     "output_dir": "dist"
