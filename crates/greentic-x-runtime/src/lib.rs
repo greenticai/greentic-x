@@ -326,6 +326,46 @@ impl ComponentProvider for StaticComponentProvider {
     }
 }
 
+/// Adapter for host-owned component runtimes.
+///
+/// This lets a host wire Greentic-X component invocation to an executor that
+/// lives outside this crate, such as greentic-runner-host, MCP transport, or an
+/// agentic worker pool, without adding those heavyweight dependencies to the
+/// portable runtime contract crate.
+pub struct DelegatingComponentProvider<F>
+where
+    F: Fn(ComponentInvocationEnvelope) -> Result<ComponentInvocationResultEnvelope, RuntimeError>
+        + Send
+        + Sync,
+{
+    handler: F,
+}
+
+impl<F> DelegatingComponentProvider<F>
+where
+    F: Fn(ComponentInvocationEnvelope) -> Result<ComponentInvocationResultEnvelope, RuntimeError>
+        + Send
+        + Sync,
+{
+    pub fn new(handler: F) -> Self {
+        Self { handler }
+    }
+}
+
+impl<F> ComponentProvider for DelegatingComponentProvider<F>
+where
+    F: Fn(ComponentInvocationEnvelope) -> Result<ComponentInvocationResultEnvelope, RuntimeError>
+        + Send
+        + Sync,
+{
+    fn invoke_component(
+        &self,
+        envelope: ComponentInvocationEnvelope,
+    ) -> Result<ComponentInvocationResultEnvelope, RuntimeError> {
+        (self.handler)(envelope)
+    }
+}
+
 /// Request for initial resource creation.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CreateResourceRequest {
@@ -2429,6 +2469,40 @@ mod tests {
         assert_eq!(
             result.output.expect("output should be present")["ranked"],
             serde_json::json!([])
+        );
+    }
+
+    #[test]
+    fn delegating_component_provider_forwards_envelope_to_host_handler() {
+        let descriptor = ComponentDescriptor::new(
+            "zain.analyser.rca",
+            "analyser",
+            ComponentRuntimeKind::WasmWasi,
+            "oci://ghcr.io/greenticai/components/zain-analyser-rca:latest",
+        );
+        let envelope = ComponentInvocationEnvelope::new(
+            "component-invoke-1",
+            &descriptor,
+            serde_json::json!({"evidence": []}),
+            provenance(),
+        );
+        let provider = DelegatingComponentProvider::new(|envelope| {
+            assert_eq!(envelope.component_id, "zain.analyser.rca");
+            assert_eq!(envelope.runtime, ComponentRuntimeKind::WasmWasi);
+            Ok(ComponentInvocationResultEnvelope::success(
+                envelope.invocation_id,
+                envelope.component_id,
+                serde_json::json!({"summary": "runner invoked"}),
+            ))
+        });
+
+        let result = provider
+            .invoke_component(envelope)
+            .expect("delegating provider should return host output");
+        assert_eq!(result.status, InvocationStatus::Succeeded);
+        assert_eq!(
+            result.output.expect("output should be present")["summary"],
+            serde_json::json!("runner invoked")
         );
     }
 }
