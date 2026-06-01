@@ -16,6 +16,7 @@ greentic-x-events.workspace = true
 greentic-x-ops.workspace = true
 greentic-x-types.workspace = true
 jsonschema.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 
 [lints]
