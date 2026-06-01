@@ -97,7 +97,18 @@ The runtime:
 - invokes handlers with JSON input
 - emits operation execution events
 
-This is deliberately lightweight for now. The runtime does not yet include a richer execution harness or external provider integration.
+This is deliberately lightweight for now. Operation execution remains separate from portable component execution.
+
+## Component Invocation Boundary
+
+The runtime also defines the `gx.component.invocation.v1` boundary for portable components:
+
+- `ComponentDescriptor` identifies a component by id, kind, runtime class, reference, interface, and metadata.
+- `ComponentInvocationEnvelope` carries `invocation_id`, `component_id`, runtime kind, reference, JSON input, provenance, optional run id, and metadata.
+- `ComponentInvocationResultEnvelope` returns a standard status, optional JSON output, optional error, warnings, and metadata.
+- `ComponentProvider` is the host/provider trait. Implementations can back it with local built-ins, WASM/WASI, MCP adapters, remote workers, or deterministic fixtures.
+
+The runtime crate ships `UnsupportedComponentProvider` and `StaticComponentProvider` so higher-level repos can wire the boundary before production OCI/WASM/MCP execution is available. Production providers are intentionally host integrations, not Telco-X-specific logic.
 
 ## Current Limitation
 
@@ -107,6 +118,7 @@ The runtime uses contract and op metadata structurally, but it does not yet:
 - enforce policy hooks
 - execute migrations
 - integrate with production storage or transport backends
+- provide a production OCI/WASM/MCP component loader; the component provider trait is the boundary for that integration
 
 The repo now also contains a runtime-capability source pack scaffold under
 `packs/greentic-x-runtime-capability-reference/`. It demonstrates the intended

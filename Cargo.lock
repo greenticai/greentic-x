@@ -1604,6 +1604,7 @@ dependencies = [
  "greentic-x-ops",
  "greentic-x-types",
  "jsonschema",
+ "serde",
  "serde_json",
 ]
 
