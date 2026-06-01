@@ -107,10 +107,224 @@ use greentic_x_types::{
     TransitionRequest,
 };
 use jsonschema::Validator;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 use std::sync::Arc;
+
+/// Portable runtime classes for Greentic-X component invocation.
+///
+/// The enum is intentionally independent from any one transport. A playbook or
+/// catalog can declare the runtime class, while the host decides which provider
+/// is configured to execute it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ComponentRuntimeKind {
+    LocalBuiltin,
+    WasmWasi,
+    McpAdapter,
+    ExternalWorker,
+}
+
+/// Descriptor for a component that can be invoked by a GX host.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ComponentDescriptor {
+    pub component_id: String,
+    pub kind: String,
+    pub runtime: ComponentRuntimeKind,
+    pub reference: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub interface: Option<String>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub metadata: BTreeMap<String, Value>,
+}
+
+impl ComponentDescriptor {
+    pub fn new(
+        component_id: impl Into<String>,
+        kind: impl Into<String>,
+        runtime: ComponentRuntimeKind,
+        reference: impl Into<String>,
+    ) -> Self {
+        Self {
+            component_id: component_id.into(),
+            kind: kind.into(),
+            runtime,
+            reference: reference.into(),
+            interface: None,
+            metadata: BTreeMap::new(),
+        }
+    }
+
+    pub fn with_interface(mut self, interface: impl Into<String>) -> Self {
+        self.interface = Some(interface.into());
+        self
+    }
+}
+
+/// Standard invocation envelope for resolver, adapter, analyser, renderer, MCP,
+/// WASM/WASI, and external worker components.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ComponentInvocationEnvelope {
+    pub invocation_id: String,
+    pub component_id: String,
+    pub runtime: ComponentRuntimeKind,
+    pub reference: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub interface: Option<String>,
+    pub input: Value,
+    pub provenance: Provenance,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub run_id: Option<String>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub metadata: BTreeMap<String, Value>,
+}
+
+impl ComponentInvocationEnvelope {
+    pub fn new(
+        invocation_id: impl Into<String>,
+        component: &ComponentDescriptor,
+        input: Value,
+        provenance: Provenance,
+    ) -> Self {
+        Self {
+            invocation_id: invocation_id.into(),
+            component_id: component.component_id.clone(),
+            runtime: component.runtime,
+            reference: component.reference.clone(),
+            interface: component.interface.clone(),
+            input,
+            provenance,
+            run_id: None,
+            metadata: component.metadata.clone(),
+        }
+    }
+
+    pub fn with_run_id(mut self, run_id: impl Into<String>) -> Self {
+        self.run_id = Some(run_id.into());
+        self
+    }
+}
+
+/// Standard result envelope returned by every component provider.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ComponentInvocationResultEnvelope {
+    pub invocation_id: String,
+    pub component_id: String,
+    pub status: InvocationStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub warnings: Vec<String>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub metadata: BTreeMap<String, Value>,
+}
+
+impl ComponentInvocationResultEnvelope {
+    pub fn success(
+        invocation_id: impl Into<String>,
+        component_id: impl Into<String>,
+        output: Value,
+    ) -> Self {
+        Self {
+            invocation_id: invocation_id.into(),
+            component_id: component_id.into(),
+            status: InvocationStatus::Succeeded,
+            output: Some(output),
+            error: None,
+            warnings: Vec::new(),
+            metadata: BTreeMap::new(),
+        }
+    }
+
+    pub fn failed(
+        invocation_id: impl Into<String>,
+        component_id: impl Into<String>,
+        error: impl Into<String>,
+    ) -> Self {
+        Self {
+            invocation_id: invocation_id.into(),
+            component_id: component_id.into(),
+            status: InvocationStatus::Failed,
+            output: None,
+            error: Some(error.into()),
+            warnings: Vec::new(),
+            metadata: BTreeMap::new(),
+        }
+    }
+}
+
+/// Provider boundary for executable components.
+///
+/// Implementations may back this with local built-ins, WASM/WASI, MCP adapter
+/// calls, remote workers, or test fixtures. The runtime contract stays the same:
+/// JSON envelope in, JSON result envelope out.
+pub trait ComponentProvider: Send + Sync {
+    fn invoke_component(
+        &self,
+        envelope: ComponentInvocationEnvelope,
+    ) -> Result<ComponentInvocationResultEnvelope, RuntimeError>;
+}
+
+/// Minimal provider for hosts that have not configured external execution yet.
+#[derive(Debug, Default, Clone)]
+pub struct UnsupportedComponentProvider;
+
+impl ComponentProvider for UnsupportedComponentProvider {
+    fn invoke_component(
+        &self,
+        envelope: ComponentInvocationEnvelope,
+    ) -> Result<ComponentInvocationResultEnvelope, RuntimeError> {
+        Err(RuntimeError::ComponentInvocationFailed {
+            component_id: envelope.component_id,
+            message: format!(
+                "component runtime {:?} for reference {} is not configured",
+                envelope.runtime, envelope.reference
+            ),
+        })
+    }
+}
+
+/// Deterministic fixture provider for tests and host integration scaffolding.
+#[derive(Debug, Default, Clone)]
+pub struct StaticComponentProvider {
+    outputs: BTreeMap<String, Value>,
+}
+
+impl StaticComponentProvider {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_component_output(mut self, component_id: impl Into<String>, output: Value) -> Self {
+        self.outputs.insert(component_id.into(), output);
+        self
+    }
+}
+
+impl ComponentProvider for StaticComponentProvider {
+    fn invoke_component(
+        &self,
+        envelope: ComponentInvocationEnvelope,
+    ) -> Result<ComponentInvocationResultEnvelope, RuntimeError> {
+        let output = self
+            .outputs
+            .get(&envelope.component_id)
+            .cloned()
+            .ok_or_else(|| RuntimeError::ComponentInvocationFailed {
+                component_id: envelope.component_id.clone(),
+                message: "no static output registered for component".to_owned(),
+            })?;
+        Ok(ComponentInvocationResultEnvelope::success(
+            envelope.invocation_id,
+            envelope.component_id,
+            output,
+        ))
+    }
+}
 
 /// Request for initial resource creation.
 #[derive(Debug, Clone, PartialEq)]
@@ -199,6 +413,10 @@ pub enum RuntimeError {
     },
     ResolverInvocationFailed {
         resolver_id: greentic_x_types::ResolverId,
+        message: String,
+    },
+    ComponentInvocationFailed {
+        component_id: String,
         message: String,
     },
     InvalidDocument(&'static str),
@@ -308,6 +526,12 @@ impl std::fmt::Display for RuntimeError {
                 message,
             } => {
                 write!(formatter, "resolver {resolver_id} failed: {message}")
+            }
+            Self::ComponentInvocationFailed {
+                component_id,
+                message,
+            } => {
+                write!(formatter, "component {component_id} failed: {message}")
             }
             Self::InvalidDocument(message) => formatter.write_str(message),
             Self::PatchDenied { path } => write!(formatter, "patch path {path} is not allowed"),
@@ -2127,5 +2351,84 @@ mod tests {
             )
             .expect_err("invalid op input should fail schema validation");
         assert!(matches!(err, RuntimeError::SchemaValidationFailed { .. }));
+    }
+
+    #[test]
+    fn component_invocation_envelope_captures_runtime_boundary() {
+        let descriptor = ComponentDescriptor::new(
+            "example.analyser.rca",
+            "analyser",
+            ComponentRuntimeKind::WasmWasi,
+            "oci://ghcr.io/greenticai/components/example-analyser-rca:latest",
+        )
+        .with_interface("gx.operation.descriptor.v1");
+
+        let envelope = ComponentInvocationEnvelope::new(
+            "component-invoke-1",
+            &descriptor,
+            serde_json::json!({"evidence": []}),
+            provenance(),
+        )
+        .with_run_id("run-1");
+
+        assert_eq!(envelope.component_id, "example.analyser.rca");
+        assert_eq!(envelope.runtime, ComponentRuntimeKind::WasmWasi);
+        assert_eq!(
+            envelope.interface.as_deref(),
+            Some("gx.operation.descriptor.v1")
+        );
+        assert_eq!(envelope.run_id.as_deref(), Some("run-1"));
+    }
+
+    #[test]
+    fn unsupported_component_provider_returns_runtime_error() {
+        let descriptor = ComponentDescriptor::new(
+            "tx.query.arbor",
+            "adapter",
+            ComponentRuntimeKind::McpAdapter,
+            "mcp://arbor/run_template",
+        );
+        let envelope = ComponentInvocationEnvelope::new(
+            "component-invoke-1",
+            &descriptor,
+            serde_json::json!({"template": "inbound_by_prefix"}),
+            provenance(),
+        );
+
+        let err = UnsupportedComponentProvider
+            .invoke_component(envelope)
+            .expect_err("unsupported provider should return a runtime error");
+        assert!(matches!(
+            err,
+            RuntimeError::ComponentInvocationFailed { .. }
+        ));
+        assert!(err.to_string().contains("tx.query.arbor"));
+    }
+
+    #[test]
+    fn static_component_provider_returns_registered_output() {
+        let descriptor = ComponentDescriptor::new(
+            "tx.analyse.top_peers",
+            "analyser",
+            ComponentRuntimeKind::LocalBuiltin,
+            "local://telco-x/analysers/top-peers",
+        );
+        let envelope = ComponentInvocationEnvelope::new(
+            "component-invoke-1",
+            &descriptor,
+            serde_json::json!({"flows": []}),
+            provenance(),
+        );
+        let provider = StaticComponentProvider::new()
+            .with_component_output("tx.analyse.top_peers", serde_json::json!({"ranked": []}));
+
+        let result = provider
+            .invoke_component(envelope)
+            .expect("static provider should return output");
+        assert_eq!(result.status, InvocationStatus::Succeeded);
+        assert_eq!(
+            result.output.expect("output should be present")["ranked"],
+            serde_json::json!([])
+        );
     }
 }
