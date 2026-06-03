@@ -108,7 +108,7 @@ The runtime also defines the `gx.component.invocation.v1` boundary for portable 
 - `ComponentInvocationResultEnvelope` returns a standard status, optional JSON output, optional error, warnings, and metadata.
 - `ComponentProvider` is the host/provider trait. Implementations can back it with local built-ins, WASM/WASI, MCP adapters, remote workers, or deterministic fixtures.
 
-The runtime crate ships `UnsupportedComponentProvider` and `StaticComponentProvider` so higher-level repos can wire the boundary before production OCI/WASM/MCP execution is available. Production providers are intentionally host integrations, not Telco-X-specific logic.
+The runtime crate ships `UnsupportedComponentProvider`, `StaticComponentProvider`, and `DelegatingComponentProvider` so higher-level repos can wire the boundary before production OCI/WASM/MCP execution is available. `StaticComponentProvider` is only for deterministic tests and replay scaffolding; production hosts should use a real provider and fail fast when a referenced component cannot be resolved or invoked. Production providers are intentionally host integrations, not Telco-X-specific logic.
 
 ## Current Limitation
 
