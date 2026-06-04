@@ -454,6 +454,221 @@ where
     }
 }
 
+/// Incoming message envelope used by the Fast2Flow routing boundary.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Fast2FlowMessageEnvelope {
+    pub text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub channel: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
+}
+
+impl Fast2FlowMessageEnvelope {
+    pub fn new(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            channel: None,
+            provider: None,
+        }
+    }
+
+    pub fn with_channel(mut self, channel: impl Into<String>) -> Self {
+        self.channel = Some(channel.into());
+        self
+    }
+
+    pub fn with_provider(mut self, provider: impl Into<String>) -> Self {
+        self.provider = Some(provider.into());
+        self
+    }
+}
+
+/// Greentic-X host request for Fast2Flow-style intent routing.
+///
+/// This mirrors the Fast2Flow hook contract but keeps Greentic-X decoupled from
+/// a concrete Fast2Flow crate or runner implementation.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Fast2FlowRouteRequest {
+    pub scope: String,
+    pub envelope: Fast2FlowMessageEnvelope,
+    pub session_active: bool,
+    pub input_locale: String,
+    pub time_budget_ms: u64,
+    pub registry_path: String,
+    pub indexes_path: String,
+    pub now_unix_ms: u64,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub metadata: BTreeMap<String, Value>,
+}
+
+impl Fast2FlowRouteRequest {
+    pub fn new(scope: impl Into<String>, text: impl Into<String>) -> Self {
+        Self {
+            scope: scope.into(),
+            envelope: Fast2FlowMessageEnvelope::new(text),
+            session_active: false,
+            input_locale: "en".to_owned(),
+            time_budget_ms: 250,
+            registry_path: String::new(),
+            indexes_path: String::new(),
+            now_unix_ms: 0,
+            metadata: BTreeMap::new(),
+        }
+    }
+
+    pub fn with_mounts(
+        mut self,
+        registry_path: impl Into<String>,
+        indexes_path: impl Into<String>,
+    ) -> Self {
+        self.registry_path = registry_path.into();
+        self.indexes_path = indexes_path.into();
+        self
+    }
+
+    pub fn with_session_active(mut self, session_active: bool) -> Self {
+        self.session_active = session_active;
+        self
+    }
+
+    pub fn with_locale(mut self, input_locale: impl Into<String>) -> Self {
+        self.input_locale = input_locale.into();
+        self
+    }
+
+    pub fn with_time_budget_ms(mut self, time_budget_ms: u64) -> Self {
+        self.time_budget_ms = time_budget_ms;
+        self
+    }
+
+    pub fn with_now_unix_ms(mut self, now_unix_ms: u64) -> Self {
+        self.now_unix_ms = now_unix_ms;
+        self
+    }
+}
+
+/// Routing decision returned by a Fast2Flow-compatible host integration.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum Fast2FlowDirective {
+    Continue,
+    Dispatch {
+        target: String,
+        confidence: f32,
+        reason: String,
+    },
+    Respond {
+        message: String,
+    },
+    Deny {
+        reason: String,
+    },
+}
+
+/// Standard route result envelope for Greentic-X intent routing.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Fast2FlowRouteResult {
+    pub directive: Fast2FlowDirective,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub metadata: BTreeMap<String, Value>,
+}
+
+impl Fast2FlowRouteResult {
+    pub fn continue_route() -> Self {
+        Self {
+            directive: Fast2FlowDirective::Continue,
+            metadata: BTreeMap::new(),
+        }
+    }
+
+    pub fn dispatch(target: impl Into<String>, confidence: f32, reason: impl Into<String>) -> Self {
+        Self {
+            directive: Fast2FlowDirective::Dispatch {
+                target: target.into(),
+                confidence,
+                reason: reason.into(),
+            },
+            metadata: BTreeMap::new(),
+        }
+    }
+
+    pub fn respond(message: impl Into<String>) -> Self {
+        Self {
+            directive: Fast2FlowDirective::Respond {
+                message: message.into(),
+            },
+            metadata: BTreeMap::new(),
+        }
+    }
+
+    pub fn deny(reason: impl Into<String>) -> Self {
+        Self {
+            directive: Fast2FlowDirective::Deny {
+                reason: reason.into(),
+            },
+            metadata: BTreeMap::new(),
+        }
+    }
+}
+
+/// Provider boundary for Fast2Flow-compatible intent routing.
+///
+/// Hosts can back this with `greentic-fast2flow`, a WASM routing component, or
+/// a remote router service. Greentic-X core owns the stable request/result
+/// contract; the host owns index loading, policy evaluation, and dispatch.
+pub trait Fast2FlowRoutingProvider: Send + Sync {
+    fn route_intent(
+        &self,
+        request: Fast2FlowRouteRequest,
+    ) -> Result<Fast2FlowRouteResult, RuntimeError>;
+}
+
+/// Fail-fast router for hosts that have not configured Fast2Flow routing.
+#[derive(Debug, Default, Clone)]
+pub struct UnsupportedFast2FlowRoutingProvider;
+
+impl Fast2FlowRoutingProvider for UnsupportedFast2FlowRoutingProvider {
+    fn route_intent(
+        &self,
+        request: Fast2FlowRouteRequest,
+    ) -> Result<Fast2FlowRouteResult, RuntimeError> {
+        Err(RuntimeError::Fast2FlowRoutingFailed {
+            scope: request.scope,
+            message: "Fast2Flow routing provider is not configured".to_owned(),
+        })
+    }
+}
+
+/// Adapter for host-owned Fast2Flow routing implementations.
+pub struct DelegatingFast2FlowRoutingProvider<F>
+where
+    F: Fn(Fast2FlowRouteRequest) -> Result<Fast2FlowRouteResult, RuntimeError> + Send + Sync,
+{
+    handler: F,
+}
+
+impl<F> DelegatingFast2FlowRoutingProvider<F>
+where
+    F: Fn(Fast2FlowRouteRequest) -> Result<Fast2FlowRouteResult, RuntimeError> + Send + Sync,
+{
+    pub fn new(handler: F) -> Self {
+        Self { handler }
+    }
+}
+
+impl<F> Fast2FlowRoutingProvider for DelegatingFast2FlowRoutingProvider<F>
+where
+    F: Fn(Fast2FlowRouteRequest) -> Result<Fast2FlowRouteResult, RuntimeError> + Send + Sync,
+{
+    fn route_intent(
+        &self,
+        request: Fast2FlowRouteRequest,
+    ) -> Result<Fast2FlowRouteResult, RuntimeError> {
+        (self.handler)(request)
+    }
+}
+
 /// Request for initial resource creation.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CreateResourceRequest {
@@ -545,6 +760,10 @@ pub enum RuntimeError {
     },
     ComponentInvocationFailed {
         component_id: String,
+        message: String,
+    },
+    Fast2FlowRoutingFailed {
+        scope: String,
         message: String,
     },
     InvalidDocument(&'static str),
@@ -660,6 +879,12 @@ impl std::fmt::Display for RuntimeError {
                 message,
             } => {
                 write!(formatter, "component {component_id} failed: {message}")
+            }
+            Self::Fast2FlowRoutingFailed { scope, message } => {
+                write!(
+                    formatter,
+                    "Fast2Flow routing failed for scope {scope}: {message}"
+                )
             }
             Self::InvalidDocument(message) => formatter.write_str(message),
             Self::PatchDenied { path } => write!(formatter, "patch path {path} is not allowed"),
@@ -2576,6 +2801,54 @@ mod tests {
             RuntimeError::ComponentInvocationFailed { .. }
         ));
         assert!(err.to_string().contains("tx.query.arbor"));
+    }
+
+    #[test]
+    fn unsupported_fast2flow_routing_provider_returns_runtime_error() {
+        let request = Fast2FlowRouteRequest::new("demo", "show inbound traffic")
+            .with_mounts("/mnt/registry", "/mnt/indexes")
+            .with_time_budget_ms(250);
+
+        let err = UnsupportedFast2FlowRoutingProvider
+            .route_intent(request)
+            .expect_err("unsupported router should fail fast");
+
+        assert!(matches!(err, RuntimeError::Fast2FlowRoutingFailed { .. }));
+        assert!(err.to_string().contains("demo"));
+    }
+
+    #[test]
+    fn delegating_fast2flow_routing_provider_forwards_request_to_host_handler() {
+        let provider = DelegatingFast2FlowRoutingProvider::new(|request| {
+            assert_eq!(request.scope, "tenant-a");
+            assert_eq!(request.envelope.text, "show inbound traffic");
+            assert_eq!(request.envelope.channel.as_deref(), Some("webchat"));
+            assert_eq!(request.indexes_path, "/mnt/indexes");
+            Ok(Fast2FlowRouteResult::dispatch(
+                "telco-x/tx.playbook.prefix_traffic",
+                0.92,
+                "matched prefix traffic metadata",
+            ))
+        });
+        let mut request = Fast2FlowRouteRequest::new("tenant-a", "show inbound traffic")
+            .with_mounts("/mnt/registry", "/mnt/indexes")
+            .with_session_active(false)
+            .with_locale("en-GB")
+            .with_now_unix_ms(1_779_000_000);
+        request.envelope = request.envelope.with_channel("webchat");
+
+        let result = provider
+            .route_intent(request)
+            .expect("delegating router should return host result");
+
+        assert_eq!(
+            result.directive,
+            Fast2FlowDirective::Dispatch {
+                target: "telco-x/tx.playbook.prefix_traffic".to_owned(),
+                confidence: 0.92,
+                reason: "matched prefix traffic metadata".to_owned(),
+            }
+        );
     }
 
     #[test]
