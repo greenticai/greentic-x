@@ -112,6 +112,17 @@ The runtime crate ships `UnsupportedComponentProvider`, `StaticComponentProvider
 
 `ResilienceStrategy` and `CachingStrategy` are declarative host instructions. The runtime serializes them on the descriptor and invocation envelope; enforcement belongs to the configured provider because retry, health checks, success checks, and cache stores are transport- and deployment-specific.
 
+## Fast2Flow Routing Boundary
+
+The runtime defines a first-class Fast2Flow-compatible routing boundary without depending on a concrete Fast2Flow implementation:
+
+- `Fast2FlowRouteRequest` carries scope, message envelope, session state, locale, time budget, registry/index mount paths, timestamp, and metadata.
+- `Fast2FlowDirective` models the routing outcome: `continue`, `dispatch`, `respond`, or `deny`.
+- `Fast2FlowRouteResult` wraps the directive with optional metadata.
+- `Fast2FlowRoutingProvider` is the host/provider trait. Hosts can implement it with `greentic-fast2flow`, a WASM routing component, or a remote routing service.
+
+The runtime crate ships `UnsupportedFast2FlowRoutingProvider` for fail-fast behavior and `DelegatingFast2FlowRoutingProvider` so runner/orchestrator hosts can bridge to Fast2Flow without adding Fast2Flow dependencies to the portable runtime crate. Greentic-X owns the stable request/result contract; the host owns index loading, policy evaluation, and dispatching the selected flow or playbook target.
+
 ## Current Limitation
 
 The runtime uses contract and op metadata structurally, but it does not yet:
