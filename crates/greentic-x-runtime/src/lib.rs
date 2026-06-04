@@ -136,6 +136,10 @@ pub struct ComponentDescriptor {
     pub reference: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub interface: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resilience: Option<ResilienceStrategy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caching: Option<CachingStrategy>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub metadata: BTreeMap<String, Value>,
 }
@@ -153,6 +157,8 @@ impl ComponentDescriptor {
             runtime,
             reference: reference.into(),
             interface: None,
+            resilience: None,
+            caching: None,
             metadata: BTreeMap::new(),
         }
     }
@@ -161,6 +167,72 @@ impl ComponentDescriptor {
         self.interface = Some(interface.into());
         self
     }
+
+    pub fn with_resilience(mut self, strategy: ResilienceStrategy) -> Self {
+        self.resilience = Some(strategy);
+        self
+    }
+
+    pub fn with_caching(mut self, strategy: CachingStrategy) -> Self {
+        self.caching = Some(strategy);
+        self
+    }
+}
+
+/// Host-executed resilience policy for component calls that touch external
+/// systems. Hosts are responsible for enforcing the policy because retry,
+/// health, and success checks are transport-specific.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ResilienceStrategy {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub health_check: Option<HealthCheckStrategy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retry: Option<RetryStrategy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub success_check: Option<SuccessCheckStrategy>,
+}
+
+/// Optional pre-invocation health check.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HealthCheckStrategy {
+    pub enabled: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interval_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout_ms: Option<u64>,
+}
+
+/// Retry settings for retryable component invocation failures.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RetryStrategy {
+    pub max_attempts: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub initial_delay_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_delay_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub backoff_multiplier: Option<u32>,
+}
+
+/// Optional post-failure verification for update-style operations where the
+/// transport may fail after the external system accepted the change.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SuccessCheckStrategy {
+    pub enabled: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout_ms: Option<u64>,
+}
+
+/// Host-executed cache policy for deterministic component calls.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CachingStrategy {
+    pub enabled: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ttl_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_entries: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub key_template: Option<String>,
 }
 
 /// Standard invocation envelope for resolver, adapter, analyser, renderer, MCP,
@@ -173,6 +245,10 @@ pub struct ComponentInvocationEnvelope {
     pub reference: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub interface: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resilience: Option<ResilienceStrategy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caching: Option<CachingStrategy>,
     pub input: Value,
     pub provenance: Provenance,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -194,6 +270,8 @@ impl ComponentInvocationEnvelope {
             runtime: component.runtime,
             reference: component.reference.clone(),
             interface: component.interface.clone(),
+            resilience: component.resilience.clone(),
+            caching: component.caching.clone(),
             input,
             provenance,
             run_id: None,
@@ -203,6 +281,16 @@ impl ComponentInvocationEnvelope {
 
     pub fn with_run_id(mut self, run_id: impl Into<String>) -> Self {
         self.run_id = Some(run_id.into());
+        self
+    }
+
+    pub fn with_resilience(mut self, strategy: ResilienceStrategy) -> Self {
+        self.resilience = Some(strategy);
+        self
+    }
+
+    pub fn with_caching(mut self, strategy: CachingStrategy) -> Self {
+        self.caching = Some(strategy);
         self
     }
 }
@@ -2418,6 +2506,51 @@ mod tests {
             Some("gx.operation.descriptor.v1")
         );
         assert_eq!(envelope.run_id.as_deref(), Some("run-1"));
+    }
+
+    #[test]
+    fn component_invocation_envelope_carries_resilience_and_caching_strategies() {
+        let resilience = ResilienceStrategy {
+            health_check: Some(HealthCheckStrategy {
+                enabled: true,
+                interval_ms: Some(30_000),
+                timeout_ms: Some(2_000),
+            }),
+            retry: Some(RetryStrategy {
+                max_attempts: 3,
+                initial_delay_ms: Some(100),
+                max_delay_ms: Some(1_000),
+                backoff_multiplier: Some(2),
+            }),
+            success_check: Some(SuccessCheckStrategy {
+                enabled: false,
+                timeout_ms: None,
+            }),
+        };
+        let caching = CachingStrategy {
+            enabled: true,
+            ttl_ms: Some(60_000),
+            max_entries: Some(512),
+            key_template: Some("${component_id}:${input.prefix}".to_owned()),
+        };
+        let descriptor = ComponentDescriptor::new(
+            "tx.query.arbor.flows",
+            "adapter",
+            ComponentRuntimeKind::McpAdapter,
+            "mcp://arbor/run_template",
+        )
+        .with_resilience(resilience.clone())
+        .with_caching(caching.clone());
+
+        let envelope = ComponentInvocationEnvelope::new(
+            "component-invoke-1",
+            &descriptor,
+            serde_json::json!({"prefix": "203.0.113.0/24"}),
+            provenance(),
+        );
+
+        assert_eq!(envelope.resilience, Some(resilience));
+        assert_eq!(envelope.caching, Some(caching));
     }
 
     #[test]
