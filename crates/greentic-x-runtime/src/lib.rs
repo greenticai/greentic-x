@@ -8,7 +8,7 @@
 //! };
 //! use greentic_x_types::{ActorRef, ContractId, ContractVersion, Provenance, ResourceId, ResourceTypeId, Revision, SchemaReference};
 //! use serde_json::json;
-//! use std::sync::Arc;
+//! use std::sync::{Arc, Mutex};
 //!
 //! let mut runtime = Runtime::new(InMemoryResourceStore::default(), NoopEventSink::default());
 //! let manifest = ContractManifest {
@@ -111,7 +111,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 /// Portable runtime classes for Greentic-X component invocation.
 ///
@@ -452,6 +452,273 @@ where
     ) -> Result<ComponentInvocationResultEnvelope, RuntimeError> {
         (self.handler)(envelope)
     }
+}
+
+/// Host-visible execution metadata produced by the generic strategy executor.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ComponentExecutionMetadata {
+    pub attempts: u32,
+    pub cache_enabled: bool,
+    pub cache_hit: bool,
+    pub cache_key: Option<String>,
+    pub elapsed_ms: u64,
+    pub timed_out: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub warnings: Vec<String>,
+}
+
+impl ComponentExecutionMetadata {
+    fn new(cache_enabled: bool, cache_key: Option<String>) -> Self {
+        Self {
+            attempts: 0,
+            cache_enabled,
+            cache_hit: false,
+            cache_key,
+            elapsed_ms: 0,
+            timed_out: false,
+            warnings: Vec::new(),
+        }
+    }
+}
+
+/// Result plus strategy execution metadata.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ComponentExecutionOutcome {
+    pub result: ComponentInvocationResultEnvelope,
+    pub metadata: ComponentExecutionMetadata,
+}
+
+/// Cache boundary for deterministic component invocation results.
+pub trait ComponentCache: Send + Sync {
+    fn get(&self, key: &str) -> Option<ComponentInvocationResultEnvelope>;
+    fn insert(
+        &self,
+        key: String,
+        value: ComponentInvocationResultEnvelope,
+        ttl_ms: Option<u64>,
+        max_entries: Option<u64>,
+    );
+}
+
+#[derive(Debug, Clone)]
+struct CachedComponentValue {
+    value: ComponentInvocationResultEnvelope,
+    expires_at: Option<std::time::Instant>,
+}
+
+/// Small in-memory cache for hosts, tests, and smoke demos.
+#[derive(Debug, Default)]
+pub struct InMemoryComponentCache {
+    values: Mutex<HashMap<String, CachedComponentValue>>,
+}
+
+impl InMemoryComponentCache {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn len(&self) -> usize {
+        self.values
+            .lock()
+            .expect("component cache mutex should not be poisoned")
+            .len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+impl ComponentCache for InMemoryComponentCache {
+    fn get(&self, key: &str) -> Option<ComponentInvocationResultEnvelope> {
+        let mut values = self
+            .values
+            .lock()
+            .expect("component cache mutex should not be poisoned");
+        let cached = values.get(key)?;
+        if cached
+            .expires_at
+            .is_some_and(|expires_at| std::time::Instant::now() >= expires_at)
+        {
+            values.remove(key);
+            return None;
+        }
+        Some(cached.value.clone())
+    }
+
+    fn insert(
+        &self,
+        key: String,
+        value: ComponentInvocationResultEnvelope,
+        ttl_ms: Option<u64>,
+        max_entries: Option<u64>,
+    ) {
+        let expires_at =
+            ttl_ms.map(|ttl| std::time::Instant::now() + std::time::Duration::from_millis(ttl));
+        let mut values = self
+            .values
+            .lock()
+            .expect("component cache mutex should not be poisoned");
+        values.insert(key, CachedComponentValue { value, expires_at });
+        if let Some(max_entries) = max_entries.and_then(|value| usize::try_from(value).ok()) {
+            while max_entries > 0 && values.len() > max_entries {
+                if let Some(oldest_key) = values.keys().next().cloned() {
+                    values.remove(&oldest_key);
+                } else {
+                    break;
+                }
+            }
+            if max_entries == 0 {
+                values.clear();
+            }
+        }
+    }
+}
+
+/// Execute a component provider with generic resilience and caching strategy support.
+///
+/// This helper intentionally stays transport-neutral: hosts can wrap WASM, MCP,
+/// local fixture, or external worker providers with the same policy handling.
+pub fn execute_component_with_strategies<P>(
+    provider: &P,
+    envelope: ComponentInvocationEnvelope,
+    cache: Option<&dyn ComponentCache>,
+) -> Result<ComponentExecutionOutcome, RuntimeError>
+where
+    P: ComponentProvider + ?Sized,
+{
+    let started = std::time::Instant::now();
+    let caching = envelope.caching.clone().filter(|strategy| strategy.enabled);
+    let cache_key = caching
+        .as_ref()
+        .map(|strategy| component_cache_key(&envelope, strategy));
+    let mut metadata = ComponentExecutionMetadata::new(caching.is_some(), cache_key.clone());
+
+    if let (Some(cache), Some(key)) = (cache, cache_key.as_deref()) {
+        if let Some(mut result) = cache.get(key) {
+            metadata.cache_hit = true;
+            metadata.elapsed_ms = elapsed_ms(started);
+            attach_execution_metadata(&mut result, &metadata);
+            return Ok(ComponentExecutionOutcome { result, metadata });
+        }
+    }
+
+    let retry = envelope
+        .resilience
+        .as_ref()
+        .and_then(|strategy| strategy.retry.as_ref());
+    let max_attempts = retry.map_or(1, |strategy| strategy.max_attempts.max(1));
+    let timeout_ms = envelope
+        .resilience
+        .as_ref()
+        .and_then(|strategy| strategy.health_check.as_ref())
+        .and_then(|strategy| strategy.timeout_ms);
+
+    let mut last_error = None;
+    for attempt in 1..=max_attempts {
+        metadata.attempts = attempt;
+        let result = provider.invoke_component(envelope.clone());
+        match result {
+            Ok(mut result) if result.status == InvocationStatus::Succeeded => {
+                metadata.elapsed_ms = elapsed_ms(started);
+                metadata.timed_out = timeout_ms.is_some_and(|limit| metadata.elapsed_ms > limit);
+                if let (Some(cache), Some(strategy), Some(key)) =
+                    (cache, caching.as_ref(), cache_key.clone())
+                {
+                    cache.insert(key, result.clone(), strategy.ttl_ms, strategy.max_entries);
+                }
+                attach_execution_metadata(&mut result, &metadata);
+                return Ok(ComponentExecutionOutcome { result, metadata });
+            }
+            Ok(result) => {
+                last_error = Some(RuntimeError::ComponentInvocationFailed {
+                    component_id: result.component_id,
+                    message: result
+                        .error
+                        .unwrap_or_else(|| "component returned failed status".to_owned()),
+                });
+            }
+            Err(err) => {
+                last_error = Some(err);
+            }
+        }
+
+        if attempt < max_attempts {
+            let delay_ms = retry_delay_ms(retry, attempt);
+            if delay_ms > 0 {
+                std::thread::sleep(std::time::Duration::from_millis(delay_ms));
+            }
+        }
+    }
+
+    metadata.elapsed_ms = elapsed_ms(started);
+    metadata.timed_out = timeout_ms.is_some_and(|limit| metadata.elapsed_ms > limit);
+    Err(
+        last_error.unwrap_or_else(|| RuntimeError::ComponentInvocationFailed {
+            component_id: envelope.component_id,
+            message: "component invocation failed without an error detail".to_owned(),
+        }),
+    )
+}
+
+fn retry_delay_ms(retry: Option<&RetryStrategy>, completed_attempt: u32) -> u64 {
+    let Some(retry) = retry else {
+        return 0;
+    };
+    let initial = retry.initial_delay_ms.unwrap_or(0);
+    if initial == 0 {
+        return 0;
+    }
+    let multiplier = retry.backoff_multiplier.unwrap_or(1).max(1) as u64;
+    let mut delay = initial;
+    for _ in 1..completed_attempt {
+        delay = delay.saturating_mul(multiplier);
+    }
+    retry.max_delay_ms.map_or(delay, |max| delay.min(max))
+}
+
+fn component_cache_key(
+    envelope: &ComponentInvocationEnvelope,
+    strategy: &CachingStrategy,
+) -> String {
+    if let Some(template) = strategy.key_template.as_deref() {
+        return render_cache_key_template(template, envelope);
+    }
+    format!(
+        "{}:{}:{}",
+        envelope.component_id, envelope.reference, envelope.input
+    )
+}
+
+fn render_cache_key_template(template: &str, envelope: &ComponentInvocationEnvelope) -> String {
+    let mut rendered = template
+        .replace("${component_id}", &envelope.component_id)
+        .replace("${runtime}", &format!("{:?}", envelope.runtime))
+        .replace("${reference}", &envelope.reference)
+        .replace("${invocation_id}", &envelope.invocation_id);
+
+    for (key, value) in envelope.input.as_object().into_iter().flatten() {
+        let replacement = value
+            .as_str()
+            .map(str::to_owned)
+            .unwrap_or_else(|| value.to_string());
+        rendered = rendered.replace(&format!("${{input.{key}}}"), &replacement);
+    }
+    rendered
+}
+
+fn attach_execution_metadata(
+    result: &mut ComponentInvocationResultEnvelope,
+    metadata: &ComponentExecutionMetadata,
+) {
+    result.metadata.insert(
+        "greentic_x.execution".to_owned(),
+        serde_json::to_value(metadata).expect("execution metadata should serialize"),
+    );
+}
+
+fn elapsed_ms(started: std::time::Instant) -> u64 {
+    started.elapsed().as_millis().try_into().unwrap_or(u64::MAX)
 }
 
 /// Incoming message envelope used by the Fast2Flow routing boundary.
@@ -2910,5 +3177,166 @@ mod tests {
             result.output.expect("output should be present")["summary"],
             serde_json::json!("runner invoked")
         );
+    }
+
+    #[test]
+    fn execute_component_with_strategies_retries_until_success() {
+        let descriptor = ComponentDescriptor::new(
+            "tx.query.arbor.flows",
+            "adapter",
+            ComponentRuntimeKind::McpAdapter,
+            "mcp://arbor/run_template",
+        )
+        .with_resilience(ResilienceStrategy {
+            health_check: None,
+            retry: Some(RetryStrategy {
+                max_attempts: 3,
+                initial_delay_ms: Some(0),
+                max_delay_ms: None,
+                backoff_multiplier: None,
+            }),
+            success_check: None,
+        });
+        let envelope = ComponentInvocationEnvelope::new(
+            "component-invoke-1",
+            &descriptor,
+            serde_json::json!({"prefix": "203.0.113.0/24"}),
+            provenance(),
+        );
+        let attempts = Arc::new(Mutex::new(0_u32));
+        let provider_attempts = attempts.clone();
+        let provider = DelegatingComponentProvider::new(move |envelope| {
+            let mut count = provider_attempts
+                .lock()
+                .expect("attempt counter should not be poisoned");
+            *count += 1;
+            if *count < 3 {
+                return Err(RuntimeError::ComponentInvocationFailed {
+                    component_id: envelope.component_id,
+                    message: "temporary failure".to_owned(),
+                });
+            }
+            Ok(ComponentInvocationResultEnvelope::success(
+                envelope.invocation_id,
+                envelope.component_id,
+                serde_json::json!({"ok": true}),
+            ))
+        });
+
+        let outcome = execute_component_with_strategies(&provider, envelope, None)
+            .expect("third attempt should succeed");
+
+        assert_eq!(outcome.metadata.attempts, 3);
+        assert_eq!(
+            *attempts
+                .lock()
+                .expect("attempt counter should not be poisoned"),
+            3
+        );
+        assert_eq!(outcome.result.status, InvocationStatus::Succeeded);
+        assert_eq!(
+            outcome.result.metadata["greentic_x.execution"]["attempts"],
+            serde_json::json!(3)
+        );
+    }
+
+    #[test]
+    fn execute_component_with_strategies_serves_cache_hit_without_provider_call() {
+        let descriptor = ComponentDescriptor::new(
+            "tx.query.inventory.interfaces",
+            "adapter",
+            ComponentRuntimeKind::WasmWasi,
+            "oci://ghcr.io/greenticai/components/inventory-interfaces:latest",
+        )
+        .with_caching(CachingStrategy {
+            enabled: true,
+            ttl_ms: Some(60_000),
+            max_entries: Some(128),
+            key_template: Some("${component_id}:${input.device_id}".to_owned()),
+        });
+        let envelope = ComponentInvocationEnvelope::new(
+            "component-invoke-1",
+            &descriptor,
+            serde_json::json!({"device_id": "aci-pod1-node2201"}),
+            provenance(),
+        );
+        let calls = Arc::new(Mutex::new(0_u32));
+        let provider_calls = calls.clone();
+        let provider = DelegatingComponentProvider::new(move |envelope| {
+            *provider_calls
+                .lock()
+                .expect("provider counter should not be poisoned") += 1;
+            Ok(ComponentInvocationResultEnvelope::success(
+                envelope.invocation_id,
+                envelope.component_id,
+                serde_json::json!({"interfaces": ["eth1/1"]}),
+            ))
+        });
+        let cache = InMemoryComponentCache::new();
+
+        let first = execute_component_with_strategies(&provider, envelope.clone(), Some(&cache))
+            .expect("first call should populate cache");
+        let second = execute_component_with_strategies(&provider, envelope, Some(&cache))
+            .expect("second call should use cache");
+
+        assert!(!first.metadata.cache_hit);
+        assert!(second.metadata.cache_hit);
+        assert_eq!(
+            second.metadata.cache_key.as_deref(),
+            Some("tx.query.inventory.interfaces:aci-pod1-node2201")
+        );
+        assert_eq!(
+            *calls
+                .lock()
+                .expect("provider counter should not be poisoned"),
+            1
+        );
+    }
+
+    #[test]
+    fn in_memory_component_cache_respects_max_entries() {
+        let cache = InMemoryComponentCache::new();
+        cache.insert(
+            "a".to_owned(),
+            ComponentInvocationResultEnvelope::success(
+                "invoke-a",
+                "component",
+                serde_json::json!({"n": 1}),
+            ),
+            None,
+            Some(1),
+        );
+        cache.insert(
+            "b".to_owned(),
+            ComponentInvocationResultEnvelope::success(
+                "invoke-b",
+                "component",
+                serde_json::json!({"n": 2}),
+            ),
+            None,
+            Some(1),
+        );
+
+        assert_eq!(cache.len(), 1);
+    }
+
+    #[test]
+    fn in_memory_component_cache_expires_entries_by_ttl() {
+        let cache = InMemoryComponentCache::new();
+        cache.insert(
+            "short".to_owned(),
+            ComponentInvocationResultEnvelope::success(
+                "component-invoke-1",
+                "tx.query.inventory.interfaces",
+                serde_json::json!({"interfaces": []}),
+            ),
+            Some(1),
+            None,
+        );
+
+        std::thread::sleep(std::time::Duration::from_millis(5));
+
+        assert!(cache.get("short").is_none());
+        assert!(cache.is_empty());
     }
 }
