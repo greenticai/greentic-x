@@ -594,13 +594,13 @@ where
         .map(|strategy| component_cache_key(&envelope, strategy));
     let mut metadata = ComponentExecutionMetadata::new(caching.is_some(), cache_key.clone());
 
-    if let (Some(cache), Some(key)) = (cache, cache_key.as_deref()) {
-        if let Some(mut result) = cache.get(key) {
-            metadata.cache_hit = true;
-            metadata.elapsed_ms = elapsed_ms(started);
-            attach_execution_metadata(&mut result, &metadata);
-            return Ok(ComponentExecutionOutcome { result, metadata });
-        }
+    if let (Some(cache), Some(key)) = (cache, cache_key.as_deref())
+        && let Some(mut result) = cache.get(key)
+    {
+        metadata.cache_hit = true;
+        metadata.elapsed_ms = elapsed_ms(started);
+        attach_execution_metadata(&mut result, &metadata);
+        return Ok(ComponentExecutionOutcome { result, metadata });
     }
 
     let retry = envelope
