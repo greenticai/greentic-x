@@ -815,6 +815,41 @@ impl Fast2FlowRouteRequest {
     }
 }
 
+/// Slim extracted entity view attached to Fast2Flow dispatch decisions.
+///
+/// This mirrors the Fast2Flow v1.2 dispatch prefill contract while keeping
+/// Greentic-X decoupled from the concrete `greentic-fast2flow` crate.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Fast2FlowRoutingEntity {
+    pub kind: String,
+    pub normalized: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub formats: BTreeMap<String, String>,
+}
+
+impl Fast2FlowRoutingEntity {
+    pub fn new(kind: impl Into<String>, normalized: impl Into<String>) -> Self {
+        Self {
+            kind: kind.into(),
+            normalized: normalized.into(),
+            role: None,
+            formats: BTreeMap::new(),
+        }
+    }
+
+    pub fn with_role(mut self, role: impl Into<String>) -> Self {
+        self.role = Some(role.into());
+        self
+    }
+
+    pub fn with_format(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.formats.insert(key.into(), value.into());
+        self
+    }
+}
+
 /// Routing decision returned by a Fast2Flow-compatible host integration.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -824,6 +859,8 @@ pub enum Fast2FlowDirective {
         target: String,
         confidence: f32,
         reason: String,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        entities: Vec<Fast2FlowRoutingEntity>,
     },
     Respond {
         message: String,
@@ -850,11 +887,21 @@ impl Fast2FlowRouteResult {
     }
 
     pub fn dispatch(target: impl Into<String>, confidence: f32, reason: impl Into<String>) -> Self {
+        Self::dispatch_with_entities(target, confidence, reason, Vec::new())
+    }
+
+    pub fn dispatch_with_entities(
+        target: impl Into<String>,
+        confidence: f32,
+        reason: impl Into<String>,
+        entities: Vec<Fast2FlowRoutingEntity>,
+    ) -> Self {
         Self {
             directive: Fast2FlowDirective::Dispatch {
                 target: target.into(),
                 confidence,
                 reason: reason.into(),
+                entities,
             },
             metadata: BTreeMap::new(),
         }
@@ -3114,8 +3161,32 @@ mod tests {
                 target: "telco-x/tx.playbook.prefix_traffic".to_owned(),
                 confidence: 0.92,
                 reason: "matched prefix traffic metadata".to_owned(),
+                entities: Vec::new(),
             }
         );
+    }
+
+    #[test]
+    fn fast2flow_dispatch_can_carry_prefill_entities() {
+        let result = Fast2FlowRouteResult::dispatch_with_entities(
+            "network-assistant/prefix-traffic",
+            0.97,
+            "matched prefix traffic",
+            vec![
+                Fast2FlowRoutingEntity::new("date", "20260610")
+                    .with_role("on")
+                    .with_format("iso", "2026-06-10"),
+            ],
+        );
+
+        match result.directive {
+            Fast2FlowDirective::Dispatch { entities, .. } => {
+                assert_eq!(entities.len(), 1);
+                assert_eq!(entities[0].kind, "date");
+                assert_eq!(entities[0].formats["iso"], "2026-06-10");
+            }
+            other => panic!("expected dispatch, got {other:?}"),
+        }
     }
 
     #[test]
