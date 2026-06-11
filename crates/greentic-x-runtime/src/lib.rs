@@ -8,7 +8,7 @@
 //! };
 //! use greentic_x_types::{ActorRef, ContractId, ContractVersion, Provenance, ResourceId, ResourceTypeId, Revision, SchemaReference};
 //! use serde_json::json;
-//! use std::sync::Arc;
+//! use std::sync::{Arc, Mutex};
 //!
 //! let mut runtime = Runtime::new(InMemoryResourceStore::default(), NoopEventSink::default());
 //! let manifest = ContractManifest {
@@ -111,7 +111,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 /// Portable runtime classes for Greentic-X component invocation.
 ///
@@ -136,6 +136,10 @@ pub struct ComponentDescriptor {
     pub reference: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub interface: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resilience: Option<ResilienceStrategy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caching: Option<CachingStrategy>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub metadata: BTreeMap<String, Value>,
 }
@@ -153,6 +157,8 @@ impl ComponentDescriptor {
             runtime,
             reference: reference.into(),
             interface: None,
+            resilience: None,
+            caching: None,
             metadata: BTreeMap::new(),
         }
     }
@@ -161,6 +167,72 @@ impl ComponentDescriptor {
         self.interface = Some(interface.into());
         self
     }
+
+    pub fn with_resilience(mut self, strategy: ResilienceStrategy) -> Self {
+        self.resilience = Some(strategy);
+        self
+    }
+
+    pub fn with_caching(mut self, strategy: CachingStrategy) -> Self {
+        self.caching = Some(strategy);
+        self
+    }
+}
+
+/// Host-executed resilience policy for component calls that touch external
+/// systems. Hosts are responsible for enforcing the policy because retry,
+/// health, and success checks are transport-specific.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ResilienceStrategy {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub health_check: Option<HealthCheckStrategy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retry: Option<RetryStrategy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub success_check: Option<SuccessCheckStrategy>,
+}
+
+/// Optional pre-invocation health check.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HealthCheckStrategy {
+    pub enabled: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interval_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout_ms: Option<u64>,
+}
+
+/// Retry settings for retryable component invocation failures.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RetryStrategy {
+    pub max_attempts: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub initial_delay_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_delay_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub backoff_multiplier: Option<u32>,
+}
+
+/// Optional post-failure verification for update-style operations where the
+/// transport may fail after the external system accepted the change.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SuccessCheckStrategy {
+    pub enabled: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout_ms: Option<u64>,
+}
+
+/// Host-executed cache policy for deterministic component calls.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CachingStrategy {
+    pub enabled: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ttl_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_entries: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub key_template: Option<String>,
 }
 
 /// Standard invocation envelope for resolver, adapter, analyser, renderer, MCP,
@@ -173,6 +245,10 @@ pub struct ComponentInvocationEnvelope {
     pub reference: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub interface: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resilience: Option<ResilienceStrategy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caching: Option<CachingStrategy>,
     pub input: Value,
     pub provenance: Provenance,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -194,6 +270,8 @@ impl ComponentInvocationEnvelope {
             runtime: component.runtime,
             reference: component.reference.clone(),
             interface: component.interface.clone(),
+            resilience: component.resilience.clone(),
+            caching: component.caching.clone(),
             input,
             provenance,
             run_id: None,
@@ -203,6 +281,16 @@ impl ComponentInvocationEnvelope {
 
     pub fn with_run_id(mut self, run_id: impl Into<String>) -> Self {
         self.run_id = Some(run_id.into());
+        self
+    }
+
+    pub fn with_resilience(mut self, strategy: ResilienceStrategy) -> Self {
+        self.resilience = Some(strategy);
+        self
+    }
+
+    pub fn with_caching(mut self, strategy: CachingStrategy) -> Self {
+        self.caching = Some(strategy);
         self
     }
 }
@@ -326,6 +414,575 @@ impl ComponentProvider for StaticComponentProvider {
     }
 }
 
+/// Adapter for host-owned component runtimes.
+///
+/// This lets a host wire Greentic-X component invocation to an executor that
+/// lives outside this crate, such as greentic-runner-host, MCP transport, or an
+/// agentic worker pool, without adding those heavyweight dependencies to the
+/// portable runtime contract crate.
+pub struct DelegatingComponentProvider<F>
+where
+    F: Fn(ComponentInvocationEnvelope) -> Result<ComponentInvocationResultEnvelope, RuntimeError>
+        + Send
+        + Sync,
+{
+    handler: F,
+}
+
+impl<F> DelegatingComponentProvider<F>
+where
+    F: Fn(ComponentInvocationEnvelope) -> Result<ComponentInvocationResultEnvelope, RuntimeError>
+        + Send
+        + Sync,
+{
+    pub fn new(handler: F) -> Self {
+        Self { handler }
+    }
+}
+
+impl<F> ComponentProvider for DelegatingComponentProvider<F>
+where
+    F: Fn(ComponentInvocationEnvelope) -> Result<ComponentInvocationResultEnvelope, RuntimeError>
+        + Send
+        + Sync,
+{
+    fn invoke_component(
+        &self,
+        envelope: ComponentInvocationEnvelope,
+    ) -> Result<ComponentInvocationResultEnvelope, RuntimeError> {
+        (self.handler)(envelope)
+    }
+}
+
+/// Host-visible execution metadata produced by the generic strategy executor.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ComponentExecutionMetadata {
+    pub attempts: u32,
+    pub cache_enabled: bool,
+    pub cache_hit: bool,
+    pub cache_key: Option<String>,
+    pub elapsed_ms: u64,
+    pub timed_out: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub warnings: Vec<String>,
+}
+
+impl ComponentExecutionMetadata {
+    fn new(cache_enabled: bool, cache_key: Option<String>) -> Self {
+        Self {
+            attempts: 0,
+            cache_enabled,
+            cache_hit: false,
+            cache_key,
+            elapsed_ms: 0,
+            timed_out: false,
+            warnings: Vec::new(),
+        }
+    }
+}
+
+/// Result plus strategy execution metadata.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ComponentExecutionOutcome {
+    pub result: ComponentInvocationResultEnvelope,
+    pub metadata: ComponentExecutionMetadata,
+}
+
+/// Cache boundary for deterministic component invocation results.
+pub trait ComponentCache: Send + Sync {
+    fn get(&self, key: &str) -> Option<ComponentInvocationResultEnvelope>;
+    fn insert(
+        &self,
+        key: String,
+        value: ComponentInvocationResultEnvelope,
+        ttl_ms: Option<u64>,
+        max_entries: Option<u64>,
+    );
+}
+
+#[derive(Debug, Clone)]
+struct CachedComponentValue {
+    value: ComponentInvocationResultEnvelope,
+    expires_at: Option<std::time::Instant>,
+}
+
+/// Small in-memory cache for hosts, tests, and smoke demos.
+#[derive(Debug, Default)]
+pub struct InMemoryComponentCache {
+    values: Mutex<HashMap<String, CachedComponentValue>>,
+}
+
+impl InMemoryComponentCache {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn len(&self) -> usize {
+        self.values
+            .lock()
+            .expect("component cache mutex should not be poisoned")
+            .len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+impl ComponentCache for InMemoryComponentCache {
+    fn get(&self, key: &str) -> Option<ComponentInvocationResultEnvelope> {
+        let mut values = self
+            .values
+            .lock()
+            .expect("component cache mutex should not be poisoned");
+        let cached = values.get(key)?;
+        if cached
+            .expires_at
+            .is_some_and(|expires_at| std::time::Instant::now() >= expires_at)
+        {
+            values.remove(key);
+            return None;
+        }
+        Some(cached.value.clone())
+    }
+
+    fn insert(
+        &self,
+        key: String,
+        value: ComponentInvocationResultEnvelope,
+        ttl_ms: Option<u64>,
+        max_entries: Option<u64>,
+    ) {
+        let expires_at =
+            ttl_ms.map(|ttl| std::time::Instant::now() + std::time::Duration::from_millis(ttl));
+        let mut values = self
+            .values
+            .lock()
+            .expect("component cache mutex should not be poisoned");
+        values.insert(key, CachedComponentValue { value, expires_at });
+        if let Some(max_entries) = max_entries.and_then(|value| usize::try_from(value).ok()) {
+            while max_entries > 0 && values.len() > max_entries {
+                if let Some(oldest_key) = values.keys().next().cloned() {
+                    values.remove(&oldest_key);
+                } else {
+                    break;
+                }
+            }
+            if max_entries == 0 {
+                values.clear();
+            }
+        }
+    }
+}
+
+/// Execute a component provider with generic resilience and caching strategy support.
+///
+/// This helper intentionally stays transport-neutral: hosts can wrap WASM, MCP,
+/// local fixture, or external worker providers with the same policy handling.
+pub fn execute_component_with_strategies<P>(
+    provider: &P,
+    envelope: ComponentInvocationEnvelope,
+    cache: Option<&dyn ComponentCache>,
+) -> Result<ComponentExecutionOutcome, RuntimeError>
+where
+    P: ComponentProvider + ?Sized,
+{
+    let started = std::time::Instant::now();
+    let caching = envelope.caching.clone().filter(|strategy| strategy.enabled);
+    let cache_key = caching
+        .as_ref()
+        .map(|strategy| component_cache_key(&envelope, strategy));
+    let mut metadata = ComponentExecutionMetadata::new(caching.is_some(), cache_key.clone());
+
+    if let (Some(cache), Some(key)) = (cache, cache_key.as_deref())
+        && let Some(mut result) = cache.get(key)
+    {
+        metadata.cache_hit = true;
+        metadata.elapsed_ms = elapsed_ms(started);
+        attach_execution_metadata(&mut result, &metadata);
+        return Ok(ComponentExecutionOutcome { result, metadata });
+    }
+
+    let retry = envelope
+        .resilience
+        .as_ref()
+        .and_then(|strategy| strategy.retry.as_ref());
+    let max_attempts = retry.map_or(1, |strategy| strategy.max_attempts.max(1));
+    let timeout_ms = envelope
+        .resilience
+        .as_ref()
+        .and_then(|strategy| strategy.health_check.as_ref())
+        .and_then(|strategy| strategy.timeout_ms);
+
+    let mut last_error = None;
+    for attempt in 1..=max_attempts {
+        metadata.attempts = attempt;
+        let result = provider.invoke_component(envelope.clone());
+        match result {
+            Ok(mut result) if result.status == InvocationStatus::Succeeded => {
+                metadata.elapsed_ms = elapsed_ms(started);
+                metadata.timed_out = timeout_ms.is_some_and(|limit| metadata.elapsed_ms > limit);
+                if let (Some(cache), Some(strategy), Some(key)) =
+                    (cache, caching.as_ref(), cache_key.clone())
+                {
+                    cache.insert(key, result.clone(), strategy.ttl_ms, strategy.max_entries);
+                }
+                attach_execution_metadata(&mut result, &metadata);
+                return Ok(ComponentExecutionOutcome { result, metadata });
+            }
+            Ok(result) => {
+                last_error = Some(RuntimeError::ComponentInvocationFailed {
+                    component_id: result.component_id,
+                    message: result
+                        .error
+                        .unwrap_or_else(|| "component returned failed status".to_owned()),
+                });
+            }
+            Err(err) => {
+                last_error = Some(err);
+            }
+        }
+
+        if attempt < max_attempts {
+            let delay_ms = retry_delay_ms(retry, attempt);
+            if delay_ms > 0 {
+                std::thread::sleep(std::time::Duration::from_millis(delay_ms));
+            }
+        }
+    }
+
+    metadata.elapsed_ms = elapsed_ms(started);
+    metadata.timed_out = timeout_ms.is_some_and(|limit| metadata.elapsed_ms > limit);
+    Err(
+        last_error.unwrap_or_else(|| RuntimeError::ComponentInvocationFailed {
+            component_id: envelope.component_id,
+            message: "component invocation failed without an error detail".to_owned(),
+        }),
+    )
+}
+
+fn retry_delay_ms(retry: Option<&RetryStrategy>, completed_attempt: u32) -> u64 {
+    let Some(retry) = retry else {
+        return 0;
+    };
+    let initial = retry.initial_delay_ms.unwrap_or(0);
+    if initial == 0 {
+        return 0;
+    }
+    let multiplier = retry.backoff_multiplier.unwrap_or(1).max(1) as u64;
+    let mut delay = initial;
+    for _ in 1..completed_attempt {
+        delay = delay.saturating_mul(multiplier);
+    }
+    retry.max_delay_ms.map_or(delay, |max| delay.min(max))
+}
+
+fn component_cache_key(
+    envelope: &ComponentInvocationEnvelope,
+    strategy: &CachingStrategy,
+) -> String {
+    if let Some(template) = strategy.key_template.as_deref() {
+        return render_cache_key_template(template, envelope);
+    }
+    format!(
+        "{}:{}:{}",
+        envelope.component_id, envelope.reference, envelope.input
+    )
+}
+
+fn render_cache_key_template(template: &str, envelope: &ComponentInvocationEnvelope) -> String {
+    let mut rendered = template
+        .replace("${component_id}", &envelope.component_id)
+        .replace("${runtime}", &format!("{:?}", envelope.runtime))
+        .replace("${reference}", &envelope.reference)
+        .replace("${invocation_id}", &envelope.invocation_id);
+
+    for (key, value) in envelope.input.as_object().into_iter().flatten() {
+        let replacement = value
+            .as_str()
+            .map(str::to_owned)
+            .unwrap_or_else(|| value.to_string());
+        rendered = rendered.replace(&format!("${{input.{key}}}"), &replacement);
+    }
+    rendered
+}
+
+fn attach_execution_metadata(
+    result: &mut ComponentInvocationResultEnvelope,
+    metadata: &ComponentExecutionMetadata,
+) {
+    result.metadata.insert(
+        "greentic_x.execution".to_owned(),
+        serde_json::to_value(metadata).expect("execution metadata should serialize"),
+    );
+}
+
+fn elapsed_ms(started: std::time::Instant) -> u64 {
+    started.elapsed().as_millis().try_into().unwrap_or(u64::MAX)
+}
+
+/// Incoming message envelope used by the Fast2Flow routing boundary.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Fast2FlowMessageEnvelope {
+    pub text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub channel: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
+}
+
+impl Fast2FlowMessageEnvelope {
+    pub fn new(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            channel: None,
+            provider: None,
+        }
+    }
+
+    pub fn with_channel(mut self, channel: impl Into<String>) -> Self {
+        self.channel = Some(channel.into());
+        self
+    }
+
+    pub fn with_provider(mut self, provider: impl Into<String>) -> Self {
+        self.provider = Some(provider.into());
+        self
+    }
+}
+
+/// Greentic-X host request for Fast2Flow-style intent routing.
+///
+/// This mirrors the Fast2Flow hook contract but keeps Greentic-X decoupled from
+/// a concrete Fast2Flow crate or runner implementation.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Fast2FlowRouteRequest {
+    pub scope: String,
+    pub envelope: Fast2FlowMessageEnvelope,
+    pub session_active: bool,
+    pub input_locale: String,
+    pub time_budget_ms: u64,
+    pub registry_path: String,
+    pub indexes_path: String,
+    pub now_unix_ms: u64,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub metadata: BTreeMap<String, Value>,
+}
+
+impl Fast2FlowRouteRequest {
+    pub fn new(scope: impl Into<String>, text: impl Into<String>) -> Self {
+        Self {
+            scope: scope.into(),
+            envelope: Fast2FlowMessageEnvelope::new(text),
+            session_active: false,
+            input_locale: "en".to_owned(),
+            time_budget_ms: 250,
+            registry_path: String::new(),
+            indexes_path: String::new(),
+            now_unix_ms: 0,
+            metadata: BTreeMap::new(),
+        }
+    }
+
+    pub fn with_mounts(
+        mut self,
+        registry_path: impl Into<String>,
+        indexes_path: impl Into<String>,
+    ) -> Self {
+        self.registry_path = registry_path.into();
+        self.indexes_path = indexes_path.into();
+        self
+    }
+
+    pub fn with_session_active(mut self, session_active: bool) -> Self {
+        self.session_active = session_active;
+        self
+    }
+
+    pub fn with_locale(mut self, input_locale: impl Into<String>) -> Self {
+        self.input_locale = input_locale.into();
+        self
+    }
+
+    pub fn with_time_budget_ms(mut self, time_budget_ms: u64) -> Self {
+        self.time_budget_ms = time_budget_ms;
+        self
+    }
+
+    pub fn with_now_unix_ms(mut self, now_unix_ms: u64) -> Self {
+        self.now_unix_ms = now_unix_ms;
+        self
+    }
+}
+
+/// Slim extracted entity view attached to Fast2Flow dispatch decisions.
+///
+/// This mirrors the Fast2Flow v1.2 dispatch prefill contract while keeping
+/// Greentic-X decoupled from the concrete `greentic-fast2flow` crate.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Fast2FlowRoutingEntity {
+    pub kind: String,
+    pub normalized: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub formats: BTreeMap<String, String>,
+}
+
+impl Fast2FlowRoutingEntity {
+    pub fn new(kind: impl Into<String>, normalized: impl Into<String>) -> Self {
+        Self {
+            kind: kind.into(),
+            normalized: normalized.into(),
+            role: None,
+            formats: BTreeMap::new(),
+        }
+    }
+
+    pub fn with_role(mut self, role: impl Into<String>) -> Self {
+        self.role = Some(role.into());
+        self
+    }
+
+    pub fn with_format(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.formats.insert(key.into(), value.into());
+        self
+    }
+}
+
+/// Routing decision returned by a Fast2Flow-compatible host integration.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum Fast2FlowDirective {
+    Continue,
+    Dispatch {
+        target: String,
+        confidence: f32,
+        reason: String,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        entities: Vec<Fast2FlowRoutingEntity>,
+    },
+    Respond {
+        message: String,
+    },
+    Deny {
+        reason: String,
+    },
+}
+
+/// Standard route result envelope for Greentic-X intent routing.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Fast2FlowRouteResult {
+    pub directive: Fast2FlowDirective,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub metadata: BTreeMap<String, Value>,
+}
+
+impl Fast2FlowRouteResult {
+    pub fn continue_route() -> Self {
+        Self {
+            directive: Fast2FlowDirective::Continue,
+            metadata: BTreeMap::new(),
+        }
+    }
+
+    pub fn dispatch(target: impl Into<String>, confidence: f32, reason: impl Into<String>) -> Self {
+        Self::dispatch_with_entities(target, confidence, reason, Vec::new())
+    }
+
+    pub fn dispatch_with_entities(
+        target: impl Into<String>,
+        confidence: f32,
+        reason: impl Into<String>,
+        entities: Vec<Fast2FlowRoutingEntity>,
+    ) -> Self {
+        Self {
+            directive: Fast2FlowDirective::Dispatch {
+                target: target.into(),
+                confidence,
+                reason: reason.into(),
+                entities,
+            },
+            metadata: BTreeMap::new(),
+        }
+    }
+
+    pub fn respond(message: impl Into<String>) -> Self {
+        Self {
+            directive: Fast2FlowDirective::Respond {
+                message: message.into(),
+            },
+            metadata: BTreeMap::new(),
+        }
+    }
+
+    pub fn deny(reason: impl Into<String>) -> Self {
+        Self {
+            directive: Fast2FlowDirective::Deny {
+                reason: reason.into(),
+            },
+            metadata: BTreeMap::new(),
+        }
+    }
+}
+
+/// Provider boundary for Fast2Flow-compatible intent routing.
+///
+/// Hosts can back this with `greentic-fast2flow`, a WASM routing component, or
+/// a remote router service. Greentic-X core owns the stable request/result
+/// contract; the host owns index loading, policy evaluation, and dispatch.
+pub trait Fast2FlowRoutingProvider: Send + Sync {
+    fn route_intent(
+        &self,
+        request: Fast2FlowRouteRequest,
+    ) -> Result<Fast2FlowRouteResult, RuntimeError>;
+}
+
+/// Fail-fast router for hosts that have not configured Fast2Flow routing.
+#[derive(Debug, Default, Clone)]
+pub struct UnsupportedFast2FlowRoutingProvider;
+
+impl Fast2FlowRoutingProvider for UnsupportedFast2FlowRoutingProvider {
+    fn route_intent(
+        &self,
+        request: Fast2FlowRouteRequest,
+    ) -> Result<Fast2FlowRouteResult, RuntimeError> {
+        Err(RuntimeError::Fast2FlowRoutingFailed {
+            scope: request.scope,
+            message: "Fast2Flow routing provider is not configured".to_owned(),
+        })
+    }
+}
+
+/// Adapter for host-owned Fast2Flow routing implementations.
+pub struct DelegatingFast2FlowRoutingProvider<F>
+where
+    F: Fn(Fast2FlowRouteRequest) -> Result<Fast2FlowRouteResult, RuntimeError> + Send + Sync,
+{
+    handler: F,
+}
+
+impl<F> DelegatingFast2FlowRoutingProvider<F>
+where
+    F: Fn(Fast2FlowRouteRequest) -> Result<Fast2FlowRouteResult, RuntimeError> + Send + Sync,
+{
+    pub fn new(handler: F) -> Self {
+        Self { handler }
+    }
+}
+
+impl<F> Fast2FlowRoutingProvider for DelegatingFast2FlowRoutingProvider<F>
+where
+    F: Fn(Fast2FlowRouteRequest) -> Result<Fast2FlowRouteResult, RuntimeError> + Send + Sync,
+{
+    fn route_intent(
+        &self,
+        request: Fast2FlowRouteRequest,
+    ) -> Result<Fast2FlowRouteResult, RuntimeError> {
+        (self.handler)(request)
+    }
+}
+
 /// Request for initial resource creation.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CreateResourceRequest {
@@ -417,6 +1074,10 @@ pub enum RuntimeError {
     },
     ComponentInvocationFailed {
         component_id: String,
+        message: String,
+    },
+    Fast2FlowRoutingFailed {
+        scope: String,
         message: String,
     },
     InvalidDocument(&'static str),
@@ -532,6 +1193,12 @@ impl std::fmt::Display for RuntimeError {
                 message,
             } => {
                 write!(formatter, "component {component_id} failed: {message}")
+            }
+            Self::Fast2FlowRoutingFailed { scope, message } => {
+                write!(
+                    formatter,
+                    "Fast2Flow routing failed for scope {scope}: {message}"
+                )
             }
             Self::InvalidDocument(message) => formatter.write_str(message),
             Self::PatchDenied { path } => write!(formatter, "patch path {path} is not allowed"),
@@ -2381,6 +3048,51 @@ mod tests {
     }
 
     #[test]
+    fn component_invocation_envelope_carries_resilience_and_caching_strategies() {
+        let resilience = ResilienceStrategy {
+            health_check: Some(HealthCheckStrategy {
+                enabled: true,
+                interval_ms: Some(30_000),
+                timeout_ms: Some(2_000),
+            }),
+            retry: Some(RetryStrategy {
+                max_attempts: 3,
+                initial_delay_ms: Some(100),
+                max_delay_ms: Some(1_000),
+                backoff_multiplier: Some(2),
+            }),
+            success_check: Some(SuccessCheckStrategy {
+                enabled: false,
+                timeout_ms: None,
+            }),
+        };
+        let caching = CachingStrategy {
+            enabled: true,
+            ttl_ms: Some(60_000),
+            max_entries: Some(512),
+            key_template: Some("${component_id}:${input.prefix}".to_owned()),
+        };
+        let descriptor = ComponentDescriptor::new(
+            "tx.query.arbor.flows",
+            "adapter",
+            ComponentRuntimeKind::McpAdapter,
+            "mcp://arbor/run_template",
+        )
+        .with_resilience(resilience.clone())
+        .with_caching(caching.clone());
+
+        let envelope = ComponentInvocationEnvelope::new(
+            "component-invoke-1",
+            &descriptor,
+            serde_json::json!({"prefix": "203.0.113.0/24"}),
+            provenance(),
+        );
+
+        assert_eq!(envelope.resilience, Some(resilience));
+        assert_eq!(envelope.caching, Some(caching));
+    }
+
+    #[test]
     fn unsupported_component_provider_returns_runtime_error() {
         let descriptor = ComponentDescriptor::new(
             "tx.query.arbor",
@@ -2403,6 +3115,78 @@ mod tests {
             RuntimeError::ComponentInvocationFailed { .. }
         ));
         assert!(err.to_string().contains("tx.query.arbor"));
+    }
+
+    #[test]
+    fn unsupported_fast2flow_routing_provider_returns_runtime_error() {
+        let request = Fast2FlowRouteRequest::new("demo", "show inbound traffic")
+            .with_mounts("/mnt/registry", "/mnt/indexes")
+            .with_time_budget_ms(250);
+
+        let err = UnsupportedFast2FlowRoutingProvider
+            .route_intent(request)
+            .expect_err("unsupported router should fail fast");
+
+        assert!(matches!(err, RuntimeError::Fast2FlowRoutingFailed { .. }));
+        assert!(err.to_string().contains("demo"));
+    }
+
+    #[test]
+    fn delegating_fast2flow_routing_provider_forwards_request_to_host_handler() {
+        let provider = DelegatingFast2FlowRoutingProvider::new(|request| {
+            assert_eq!(request.scope, "tenant-a");
+            assert_eq!(request.envelope.text, "show inbound traffic");
+            assert_eq!(request.envelope.channel.as_deref(), Some("webchat"));
+            assert_eq!(request.indexes_path, "/mnt/indexes");
+            Ok(Fast2FlowRouteResult::dispatch(
+                "telco-x/tx.playbook.prefix_traffic",
+                0.92,
+                "matched prefix traffic metadata",
+            ))
+        });
+        let mut request = Fast2FlowRouteRequest::new("tenant-a", "show inbound traffic")
+            .with_mounts("/mnt/registry", "/mnt/indexes")
+            .with_session_active(false)
+            .with_locale("en-GB")
+            .with_now_unix_ms(1_779_000_000);
+        request.envelope = request.envelope.with_channel("webchat");
+
+        let result = provider
+            .route_intent(request)
+            .expect("delegating router should return host result");
+
+        assert_eq!(
+            result.directive,
+            Fast2FlowDirective::Dispatch {
+                target: "telco-x/tx.playbook.prefix_traffic".to_owned(),
+                confidence: 0.92,
+                reason: "matched prefix traffic metadata".to_owned(),
+                entities: Vec::new(),
+            }
+        );
+    }
+
+    #[test]
+    fn fast2flow_dispatch_can_carry_prefill_entities() {
+        let result = Fast2FlowRouteResult::dispatch_with_entities(
+            "network-assistant/prefix-traffic",
+            0.97,
+            "matched prefix traffic",
+            vec![
+                Fast2FlowRoutingEntity::new("date", "20260610")
+                    .with_role("on")
+                    .with_format("iso", "2026-06-10"),
+            ],
+        );
+
+        match result.directive {
+            Fast2FlowDirective::Dispatch { entities, .. } => {
+                assert_eq!(entities.len(), 1);
+                assert_eq!(entities[0].kind, "date");
+                assert_eq!(entities[0].formats["iso"], "2026-06-10");
+            }
+            other => panic!("expected dispatch, got {other:?}"),
+        }
     }
 
     #[test]
@@ -2430,5 +3214,200 @@ mod tests {
             result.output.expect("output should be present")["ranked"],
             serde_json::json!([])
         );
+    }
+
+    #[test]
+    fn delegating_component_provider_forwards_envelope_to_host_handler() {
+        let descriptor = ComponentDescriptor::new(
+            "zain.analyser.rca",
+            "analyser",
+            ComponentRuntimeKind::WasmWasi,
+            "oci://ghcr.io/greenticai/components/zain-analyser-rca:latest",
+        );
+        let envelope = ComponentInvocationEnvelope::new(
+            "component-invoke-1",
+            &descriptor,
+            serde_json::json!({"evidence": []}),
+            provenance(),
+        );
+        let provider = DelegatingComponentProvider::new(|envelope| {
+            assert_eq!(envelope.component_id, "zain.analyser.rca");
+            assert_eq!(envelope.runtime, ComponentRuntimeKind::WasmWasi);
+            Ok(ComponentInvocationResultEnvelope::success(
+                envelope.invocation_id,
+                envelope.component_id,
+                serde_json::json!({"summary": "runner invoked"}),
+            ))
+        });
+
+        let result = provider
+            .invoke_component(envelope)
+            .expect("delegating provider should return host output");
+        assert_eq!(result.status, InvocationStatus::Succeeded);
+        assert_eq!(
+            result.output.expect("output should be present")["summary"],
+            serde_json::json!("runner invoked")
+        );
+    }
+
+    #[test]
+    fn execute_component_with_strategies_retries_until_success() {
+        let descriptor = ComponentDescriptor::new(
+            "tx.query.arbor.flows",
+            "adapter",
+            ComponentRuntimeKind::McpAdapter,
+            "mcp://arbor/run_template",
+        )
+        .with_resilience(ResilienceStrategy {
+            health_check: None,
+            retry: Some(RetryStrategy {
+                max_attempts: 3,
+                initial_delay_ms: Some(0),
+                max_delay_ms: None,
+                backoff_multiplier: None,
+            }),
+            success_check: None,
+        });
+        let envelope = ComponentInvocationEnvelope::new(
+            "component-invoke-1",
+            &descriptor,
+            serde_json::json!({"prefix": "203.0.113.0/24"}),
+            provenance(),
+        );
+        let attempts = Arc::new(Mutex::new(0_u32));
+        let provider_attempts = attempts.clone();
+        let provider = DelegatingComponentProvider::new(move |envelope| {
+            let mut count = provider_attempts
+                .lock()
+                .expect("attempt counter should not be poisoned");
+            *count += 1;
+            if *count < 3 {
+                return Err(RuntimeError::ComponentInvocationFailed {
+                    component_id: envelope.component_id,
+                    message: "temporary failure".to_owned(),
+                });
+            }
+            Ok(ComponentInvocationResultEnvelope::success(
+                envelope.invocation_id,
+                envelope.component_id,
+                serde_json::json!({"ok": true}),
+            ))
+        });
+
+        let outcome = execute_component_with_strategies(&provider, envelope, None)
+            .expect("third attempt should succeed");
+
+        assert_eq!(outcome.metadata.attempts, 3);
+        assert_eq!(
+            *attempts
+                .lock()
+                .expect("attempt counter should not be poisoned"),
+            3
+        );
+        assert_eq!(outcome.result.status, InvocationStatus::Succeeded);
+        assert_eq!(
+            outcome.result.metadata["greentic_x.execution"]["attempts"],
+            serde_json::json!(3)
+        );
+    }
+
+    #[test]
+    fn execute_component_with_strategies_serves_cache_hit_without_provider_call() {
+        let descriptor = ComponentDescriptor::new(
+            "tx.query.inventory.interfaces",
+            "adapter",
+            ComponentRuntimeKind::WasmWasi,
+            "oci://ghcr.io/greenticai/components/inventory-interfaces:latest",
+        )
+        .with_caching(CachingStrategy {
+            enabled: true,
+            ttl_ms: Some(60_000),
+            max_entries: Some(128),
+            key_template: Some("${component_id}:${input.device_id}".to_owned()),
+        });
+        let envelope = ComponentInvocationEnvelope::new(
+            "component-invoke-1",
+            &descriptor,
+            serde_json::json!({"device_id": "aci-pod1-node2201"}),
+            provenance(),
+        );
+        let calls = Arc::new(Mutex::new(0_u32));
+        let provider_calls = calls.clone();
+        let provider = DelegatingComponentProvider::new(move |envelope| {
+            *provider_calls
+                .lock()
+                .expect("provider counter should not be poisoned") += 1;
+            Ok(ComponentInvocationResultEnvelope::success(
+                envelope.invocation_id,
+                envelope.component_id,
+                serde_json::json!({"interfaces": ["eth1/1"]}),
+            ))
+        });
+        let cache = InMemoryComponentCache::new();
+
+        let first = execute_component_with_strategies(&provider, envelope.clone(), Some(&cache))
+            .expect("first call should populate cache");
+        let second = execute_component_with_strategies(&provider, envelope, Some(&cache))
+            .expect("second call should use cache");
+
+        assert!(!first.metadata.cache_hit);
+        assert!(second.metadata.cache_hit);
+        assert_eq!(
+            second.metadata.cache_key.as_deref(),
+            Some("tx.query.inventory.interfaces:aci-pod1-node2201")
+        );
+        assert_eq!(
+            *calls
+                .lock()
+                .expect("provider counter should not be poisoned"),
+            1
+        );
+    }
+
+    #[test]
+    fn in_memory_component_cache_respects_max_entries() {
+        let cache = InMemoryComponentCache::new();
+        cache.insert(
+            "a".to_owned(),
+            ComponentInvocationResultEnvelope::success(
+                "invoke-a",
+                "component",
+                serde_json::json!({"n": 1}),
+            ),
+            None,
+            Some(1),
+        );
+        cache.insert(
+            "b".to_owned(),
+            ComponentInvocationResultEnvelope::success(
+                "invoke-b",
+                "component",
+                serde_json::json!({"n": 2}),
+            ),
+            None,
+            Some(1),
+        );
+
+        assert_eq!(cache.len(), 1);
+    }
+
+    #[test]
+    fn in_memory_component_cache_expires_entries_by_ttl() {
+        let cache = InMemoryComponentCache::new();
+        cache.insert(
+            "short".to_owned(),
+            ComponentInvocationResultEnvelope::success(
+                "component-invoke-1",
+                "tx.query.inventory.interfaces",
+                serde_json::json!({"interfaces": []}),
+            ),
+            Some(1),
+            None,
+        );
+
+        std::thread::sleep(std::time::Duration::from_millis(5));
+
+        assert!(cache.get("short").is_none());
+        assert!(cache.is_empty());
     }
 }

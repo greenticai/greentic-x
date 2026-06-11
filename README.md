@@ -53,7 +53,10 @@ Greentic core should stay narrow and foundational. This repository is where the 
 - Catalog tooling: `gx` now also scaffolds solution catalog repos, builds canonical `catalog.json` indexes, validates them, publishes both catalog indexes and tar bundles, and lets `gx wizard` merge local or OCI-backed solution catalogs through repeated `--catalog` flags.
 - `gtc` integration: `gx wizard` now emits generic `gtc` setup/start handoff artifacts alongside the existing GX solution, pack, bundle, and launcher outputs so orchestration can stay contract-driven.
 - Profile/examples: `gx.observability.playbook.v1` now compiles into normal GX flows, and four generic reference example packages are checked in under `examples/`.
-- Remaining work: policy/migration execution, richer pack contents, designer UX, and publish decisions.
+- Component invocation boundary: `greentic-x-runtime` defines descriptor/envelope/result/provider contracts for external WASM/WASI, MCP adapter, and worker components.
+- Resilience and caching strategy metadata: runtime descriptors and invocation envelopes carry declarative retry/health/cache policy for host/provider enforcement.
+- Fast2Flow boundary: `greentic-x-runtime` defines request/result/directive/provider contracts so runner/orchestrator hosts can bridge to Fast2Flow without coupling the portable runtime crate to a concrete router.
+- Remaining work: policy/migration execution, production component provider implementations, richer pack contents, designer UX, and publish decisions.
 
 ## Non-Goals For This Bootstrap
 
