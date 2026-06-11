@@ -35,6 +35,7 @@ pub(crate) fn collect_interactive_answers(
             debug: false,
         },
         verbose: false,
+        env_id: String::new(),
     };
 
     let mut driver =
