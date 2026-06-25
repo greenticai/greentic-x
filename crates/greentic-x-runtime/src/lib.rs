@@ -815,6 +815,23 @@ impl Fast2FlowRouteRequest {
     }
 }
 
+/// Downstream execution path selected by Fast2Flow for a dispatch target.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Fast2FlowFlowType {
+    /// Existing fixed workflow/playbook execution path.
+    #[default]
+    Deterministic,
+    /// Top-level agentic coordinator execution path.
+    Agentic,
+}
+
+impl Fast2FlowFlowType {
+    pub fn is_agentic(self) -> bool {
+        matches!(self, Self::Agentic)
+    }
+}
+
 /// Slim extracted entity view attached to Fast2Flow dispatch decisions.
 ///
 /// This mirrors the Fast2Flow v1.2 dispatch prefill contract while keeping
@@ -859,6 +876,8 @@ pub enum Fast2FlowDirective {
         target: String,
         confidence: f32,
         reason: String,
+        #[serde(default)]
+        flow_type: Fast2FlowFlowType,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         entities: Vec<Fast2FlowRoutingEntity>,
     },
@@ -878,6 +897,19 @@ pub struct Fast2FlowRouteResult {
     pub metadata: BTreeMap<String, Value>,
 }
 
+impl Fast2FlowDirective {
+    pub fn flow_type(&self) -> Option<Fast2FlowFlowType> {
+        match self {
+            Self::Dispatch { flow_type, .. } => Some(*flow_type),
+            Self::Continue | Self::Respond { .. } | Self::Deny { .. } => None,
+        }
+    }
+
+    pub fn is_agentic_dispatch(&self) -> bool {
+        self.flow_type().is_some_and(Fast2FlowFlowType::is_agentic)
+    }
+}
+
 impl Fast2FlowRouteResult {
     pub fn continue_route() -> Self {
         Self {
@@ -887,7 +919,30 @@ impl Fast2FlowRouteResult {
     }
 
     pub fn dispatch(target: impl Into<String>, confidence: f32, reason: impl Into<String>) -> Self {
-        Self::dispatch_with_entities(target, confidence, reason, Vec::new())
+        Self::dispatch_with_flow_type(target, confidence, reason, Fast2FlowFlowType::Deterministic)
+    }
+
+    pub fn dispatch_agentic(
+        target: impl Into<String>,
+        confidence: f32,
+        reason: impl Into<String>,
+    ) -> Self {
+        Self::dispatch_with_flow_type(target, confidence, reason, Fast2FlowFlowType::Agentic)
+    }
+
+    pub fn dispatch_with_flow_type(
+        target: impl Into<String>,
+        confidence: f32,
+        reason: impl Into<String>,
+        flow_type: Fast2FlowFlowType,
+    ) -> Self {
+        Self::dispatch_with_entities_and_flow_type(
+            target,
+            confidence,
+            reason,
+            flow_type,
+            Vec::new(),
+        )
     }
 
     pub fn dispatch_with_entities(
@@ -896,15 +951,40 @@ impl Fast2FlowRouteResult {
         reason: impl Into<String>,
         entities: Vec<Fast2FlowRoutingEntity>,
     ) -> Self {
+        Self::dispatch_with_entities_and_flow_type(
+            target,
+            confidence,
+            reason,
+            Fast2FlowFlowType::Deterministic,
+            entities,
+        )
+    }
+
+    pub fn dispatch_with_entities_and_flow_type(
+        target: impl Into<String>,
+        confidence: f32,
+        reason: impl Into<String>,
+        flow_type: Fast2FlowFlowType,
+        entities: Vec<Fast2FlowRoutingEntity>,
+    ) -> Self {
         Self {
             directive: Fast2FlowDirective::Dispatch {
                 target: target.into(),
                 confidence,
                 reason: reason.into(),
+                flow_type,
                 entities,
             },
             metadata: BTreeMap::new(),
         }
+    }
+
+    pub fn flow_type(&self) -> Option<Fast2FlowFlowType> {
+        self.directive.flow_type()
+    }
+
+    pub fn is_agentic_dispatch(&self) -> bool {
+        self.directive.is_agentic_dispatch()
     }
 
     pub fn respond(message: impl Into<String>) -> Self {
@@ -3161,9 +3241,48 @@ mod tests {
                 target: "telco-x/tx.playbook.prefix_traffic".to_owned(),
                 confidence: 0.92,
                 reason: "matched prefix traffic metadata".to_owned(),
+                flow_type: Fast2FlowFlowType::Deterministic,
                 entities: Vec::new(),
             }
         );
+    }
+
+    #[test]
+    fn fast2flow_dispatch_can_select_agentic_execution() {
+        let result = Fast2FlowRouteResult::dispatch_agentic(
+            "telco-x/network_triage",
+            0.86,
+            "matched agentic network triage",
+        );
+
+        assert_eq!(result.flow_type(), Some(Fast2FlowFlowType::Agentic));
+        assert!(result.is_agentic_dispatch());
+
+        match result.directive {
+            Fast2FlowDirective::Dispatch {
+                target, flow_type, ..
+            } => {
+                assert_eq!(target, "telco-x/network_triage");
+                assert_eq!(flow_type, Fast2FlowFlowType::Agentic);
+            }
+            other => panic!("expected dispatch, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn fast2flow_legacy_dispatch_without_flow_type_defaults_to_deterministic() {
+        let payload = r#"{
+            "directive": {
+                "type": "dispatch",
+                "target": "telco-x/tx.playbook.prefix_traffic",
+                "confidence": 0.92,
+                "reason": "legacy fast2flow result"
+            }
+        }"#;
+
+        let result: Fast2FlowRouteResult = serde_json::from_str(payload).expect("legacy parse");
+        assert_eq!(result.flow_type(), Some(Fast2FlowFlowType::Deterministic));
+        assert!(!result.is_agentic_dispatch());
     }
 
     #[test]
