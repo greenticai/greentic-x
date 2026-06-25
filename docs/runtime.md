@@ -117,11 +117,11 @@ The runtime crate ships `UnsupportedComponentProvider`, `StaticComponentProvider
 The runtime defines a first-class Fast2Flow-compatible routing boundary without depending on a concrete Fast2Flow implementation:
 
 - `Fast2FlowRouteRequest` carries scope, message envelope, session state, locale, time budget, registry/index mount paths, timestamp, and metadata.
-- `Fast2FlowDirective` models the routing outcome: `continue`, `dispatch`, `respond`, or `deny`.
+- `Fast2FlowDirective` models the routing outcome: `continue`, `dispatch`, `respond`, or `deny`; dispatch results include `flow_type` so hosts can choose deterministic workflow execution or the agentic coordinator path.
 - `Fast2FlowRouteResult` wraps the directive with optional metadata.
 - `Fast2FlowRoutingProvider` is the host/provider trait. Hosts can implement it with `greentic-fast2flow`, a WASM routing component, or a remote routing service.
 
-The runtime crate ships `UnsupportedFast2FlowRoutingProvider` for fail-fast behavior and `DelegatingFast2FlowRoutingProvider` so runner/orchestrator hosts can bridge to Fast2Flow without adding Fast2Flow dependencies to the portable runtime crate. Greentic-X owns the stable request/result contract; the host owns index loading, policy evaluation, and dispatching the selected flow or playbook target.
+The runtime crate ships `UnsupportedFast2FlowRoutingProvider` for fail-fast behavior and `DelegatingFast2FlowRoutingProvider` so runner/orchestrator hosts can bridge to Fast2Flow without adding Fast2Flow dependencies to the portable runtime crate. Greentic-X owns the stable request/result contract; the host owns index loading, policy evaluation, and dispatching the selected flow or playbook target. For `flow_type = deterministic`, hosts keep the existing workflow/playbook runner. For `flow_type = agentic`, hosts call the top-level agentic component/coordinator and let that component delegate to worker agents.
 
 ## Current Limitation
 
